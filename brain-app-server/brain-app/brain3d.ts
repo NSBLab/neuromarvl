@@ -1044,7 +1044,7 @@ class Brain3DApp implements Application, Loopable {
         app.edgeCount = this.edgeCountSliderValue;
         app.brainSurfaceMode = this.brainSurfaceMode;
         app.showingTopologyNetwork = this.showingTopologyNetwork;
-        app.networkType = this.networkType;
+        app.networkType = this.networkType == undefined ? "" : this.networkType;
 
         if (this.circularGraph) {
             app.circularBundleAttribute = this.circularGraph.circularBundleAttribute;

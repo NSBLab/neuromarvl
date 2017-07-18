@@ -212,6 +212,12 @@ class CircularGraph {
 
         // If Label exists use it as default 
         var option: HTMLOptionElement;
+
+        option = document.createElement('option');
+        option.text = 'None';
+        option.value = 'none';
+        $('#select-circular-label-' + this.id).append(option);
+
         if (this.dataSet.brainLabels) {
             option = document.createElement('option');
             option.text = 'Label';
@@ -1290,18 +1296,29 @@ class CircularGraph {
 
     circularLayoutLabelOnChange(attr: string) {
         this.circularLabelAttribute = attr;
+        
+        if (attr == "none") {
+            this.svgAllElements.selectAll(".nodeCircular")
+                .style("display", "none");
+            
 
-        if (attr == "label") {
-            this.svgAllElements.selectAll(".nodeCircular")
-                .text(function (d) {
-                    return d.label;
-                });
-        } else if (attr == "id") {
-            this.svgAllElements.selectAll(".nodeCircular")
-                .text(function (d) { return d.key; });
         } else {
             this.svgAllElements.selectAll(".nodeCircular")
-                .text(function (d) { return d[attr]; });
+                .style("display", "block");
+            
+
+            if (attr == "label") {
+                this.svgAllElements.selectAll(".nodeCircular")
+                    .text(function (d) {
+                        return d.label;
+                    });
+            } else if (attr == "id") {
+                this.svgAllElements.selectAll(".nodeCircular")
+                    .text(function (d) { return d.key; });
+            } else {
+                this.svgAllElements.selectAll(".nodeCircular")
+                    .text(function (d) { return d[attr]; });
+            }
         }
     }
 
@@ -1372,12 +1389,12 @@ class CircularGraph {
     mouseOveredCircularLayout(d) { // d: contain the node's info 
 
         var selectedID = this.commonData.selectedNode;
-
+        var _this = this;
         // Reseting All nodes source and target
         this.svgAllElements.selectAll(".nodeCircular")
             .each(function (n) { n.target = n.source = false; }); // For every node in the graph
 
-        var varEdgeColorMode = this.circularEdgeColorMode;
+        var varEdgeColorMode = _this.circularEdgeColorMode;
         this.svgAllElements.selectAll(".linkCircular")
             .style("stroke-width", function (l) {
 
@@ -1406,9 +1423,11 @@ class CircularGraph {
         this.svgAllElements.selectAll(".nodeCircular")
             .style("font-weight", function (n) {
                 if ((n.target || n.source)) { // if the node has any direct relation to the selected node
+
                     return "bolder";
                 }
                 else {
+
                     return "normal";
                 }
             })
@@ -1429,7 +1448,19 @@ class CircularGraph {
                 } else {
                     return 0.2;
                 }
-            });;
+            })
+            .style("display", function (n) {
+                if (_this.circularLabelAttribute == 'none') {
+                    if ((n.target || n.source)) { // if the node has any direct relation to the selected node
+                        return "block";
+                    }
+                    else {
+                        return "none";
+                    }
+                } else {
+                    return "block";
+                }
+            });
 
         this.svgAllElements.selectAll(".nodeDotCircular")
             .style("opacity", function (n) {
@@ -1459,16 +1490,24 @@ class CircularGraph {
 
     mouseOutedCircularLayout(d) {
         var selectedID = this.commonData.selectedNode;
-
+        var _this = this;
         if (selectedID == -1) {
             this.svgAllElements.selectAll(".linkCircular")
                 .style("stroke-width", "1px")
                 .style("stroke-opacity", 1);
 
+
             this.svgAllElements.selectAll(".nodeCircular")
                 .style("font-weight", "normal")
                 .style("font-size", "11px")
-                .style("opacity", 1);
+                .style("opacity", 1)
+                .style("display", function (n) {
+                    if (_this.circularLabelAttribute == 'none') {
+                        return "none";
+                    } else {
+                        return "block";
+                    }
+                });
 
             this.svgAllElements.selectAll(".nodeDotCircular")
                 .style("opacity", 1);

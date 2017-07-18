@@ -277,7 +277,7 @@ class NeuroMarvl {
         $("#overlay-close").click(this.toggleSplashPage);
         $("#control-panel-bottom-close").click(this.toggleSplashPage);
 
-        // Create colour pickers
+        // Create color pickers
         (<any>$("#input-node-color")).colorpicker({ format: "hex" });
         (<any>$("#input-surface-color")).colorpicker({ format: "hex" });
         (<any>$("#input-min-color")).colorpicker({ format: "hex" });
@@ -375,11 +375,13 @@ class NeuroMarvl {
             this.apps[id].initShowNetwork(app);
         }
 
+        this.initDataDependantUI();
+
         this.removeLoadingNotification();
     }
 
     initDataDependantUI = () => {
-        // init the node size and colour given the current UI. The UI needs to be redesigned.
+        // init the node size and color given the current UI. The UI needs to be redesigned.
         if (this.saveObj.nodeSettings.nodeSizeOrColor && (this.saveObj.nodeSettings.nodeSizeOrColor.length > 0)) {
             if (this.saveObj.nodeSettings.nodeSizeOrColor == "node-size") {
                 this.initNodeColor();
@@ -391,7 +393,7 @@ class NeuroMarvl {
             }
         }
 
-        // init edge size and colour.
+        // init edge size and color.
         if (this.saveObj.edgeSettings) {
             this.initEdgeSizeAndColor();
         }
@@ -936,7 +938,7 @@ class NeuroMarvl {
     }
 
     setEdgeColorByNode = () => {
-        // save edge colour setting
+        // save edge color setting
         this.saveObj.edgeSettings.colorBy = "node";
 
         if (this.apps[0]) this.apps[0].setEdgeColorByNode();
@@ -946,7 +948,7 @@ class NeuroMarvl {
     }
 
     setEdgeNoColor = () => {
-        // save edge colour setting 
+        // save edge color setting 
         this.saveObj.edgeSettings.colorBy = "none";
 
         if (this.apps[0]) this.apps[0].setEdgeNoColor();
@@ -1361,6 +1363,8 @@ class NeuroMarvl {
 
         return scaleArray;
     }
+
+
 
     setupNodeSizeRangeSlider = (attribute: string) => {
         $('#div-node-color-pickers').hide();
@@ -1892,7 +1896,7 @@ class NeuroMarvl {
         this.divLoadingNotification.style.padding = '5px';
         this.divLoadingNotification.style.borderRadius = '2px';
         this.divLoadingNotification.style.zIndex = '1';
-        this.divLoadingNotification.style.backgroundColor = '#feeebd'; // the colour of the control panel
+        this.divLoadingNotification.style.backgroundColor = '#feeebd'; // the color of the control panel
 
         var text = document.createElement('div');
         text.innerHTML = "Loading...";
@@ -2120,7 +2124,7 @@ class NeuroMarvl {
         });
 
 
-        // Colour pickers
+        // Color pickers
         $("#input-node-color").on("changeColor", e => {
             this.setSelectNodeKeyBackgroundColor((<any>e).color.toHex());
             this.setNodeSizeOrColor();
@@ -2304,7 +2308,7 @@ class NeuroMarvl {
 
             var keySelection = <any>document.getElementById('select-edge-key');
 
-            // find the coressponding key and retrieve colour data
+            // find the coressponding key and retrieve color data
             for (var i = 0; i < keySelection.length; i++) {
                 if (keySelection.options[i].value == key) {
                     var color = keySelection.options[i].style.backgroundColor;

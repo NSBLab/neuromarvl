@@ -300,7 +300,7 @@ class InputTargetManager {
                 this.rightClickLabel.style.padding = '5px';
                 this.rightClickLabel.style.borderRadius = '5px';
                 this.rightClickLabel.style.zIndex = '1';    
-                this.rightClickLabel.style.backgroundColor = '#feeebd'; // the colour of the control panel
+                this.rightClickLabel.style.backgroundColor = '#feeebd'; // the color of the control panel
 
                 // the first attribute is node id
                 this.selectedNodeID = record.id;

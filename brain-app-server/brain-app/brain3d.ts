@@ -118,6 +118,8 @@ class Brain3DApp implements Application, Loopable {
     useTransitionColor = false;
 
     networkType: string;
+    prevInBoundingSphere: boolean;
+
 
     mouse = {
         dx: 0,
@@ -234,7 +236,7 @@ class Brain3DApp implements Application, Loopable {
 
 
     getNodeColors(colorAttribute: string, minColor: number, maxColor: number): { color: number, portion: number }[][] {
-        /* Get the colour array, a mapping of the configured colour attribute to colour values, e.g.
+        /* Get the color array, a mapping of the configured color attribute to color values, e.g.
             [
                 // Continuous values are evenly split
                 [
@@ -252,7 +254,7 @@ class Brain3DApp implements Application, Loopable {
 
         let valueArray = a.get(colorAttribute);
 
-        // D3 can scale colours, but needs to use colour strings
+        // D3 can scale colours, but needs to use color strings
         let minString = "#" + minColor.toString(16);
         let maxString = "#" + maxColor.toString(16);
         
@@ -272,7 +274,7 @@ class Brain3DApp implements Application, Loopable {
 
 
     getNodeColorsDiscrete(colorAttribute: string, discreteValues: number[], discreteColors: number[]): { color: number, portion: number }[][] {
-        /* Get the colour array, a mapping of the configured colour attribute to colour values, e.g.
+        /* Get the color array, a mapping of the configured color attribute to color values, e.g.
             [
                 // Discrete values are weighted by proportion
                 [
@@ -292,7 +294,7 @@ class Brain3DApp implements Application, Loopable {
 
         
         if (a.info[colorAttribute].numElements > 1) {
-            // Discrete multi-value has each colour from the mapping with its proportion of total value in that node
+            // Discrete multi-value has each color from the mapping with its proportion of total value in that node
             return valueArray.map(aArray => {
                 let singlePortion = (1 / aArray.reduce((weight, acc) => acc + weight, 0)) || 0;
                 return aArray.map((value, i) => ({
@@ -317,7 +319,7 @@ class Brain3DApp implements Application, Loopable {
 
 
     getNodeColorsEmpty(): { color: number, portion: number }[][] {
-        /* Get a minimal practical colour array
+        /* Get a minimal practical color array
             [
                 // Empty values are a minimal set of grey
                 [
@@ -360,7 +362,7 @@ class Brain3DApp implements Application, Loopable {
 
         var varShowProcessingNotification = () => { this.showProcessingNotification(); };
 
-        // Set the background colour
+        // Set the background color
         jDiv.css({ backgroundColor: '#ffffff' });
 
         // Set up renderer, and add the canvas and the slider to the div
@@ -1303,7 +1305,7 @@ class Brain3DApp implements Application, Loopable {
         this.jDivProcessingNotification.style.padding = '5px';
         this.jDivProcessingNotification.style.borderRadius = '2px';
         this.jDivProcessingNotification.style.zIndex = '1';
-        this.jDivProcessingNotification.style.backgroundColor = '#feeebd'; // the colour of the control panel
+        this.jDivProcessingNotification.style.backgroundColor = '#feeebd'; // the color of the control panel
 
         var text = document.createElement('div');
         text.innerHTML = "Processing...";
@@ -1658,7 +1660,7 @@ class Brain3DApp implements Application, Loopable {
     }
 
     setNodeDefaultSizeColor() {
-        // set default node colour and scale
+        // set default node color and scale
         this.physioGraph.setDefaultNodeColor();
         this.colaGraph.setDefaultNodeColor();
 
@@ -1701,14 +1703,14 @@ class Brain3DApp implements Application, Loopable {
         let colorArray = this.getNodeColors(attribute, parseInt(minColor.replace("#", "0x")), parseInt(maxColor.replace("#", "0x")));
 
         if (!colorArray) {
-            throw "Encountered error in generating colour array.";
+            throw "Encountered error in generating color array.";
         }
 
         // update graphs
         if (this.physioGraph) this.physioGraph.setNodesColor(colorArray);
         if (this.colaGraph) this.colaGraph.setNodesColor(colorArray);
 
-        this.svgNeedsUpdate = true; // update to change node colour
+        this.svgNeedsUpdate = true; // update to change node color
     }
 
     setNodeColorDiscrete(attribute: string, keyArray: number[], colorArray: string[]) {
@@ -1980,17 +1982,22 @@ class Brain3DApp implements Application, Loopable {
             raycaster.setFromCamera(pointer, this.camera);
             
             var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
-            if (inBoundingSphere) {
-                this.isControllingGraphOnly = false;
-                this.svg.on(".zoom", null);
-                this.canvasGraph.setUserControl(false);
+            if (this.prevInBoundingSphere !== inBoundingSphere) {
+                if (inBoundingSphere) {
+                    this.isControllingGraphOnly = false;
+                    this.svg.on(".zoom", null);
+                    this.canvasGraph.setUserControl(false);
+                }
+                else {
+                    this.isControllingGraphOnly = true;
+                    var varSVGZoom = () => { this.svgZoom(); }
+                    this.svg.call(this.d3Zoom.on("zoom", varSVGZoom));
+                    
+                    this.canvasGraph.setUserControl(true);
+                }
             }
-            else {
-                this.isControllingGraphOnly = true;
-                var varSVGZoom = () => { this.svgZoom(); }
-                this.svg.call(this.d3Zoom.on("zoom", varSVGZoom));
-                this.canvasGraph.setUserControl(true);
-            }
+            this.prevInBoundingSphere = inBoundingSphere;
+
         } else {
             this.isControllingGraphOnly = false;
             this.svg.on(".zoom", null);

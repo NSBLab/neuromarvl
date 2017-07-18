@@ -308,7 +308,7 @@ class CircularGraph {
 
         //------------------------------------------------------------------------------------------------
         // Update Nodes and edges data
-        // update colour of the nodes
+        // update color of the nodes
         for (var nodeIndex in this.svgNodeBundleArray) {
             var node = this.svgNodeBundleArray[nodeIndex];
             node.color = this.colaGraph.nodeMeshes[node.id].material.color.getHexString();
@@ -407,7 +407,7 @@ class CircularGraph {
         var varSvg = this.svg[0];
         var varNS = varSvg[0].namespaceURI;
         var varDefs = this.svgDefs;
-        // use normal colour updating style
+        // use normal color updating style
         var bundledLinks = bundle(links);
         this.svgAllElements.selectAll(".linkCircular")
             .data(function () {
@@ -506,7 +506,7 @@ class CircularGraph {
         this.svgAllElements.selectAll(".nodeDotCircular")
             .data(this.nodes.filter(function (n) { return !n.children; }))
             .each(function (chartData, i) {
-                //TODO: Colour conversion is already done elsewhere. Pass it to the graph so it doesn't need to be repeated for every node
+                //TODO: Color conversion is already done elsewhere. Pass it to the graph so it doesn't need to be repeated for every node
 
                 var colorAttr = nodeSettings.nodeColorAttribute;
                 var attrArray = attributes.get(colorAttr);
@@ -1029,7 +1029,7 @@ class CircularGraph {
         let id = this.attributeBars.length;
         let bar = {
             id: id,
-            color: "#bdc3c7", // default colour
+            color: "#bdc3c7", // default color
             attribute: "none", // default attribute
             isGradientOn: false
         }
@@ -1097,7 +1097,7 @@ class CircularGraph {
         }
     }
 
-    // Differences between update and set circular bar colour
+    // Differences between update and set circular bar color
     updateCircularBarColor(barID: number, color: string) {
         this.circularBarColorChange = true;
 
@@ -1114,7 +1114,7 @@ class CircularGraph {
         if (bar.isGradientOn) {
             var attr = $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).val();
 
-            // Change all colour of the first bar
+            // Change all color of the first bar
             this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
                 .style("fill", function (d) {
 
@@ -1255,7 +1255,7 @@ class CircularGraph {
                 })
         }
 
-        // Update the bar colour base on the value in the object
+        // Update the bar color base on the value in the object
         this.updateCircularBarColor(bar.id, bar.color);
 
         // move the label

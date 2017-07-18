@@ -132,7 +132,7 @@ class Graph2D {
         // Add Edges to graph
         for (var i = 0; i < this.graph3d.edgeList.length; i++) {
             var edge = this.graph3d.edgeList[i];
-            // To ensure consistency between graphs, edge colour info can be taken from the 3D object uniforms.
+            // To ensure consistency between graphs, edge color info can be taken from the 3D object uniforms.
             // Uniform types are uniforms.(start/end)color: {type: "v4", value: THREE.Vector4 } and uniforms.(start/end)color: {type: "f", value: number}.
             if (edge.visible) {
                 var linkObject = new Object();
@@ -142,7 +142,7 @@ class Graph2D {
                 }
                 else {
                     // "node"
-                    //TODO: use gradient to colour edges - this needs a change to cytoscape.js
+                    //TODO: use gradient to color edges - this needs a change to cytoscape.js
                     let colorVector = (new THREE.Vector4()).lerpVectors(edge.uniforms.startColor.value, edge.uniforms.endColor.value, 0.5);
                     linkObject["color"] = `rgb(${colorVector.x * 255}, ${colorVector.y * 255}, ${colorVector.z * 255})`;
                 }
@@ -329,7 +329,7 @@ class Graph2D {
                 break;
             case "concentric":
                 // Groups into arbitrary rings with no grouping defined, so use colours if bundling is not set.
-                // May be too many distinct colour values, so pool into 10 groups.
+                // May be too many distinct color values, so pool into 10 groups.
                 if (this.groupNodesBy === "none") {
                     let minColor = 0xffffff;
                     let maxColor = 0x000000;
@@ -531,7 +531,7 @@ class Graph2D {
 
             this.cy.elements(`node[sourceId=${this.commonData.selectedNode}]`).addClass("chosen");
 
-            // Edge colour setting changes
+            // Edge color setting changes
             if ((this.graph3d.colorMode === "weight") || (this.graph3d.colorMode === "none")) {
                 this.cy.elements("edge").each((i, e) => {
                     let edge = this.graph3d.edgeList[e.data("edgeListIndex")];
@@ -548,7 +548,7 @@ class Graph2D {
                 });
             }
 
-            // Node size/colour changes - TODO: colour
+            // Node size/color changes - TODO: color
             let nodes = this.graph3d.nodeMeshes;
             this.cy.elements("node.child").each((i, e) => {
                 // Size
@@ -556,7 +556,7 @@ class Graph2D {
                 let radius = node.scale.x * this.scale * this.BASE_RADIUS
                 e.data("radius", radius);
 
-                // Colour
+                // Color
                 let d = node.userData;
                 e.data("color0", d.colors[0] ? "#" + d.colors[0].color.toString(16) : "black");
                 e.data("color1", d.colors[1] ? "#" + d.colors[1].color.toString(16) : "black");

@@ -141,7 +141,7 @@
                     <option value="none">None</option>
                 </select>
                 <br />
-                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Open colour selection palette for the brain model surface">Color</label>
+                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Open color selection palette for the brain model surface">Color</label>
                 <p style="margin-bottom: 0;">
                     <div id="input-surface-color" class="input-group colorpicker-component">
                         <input type="text" value="E3E3E3" class="form-control" />
@@ -281,7 +281,7 @@ R Amygdala ">Node labels (optional)</label>
                                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select node property to change">Set</label>
                                 <select id="select-node-size-color" class="form-control input-sm">
                                     <option value="node-size">Size</option>
-                                    <option value="node-color">Colour</option>
+                                    <option value="node-color">Color</option>
                                     <option value="node-default">None</option>
                                 </select>
                                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Change node property according to one of the following attributes">by</label>
@@ -375,8 +375,8 @@ R Amygdala ">Node labels (optional)</label>
                         </div>
                         <div id="div-edge-color">
                             <p style="margin-top: 5px; margin-bottom: 0;">
-                                <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set edge colour either to the colour of the connecting nodes or a colour scale that represents variations in edge weight. If edges are coloured by nodes, you have the option to select a colour for edge attached to nodes of two different colours (e.g., inter-module edges).">
-                                    <label for="select-edge-color">Colour edges by</label>
+                                <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set edge color either to the color of the connecting nodes or a color scale that represents variations in edge weight. If edges are coloured by nodes, you have the option to select a color for edge attached to nodes of two different colours (e.g., inter-module edges).">
+                                    <label for="select-edge-color">Color edges by</label>
                                     <select class="form-control" id="select-edge-color">
                                         <option value="none">None</option>
                                         <option value="node">Node</option>
@@ -384,10 +384,10 @@ R Amygdala ">Node labels (optional)</label>
                                     </select>
                                 </div>
                             </p>
-                            <div id="div-edge-color-by-node-picker" style="display: none; margin-top: 30px; margin-left: 40px;" data-toggle="tooltip" data-placement="right" title="Set an alternative colour for edges with end nodes of different values">
+                            <div id="div-edge-color-by-node-picker" style="display: none; margin-top: 30px; margin-left: 40px;" data-toggle="tooltip" data-placement="right" title="Set an alternative color for edges with end nodes of different values">
                                 <p><input type="checkbox" id="checkbox-color-transitional-edges" style="width: 12px;"><strong> Customise inter-cluster edges</strong></p>
                                 <p>
-                                    <label for="pick-color-intercluster">Colour</label>
+                                    <label for="pick-color-intercluster">Color</label>
                                     <div id="input-edge-transitional-color" class="input-group colorpicker-component">
                                         <input id="pick-color-intercluster" type="text" value="ee2211" class="form-control" />
                                         <span class="input-group-addon"><i></i></span>
@@ -402,7 +402,7 @@ R Amygdala ">Node labels (optional)</label>
                                     <p data-toggle="tooltip" data-placement="right" title="Set specific colours for value ranges">
                                         <input type="checkbox" id="checkbox-edge-color-discretized" style="width: 12px;"><strong> Discretise continuous values</strong>
                                     </p>
-                                    <div id="div-edge-color-continuous-discretized" data-toggle="tooltip" data-placement="right" title="Set the number and colour of divisions based on value ranges">
+                                    <div id="div-edge-color-continuous-discretized" data-toggle="tooltip" data-placement="right" title="Set the number and color of divisions based on value ranges">
 
                                         <strong>Select number of divisions </strong>
                                         <select id="select-edge-color-number-discretized-category" class="form-control" style="margin-bottom: 10px;">
@@ -529,7 +529,7 @@ R Amygdala ">Node labels (optional)</label>
         <div id="context-menu-attributes">
         </div>
         <div id="div-context-menu-color-picker" style="visibility:hidden;">
-            colour:
+            color:
             <div id="input-context-menu-node-color" class="input-group colorpicker-component" 
                  style="width: 12em; background-color: #feeebd; border: 1px solid grey; "
             >
@@ -597,7 +597,7 @@ R Amygdala ">Node labels (optional)</label>
                     <h3>Label</h3>
                     <p>Set the node label to the label data, or alternatively the value of a given attribute.</p>
                     <h3>Histogram</h3>
-                    <p>The histogram option allows for the addition of a bar graph representation of node attributes to be added on the circle's outer edge. Set the number and assignment of attributes, and use the colour palette to set the respective colours.</p>
+                    <p>The histogram option allows for the addition of a bar graph representation of node attributes to be added on the circle's outer edge. Set the number and assignment of attributes, and use the color palette to set the respective colours.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

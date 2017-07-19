@@ -1877,8 +1877,18 @@ class NeuroMarvl {
                 (<any>$("#input-node-color")).colorpicker("setValue", this.saveObj.nodeSettings.nodeColorDiscrete[0]);
             }
             else {
-                (<any>$("#input-min-color")).colorpicker("setValue", this.saveObj.nodeSettings.nodeColorContinuousMin);
-                (<any>$("#input-max-color")).colorpicker("setValue", this.saveObj.nodeSettings.nodeColorContinuousMax);
+
+                // Due to callback triggered when setting color, we need to temprarily save the values
+                // or they get reset with the standard value from the color picker
+                let tmpMin = this.saveObj.nodeSettings.nodeColorContinuousMin;
+                let tmpMax = this.saveObj.nodeSettings.nodeColorContinuousMax;
+
+                (<any>$("#input-min-color")).colorpicker("setValue", tmpMin);
+                (<any>$("#input-max-color")).colorpicker("setValue", tmpMax);
+
+                this.saveObj.nodeSettings.nodeColorContinuousMin = tmpMin;
+                this.saveObj.nodeSettings.nodeColorContinuousMax = tmpMax;
+
             }
             this.selectNodeSizeColorOnChange();
         }

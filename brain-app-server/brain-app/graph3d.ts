@@ -412,6 +412,7 @@ class Graph3D {
     setEdgeDirectionGradient() {
         var startRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionStartColor, 1.0);
         var endRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionEndColor, 1.0);
+
         for (var i = 0; i < this.edgeList.length; i++) {
             var edge = this.edgeList[i];
             edge.uniforms.startColor.value = new THREE.Vector4(startRGB.r / 255, startRGB.g / 255, startRGB.b / 255, 1.0);

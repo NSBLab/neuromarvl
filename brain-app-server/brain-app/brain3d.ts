@@ -49,7 +49,7 @@ class Brain3DApp implements Application, Loopable {
     // Data/objects
     commonData: CommonData;
     dataSet: DataSet;
-    saveObj;
+    saveFileObj;
 
     // Brain Surface
     surfaceUniformList = [];
@@ -143,7 +143,7 @@ class Brain3DApp implements Application, Loopable {
     }
     */
     
-    constructor(info, commonData: CommonData, inputTargetCreator: (l: number, r: number, t: number, b: number) => InputTarget, saveObj) {
+    constructor(info, commonData: CommonData, inputTargetCreator: (l: number, r: number, t: number, b: number) => InputTarget, saveFileObj) {
 
         this.id = info.id;
         this.brainModelOrigin = info.brainModelOrigin;
@@ -155,7 +155,7 @@ class Brain3DApp implements Application, Loopable {
             this.brainSurfaceMode = 0;
         }
         this.commonData = commonData;
-        this.saveObj = saveObj;
+        this.saveFileObj = saveFileObj;
         this.input = inputTargetCreator(0, 0, 0, sliderSpace);
         this.edgeCountSliderValue = initialEdgesShown;
          
@@ -211,7 +211,7 @@ class Brain3DApp implements Application, Loopable {
         // Initialise Graph Objects
         this.circularGraph = new CircularGraph( this.id, this.jDiv, this.dataSet,
                                                 this.svg, this.svgDefs, this.svgAllElements,
-                                                this.d3Zoom, this.commonData, this.saveObj);
+                                                this.d3Zoom, this.commonData, this.saveFileObj);
         
     }   
 
@@ -1862,7 +1862,7 @@ class Brain3DApp implements Application, Loopable {
         }
 
         // Set up the node colourings
-        let nSettings = this.saveObj.nodeSettings;
+        let nSettings = this.saveFileObj.nodeSettings;
         let colorAttribute = nSettings.nodeColorAttribute;
         let nodeColors;
         if (!this.dataSet.attributes.info[colorAttribute]) {
@@ -1878,11 +1878,17 @@ class Brain3DApp implements Application, Loopable {
 
         // Set up loop
 
+        // Initialise Graph Objects
+        this.circularGraph = new CircularGraph(this.id, this.jDiv, this.dataSet,
+            this.svg, this.svgDefs, this.svgAllElements,
+            this.d3Zoom, this.commonData, this.saveFileObj);
+
+
         // Set up the graphs
         var edgeMatrix = this.dataSet.adjMatrixFromEdgeCount(maxEdgesShowable); // Don't create more edges than we will ever be showing
 
         if (this.physioGraph) this.physioGraph.destroy();
-        this.physioGraph = new Graph3D(this.brainObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveObj);
+        this.physioGraph = new Graph3D(this.brainObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj);
 
         if (this.brainSurfaceMode === 0) {
             this.physioGraph.setNodePositions(this.dataSet.brainCoords);
@@ -1895,10 +1901,10 @@ class Brain3DApp implements Application, Loopable {
 
         edgeMatrix = this.dataSet.adjMatrixFromEdgeCount(maxEdgesShowable);
         if (this.colaGraph) this.colaGraph.destroy();
-        this.colaGraph = new Graph3D(this.colaObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveObj);
+        this.colaGraph = new Graph3D(this.colaObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj);
         this.colaGraph.setVisible(false);
         
-        this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer, this.commonData, this.saveObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
+        this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer, this.commonData, this.saveFileObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
 
         // Initialise the filtering
         if (this.brainSurfaceMode === 0) {

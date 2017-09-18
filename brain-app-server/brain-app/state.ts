@@ -302,6 +302,7 @@ class SaveFile {
         this.edgeSettings = (sourceObject && sourceObject.edgeSettings) || {
             colorBy: "none", // node (default), none or weight 
             size: 1, // default
+            thicknessByWeight: false,
             directionMode: "none",
             directionStartColor: "#FF0000",
             directionEndColor: "#0000FF",

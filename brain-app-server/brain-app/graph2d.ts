@@ -168,7 +168,7 @@ class Graph2D {
         }
         
 
-        // Use saveObj and this.layout to create the layout and style options, then create the cytoscape graph
+        // Use saveFileObj and this.layout to create the layout and style options, then create the cytoscape graph
         let container = this.container;
         let colorAttribute = this.saveObj.nodeSettings.nodeColorAttribute;
         

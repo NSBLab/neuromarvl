@@ -2,6 +2,9 @@
  * Use cola to do a layout in 3D!! Yay.
  * Pretty simple for the moment.
  */
+// <reference path="extern/rectangle.ts" />
+
+
 module cola {
     export class Link3D {
         length: number;
@@ -14,7 +17,7 @@ module cola {
                 }, 0));
         }
     }
-    export class Node3D implements GraphNode {
+    export class Node3D implements cola.vpsc.GraphNode {
         // if fixed, layout will not move the node from its specified starting position
         fixed: boolean;
         width: number;
@@ -23,6 +26,7 @@ module cola {
         py: number;
         bounds: vpsc.Rectangle;
         variable: vpsc.Variable;
+        
         constructor(
             public x: number = 0,
             public y: number = 0,
@@ -39,8 +43,9 @@ module cola {
             for (var i = 0; i < Layout3D.k; ++i) {
                 this.result[i] = new Array(nodes.length);
             }
+
             nodes.forEach((v, i) => {
-                for (var dim of Layout3D.dims) {
+                for (let dim of Layout3D.dims ) {
                     if (typeof v[dim] == 'undefined') v[dim] = Math.random();
                 }
                 this.result[0][i] = v.x;

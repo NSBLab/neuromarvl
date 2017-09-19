@@ -294,6 +294,10 @@ class NeuroMarvl {
         (<any>$("#input-edge-color")).colorpicker({ format: "hex" });
         (<any>$("#input-context-menu-node-color")).colorpicker({ format: "hex" });
         (<any>$("#input-edge-transitional-color")).colorpicker({ format: "hex" });
+
+
+
+
     }
 
     start = () => {
@@ -1131,8 +1135,14 @@ class NeuroMarvl {
         reader.readAsText(file);
     }
 
-    saveSettings = () => {
-        var filename = "brain-model-settings.txt";
+    saveSettings = (filename) => {
+
+        //$('file-save-dialog').dialog("open");
+        if (typeof filename !== 'string')
+            filename = "brain-model-settings.txt";
+        else if (filename.split('.').length == 1) { // check if a file extension was given
+            filename = filename + '.txt';
+        }
         var body = document.body;
 
         //Save all the applicationsInstances
@@ -2287,13 +2297,38 @@ class NeuroMarvl {
             // Parse and upload labels
             this.uploadLabels();
         });
-        
+
         $('#button-load-settings').button().click(() => $("#input-select-load-file").click());
 
         $('#input-select-load-file').on('change', this.loadSettings);
 
-        $('#button-save-settings').button().click(this.saveSettings);
+        $('#button-save-settings').button().click(() => {
+            
+            // set default file name
 
+            $('#file-save-name').val("brain-model-settings.txt");
+
+            let me = this;
+            let dialog = $('#file-save-dialog');
+            let configsavebutton = $('#button-save-settings');
+            dialog.dialog({
+                position: {
+                    my: "bottom",
+                    at: "top",
+                    of: configsavebutton
+                },
+                buttons: {
+
+                    OK: function () {
+                        let filename = $('#file-save-name').val();
+
+                        $(this).dialog('close');
+
+                        me.saveSettings(filename);
+                    }
+                }
+            });
+        });
         $('#button-export-svg').button().click(() => $("#exportModal")["modal"]());
 
         $('#button-export-submit').button().click(() => {

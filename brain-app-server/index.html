@@ -661,7 +661,9 @@ R Amygdala ">Node labels (optional)</label>
                     <h4 id="alertModalTitle" class="modal-title">Export Settings</h4>
                 </div>
                 <div class="modal-body">
-                    
+                    <label class="control-label">Filename:</label>
+                    <input type="text" id="select-export-filename" class="form-control">
+                    <br />                
                     <label class="control-label">Type:</label>
                     <select id="select-export-type" class="form-control" >
                         <option value="svg">SVG</option>
@@ -674,6 +676,14 @@ R Amygdala ">Node labels (optional)</label>
                         <option value="1">Top Right</option>
                         <option value="2">Bottom Left</option>
                         <option value="3">Bottom Right</option>
+                    </select>
+                    <br />
+                    <label class="control-label">Quality:</label>
+                    <select id="select-export-resolution" class="form-control">
+                        <option value="1280x720">Low</option>
+                        <option value="1920x1080">Medium</option>
+                        <option value="3840x2160">High</option>
+                        <option value="7680x4320">Best</option>
                     </select>
 
 

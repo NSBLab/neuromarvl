@@ -1997,7 +1997,8 @@ class Brain3DApp implements Application, Loopable {
                 else {
                     this.isControllingGraphOnly = true;
                     var varSVGZoom = () => { this.svgZoom(); }
-                    this.svg.call(this.d3Zoom.on("zoom", varSVGZoom));
+                    var func = this.d3Zoom.on("zoom", varSVGZoom);
+                    this.svg.call(func);
                     
                     this.canvasGraph.setUserControl(true);
                 }

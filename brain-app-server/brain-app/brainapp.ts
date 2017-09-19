@@ -431,7 +431,7 @@ class NeuroMarvl {
                 this.applicationsInstances[0].update(0);
 
                 // Capture and download the visualisation
-                this.exportSVG(0, "svg");
+                this.exportSVG(0, "svg", {x:1920, y:1080}, null);
 
                 // update status
                 i++;
@@ -1169,23 +1169,71 @@ class NeuroMarvl {
         setTimeout(() => window["URL"].revokeObjectURL(url), 10);
     }
 
-    exportSVG = (viewport, fileType) => {
+    exportSVG = (viewport, fileType, resolution, filename) => {
         var documents = [window.document],
             SVGSources = [];
+
 
         // loop through all active app
         if (!this.applicationsInstances[viewport]) return;
 
         var styles = this.getStyles(document);
-        var newSource = this.getSource(viewport, styles);
 
-        // Export all svg Graph on the page
-        if (fileType === "svg") {
-            this.downloadSVG(newSource);
-        } else if (fileType === "image") {
-            this.downloadSVGImage(newSource);
+        let canvas = this.applicationsInstances[viewport].getDrawingCanvas();
+        let origWidth = canvas.width;
+        let origHeight = canvas.height;
+
+        this.applicationsInstances[viewport].resize(resolution.x, resolution.y);
+
+        let prevsvgtransform = this.applicationsInstances[viewport].svgAllElements.attr("transform");
+        if (prevsvgtransform != null) {
+            let zoom = resolution.x / origWidth;
+
+            let tx = 0;
+            let ty = 0;
+            let scale = 1;
+
+
+            let str = prevsvgtransform.split('translate(')[1];
+            str = str.split(')')[0];
+            str = str.split(',');
+            tx = parseFloat(str[0]) * zoom;
+            ty = parseFloat(str[1]) * zoom;
+
+
+            if (prevsvgtransform.indexOf('scale') > 0) {
+                let str = prevsvgtransform.split('scale(')[1];
+                str = str.split(')')[0];
+                scale = parseFloat(str);
+            }
+            scale *= zoom;
+
+            let newtransform = 'translate(' + tx + ',' + ty + ')scale(' + scale + ')';
+            this.applicationsInstances[viewport].svgAllElements.attr("transform", newtransform);
         }
-
+        // we need to let the browser render into the new sized canvas
+        requestAnimationFrame(() => {
+            var newSource = this.getSource(viewport, styles);
+            
+            // Export all svg Graph on the page
+            if (fileType === "svg") {
+                this.downloadSVG(newSource, filename);
+            } else if (fileType === "image") {
+                this.downloadSVGImage(newSource, filename);
+            }
+            
+            requestAnimationFrame(() => {
+                this.applicationsInstances[viewport].resize(
+                    this.applicationsInstances[viewport].jDiv.width(),
+                    this.applicationsInstances[viewport].jDiv.height());
+                if (prevsvgtransform != null)
+                    this.applicationsInstances[viewport].svgAllElements.attr("transform", prevsvgtransform);
+            });
+            
+            
+        });
+        
+        
     }
 
     getSource = (id, styles) => {
@@ -1197,7 +1245,9 @@ class NeuroMarvl {
             xlink: "http://www.w3.org/1999/xlink",
             svg: "http://www.w3.org/2000/svg"
         };
+        
         let canvas = this.applicationsInstances[id].getDrawingCanvas();
+
         let svgGraph = document.getElementById("svgGraph" + id);
         if (svgGraph.getAttribute("visibility") === "hidden") {
             // Not meant to be seen, use a new blank svg
@@ -1231,6 +1281,7 @@ class NeuroMarvl {
         var canvas2d = <HTMLCanvasElement>$(`#div-graph-${id} div.graph2dContainer canvas[data-id='layer2-node']`).get(0);
         if (canvas2d && (canvas2d.getAttribute("visibility") !== "hidden") && this.applicationsInstances[0].canvasGraph.cy) {
             var image2d = document.createElement("image");
+            let cy = this.applicationsInstances[0].canvasGraph.cy;
             svg.insertBefore(image2d, svg.firstChild);
             image2d.setAttribute('crossOrigin', 'anonymous');
             image2d.setAttribute('y', '0');
@@ -1282,8 +1333,9 @@ class NeuroMarvl {
         return svgInfo;
     }
 
-    downloadSVG = source => {
-        var filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    downloadSVG = (source, filename) => {
+        if(filename == null)
+            filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
         var body = document.body;
 
         var url = window["URL"].createObjectURL(new Blob(source.source, { "type": "text\/xml" }));
@@ -1300,25 +1352,39 @@ class NeuroMarvl {
     }
 
 
-    downloadSVGImage = source => {
-        var filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    downloadSVGImage = (source, filename) => {
+        if (filename == null)
+            filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
 
         // Adapted from https://bl.ocks.org/biovisualize/8187844
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
         let image = new Image();
         let svgBlob = new Blob(source.source, { type: "image/svg+xml;charset=utf-8" });
+
+        
+        let canvas = document.createElement('canvas');
+
         image.onload = () => {
-            canvas.width = image.width;
-            canvas.height = image.height;
+            
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            let context = canvas.getContext('2d');
             context.fillStyle = "#ffffff";
-            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillRect(0, 0, image.width, image.height);
             context.drawImage(image, 0, 0);
 
-            var a = document.createElement("a");
-            a.setAttribute("download", filename + ".jpg");
-            a.setAttribute("href", canvas.toDataURL('image/jpeg', 0.9));
-            a.click();
+            // Visual Studio complains about wrong method signature
+            (<any>canvas).toBlob(function (blob) {
+                let objUrl = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.setAttribute("download", filename + ".png");
+                a.setAttribute("href", objUrl);
+                a.click();
+
+                setTimeout(() => { window["URL"].revokeObjectURL(objUrl), 10 });
+                setTimeout(() => { window["URL"].revokeObjectURL(image.src) }, 10);
+            });
+
         }
         image.src = URL.createObjectURL(svgBlob);
     }
@@ -2332,10 +2398,20 @@ class NeuroMarvl {
         $('#button-export-svg').button().click(() => $("#exportModal")["modal"]());
 
         $('#button-export-submit').button().click(() => {
+            var filename = $('#select-export-filename').val();
+            if (filename.length == 0)
+                filename = null;
+            
             var viewport = $('#select-export-viewport').val();
             var type = $('#select-export-type').val();
-
-            this.exportSVG(parseInt(viewport), type)
+            var strresolution = $('#select-export-resolution').val();
+            
+            strresolution = strresolution.split('x');
+            var resolution = {
+                x: parseInt(strresolution[0]),
+                y: parseInt(strresolution[1])
+            }
+            this.exportSVG(parseInt(viewport), type,  resolution, filename)
         });
 
         $('#button-save-app').button().click(() => {

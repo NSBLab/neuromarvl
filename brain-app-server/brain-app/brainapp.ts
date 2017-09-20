@@ -1638,7 +1638,9 @@ class NeuroMarvl {
                     this.input.newTarget(viewTypeId),
                     this.saveFileObj
                 );
-                this.applicationsInstances[viewTypeId].setDataSet(this.referenceDataSet);
+                // TODO: CHECK if following line is really not necessary
+                // TODOL it's actually been called in the setDataset method
+                //this.applicationsInstances[viewTypeId].setDataSet(this.referenceDataSet);
                 
                 this.setDataset(viewType);
                 this.initApp(viewTypeId);
@@ -2547,29 +2549,7 @@ class NeuroMarvl {
         */
 
         $('#checkbox-thickness-by-weight').on('change', this.setEdgeThicknessByWeight);
-        /*
-            () => {
 
-            //let val = $('#checkbox-thickness-by-weight').is(":checked");
-            this.setEdgeThicknessByWeight();
-
-            /*
-
-            if ($('#checkbox-thickness-by-weight').is(":checked")) {
-                if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeThicknessByWeight(true);
-                if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeThicknessByWeight(true);
-                if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeThicknessByWeight(true);
-                if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeThicknessByWeight(true);
-            }
-            else {
-                if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeThicknessByWeight(false);
-                if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeThicknessByWeight(false);
-                if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeThicknessByWeight(false);
-                if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeThicknessByWeight(false);
-            }
-           
-        });
-        */
 
         $('#checkbox-edge-color-force-continuous').on('change', () => {
             if ($("#checkbox-edge-color-force-continuous").is(":checked")) {

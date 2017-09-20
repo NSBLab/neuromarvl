@@ -288,20 +288,21 @@ class CircularGraph {
             console.log("ERROR: colaGraph is NULL");
             return;
         }
+        this.checkIfAttributesMatchOptionMenu();
         // Get all values
         var attrLabel = $('#select-circular-label-' + this.id).val();
         var attrBundle = $('#select-circular-layout-bundle-' + this.id).val();
         var attrSort = $('#select-circular-layout-sort-' + this.id).val();
 
         this.generateCircularData(attrBundle);
-        this.GenerateCircularUI(attrSort, attrBundle);
+        this.createCircularGraph(attrSort, attrBundle);
         this.circularLayoutLabelOnChange(attrLabel);
         this.updateAllAttributeBars();
     }
 
 
     update() {
-        if (!this.colaGraph) {
+        if (!this.colaGraph || !this.svgNodeBundleArray) {
             return;
         }
 
@@ -573,6 +574,37 @@ class CircularGraph {
 
     }
 
+    /**
+     * Checks, if the select-option items (e.g. bundle) in the
+     * graph options menu still match the given dataSet.
+     * If not, recreate it to avoid later issues when
+     * items are still in the menu but not in the dataSet
+     */
+    checkIfAttributesMatchOptionMenu() {
+        let menuSelectoptions = <any>$('#select-circular-layout-bundle-' + this.id).children();
+        let dataColumnNames = this.dataSet.attributes.columnNames;
+
+        // substract the 'none' option, which is not in the dataSet
+        if (menuSelectoptions.length - 1 != dataColumnNames.length) {
+            this.setupOptionMenuUI();
+            return;
+        }
+
+        // do bidirectional comparison
+        // we expect no double entries, or this won't work
+        let map = {};
+        for (let option of menuSelectoptions) {
+            map[option.getAttribute('value')] = '';
+        }
+        delete map['none'];
+
+        for (let column of dataColumnNames)
+            if (map[column] == undefined) {
+                this.setupOptionMenuUI();
+                break;
+            }
+    }
+
     // Generate data array for the graph 
     generateCircularData(bundleByAttribute: string) {
         if (!this.colaGraph) {
@@ -733,7 +765,7 @@ class CircularGraph {
         }
     }
 
-    GenerateCircularUI(sortByAttribute: string, bundleByAttribute: string) {
+    createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
         // Based on http://bl.ocks.org/mbostock/1044242
 
         let attributes = this.dataSet.attributes;

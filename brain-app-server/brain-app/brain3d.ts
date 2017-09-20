@@ -1850,7 +1850,11 @@ class Brain3DApp implements Application, Loopable {
 
     // Initialise or re-initialise the visualisation.
     restart() {
-        if (!this.dataSet || !this.dataSet.verify()) return;
+        if (!this.dataSet || !this.dataSet.verify()) {
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Current dataset cannot be verified. Cannot create brain view.");
+
+            return;
+        }
         console.log("Restarted view: " + this.id);
 
         // Create the dissimilarity matrix from the similarity matrix (we need dissimilarity for Cola)

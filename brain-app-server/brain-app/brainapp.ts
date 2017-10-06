@@ -2010,6 +2010,21 @@ class NeuroMarvl {
             
             this.setEdgeColor();
         }
+
+
+        // Set inter-cluster edge coloring
+        if (this.saveFileObj.edgeSettings.edgeColorByNodeTransition != null) {
+
+            if (this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor) {
+                (<any>$("#input-edge-transitional-color")).colorpicker("setValue", this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor);
+            }
+            
+            let checkbox = $('#checkbox-color-transitional-edges');
+            checkbox.prop('checked', this.saveFileObj.edgeSettings.edgeColorByNodeTransition);
+            this.setUseTransitionColor(this.saveFileObj.edgeSettings.edgeColorByNodeTransition);
+            
+        }
+
     }
 
     initNodeSize = () => {

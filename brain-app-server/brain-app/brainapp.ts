@@ -2017,6 +2017,7 @@ class NeuroMarvl {
 
             if (this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor) {
                 (<any>$("#input-edge-transitional-color")).colorpicker("setValue", this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor);
+                this.setEdgeTransitionColor(this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor);
             }
             
             let checkbox = $('#checkbox-color-transitional-edges');

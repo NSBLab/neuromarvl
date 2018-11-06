@@ -416,17 +416,19 @@ class CircularGraph {
         var varDefs = this.svgDefs;
         // use normal color updating style
         var bundledLinks = bundle(links);
-        this.svgAllElements.selectAll(".linkCircular")
-            .data(function () {
-                if (bundledLinks[0][0].bundleByAttribute == "none") {
-                    for (var i = 0; i < bundledLinks.length; i++) {
-                        bundledLinks[i][1].y = 70;
+        if (bundledLinks.length > 0) {
+            this.svgAllElements.selectAll(".linkCircular")
+                .data(function () {
+                    if (bundledLinks[0][0].bundleByAttribute == "none") {
+                        for (var i = 0; i < bundledLinks.length; i++) {
+                            bundledLinks[i][1].y = 70;
+                        }
                     }
-                }
-                return bundledLinks;
-            })
-            .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
-            .style("stroke-opacity", 1);
+                    return bundledLinks;
+                })
+                .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
+                .style("stroke-opacity", 1);
+        }
         this.svgAllElements.selectAll(".linkCircular")
             .style("stroke", function (l) {
                 var id = 'gradient_' + l.source.id + '_' + l.target.id;
@@ -767,6 +769,8 @@ class CircularGraph {
 
     createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
         // Based on http://bl.ocks.org/mbostock/1044242
+        if (this.svgNodeBundleArray.length == 0)
+            return;
 
         let attributes = this.dataSet.attributes;
         let edgeSettings = this.saveObj.edgeSettings;
@@ -869,97 +873,98 @@ class CircularGraph {
         var varDefs = this.svgDefs;
         var bundledLinks = bundle(links);
 
-        this.svgAllElements.selectAll(".linkCircular")
-            .data(function () {
-                if (bundledLinks[0][0].bundleByAttribute == "none") {
-                    for (var i = 0; i < bundledLinks.length; i++) {
-                        bundledLinks[i][1].y = 70;
+        if (bundledLinks.length > 0) {
+            this.svgAllElements.selectAll(".linkCircular")
+                .data(function () {
+                    if (bundledLinks[0][0].bundleByAttribute == "none") {
+                        for (var i = 0; i < bundledLinks.length; i++) {
+                            bundledLinks[i][1].y = 70;
+                        }
                     }
-                }
-                return bundledLinks;
-            })
-            .enter()
-            .append("path") // Appending Element
-            .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
-            .attr("class", "linkCircular")
-            .attr("d", function (d) {
-                return line(d);
-            })
-            .style("stroke-opacity", 1)
-            .style("stroke", function (l) {
-                var id = 'gradient_' + l.source.id + '_' + l.target.id;
-                var sourceOpacity = 1, targetOpacity = 1;
+                    return bundledLinks;
+                })
+                .enter()
+                .append("path") // Appending Element
+                .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
+                .attr("class", "linkCircular")
+                .attr("d", function (d) {
+                    return line(d);
+                })
+                .style("stroke-opacity", 1)
+                .style("stroke", function (l) {
+                    var id = 'gradient_' + l.source.id + '_' + l.target.id;
+                    var sourceOpacity = 1, targetOpacity = 1;
 
-                if (edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode != "node") {
-                    return l.color = l.source.linkColors[l.target.id];
-                } else if (l.source.color === l.target.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
-                    return l.color = "#" + l.source.color;
-                }
-
-                if (edgeDirectionMode === "gradient") {
-                    var sourceColor = (String)(edgeSettings.directionStartColor);
-                    var targetColor = (String)(edgeSettings.directionEndColor);
-                } else if (edgeColorMode === "node") {
-                    var sourceColor: string;
-                    var targetColor: string;
-                    if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.color !== l.target.color)) {
-                        sourceColor = String(edgeColorConfig.edgeTransitionColor);
-                        targetColor = String(edgeColorConfig.edgeTransitionColor);
+                    if (edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode != "node") {
+                        return l.color = l.source.linkColors[l.target.id];
+                    } else if (l.source.color === l.target.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
+                        return l.color = "#" + l.source.color;
                     }
-                    else {
-                        sourceColor = String(l.source.color);
-                        targetColor = String(l.target.color);
+
+                    if (edgeDirectionMode === "gradient") {
+                        var sourceColor = (String)(edgeSettings.directionStartColor);
+                        var targetColor = (String)(edgeSettings.directionEndColor);
+                    } else if (edgeColorMode === "node") {
+                        var sourceColor: string;
+                        var targetColor: string;
+                        if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.color !== l.target.color)) {
+                            sourceColor = String(edgeColorConfig.edgeTransitionColor);
+                            targetColor = String(edgeColorConfig.edgeTransitionColor);
+                        }
+                        else {
+                            sourceColor = String(l.source.color);
+                            targetColor = String(l.target.color);
+                        }
+                    } else {
+                        var sourceColor = String(l.source.linkColors[l.target.id]);
+                        var targetColor = String(l.source.linkColors[l.target.id]);
                     }
-                } else {
-                    var sourceColor = String(l.source.linkColors[l.target.id]);
-                    var targetColor = String(l.source.linkColors[l.target.id]);
-                }
 
-                if (edgeDirectionMode === "opacity") {
-                    sourceOpacity = 0;
-                    targetOpacity = 1;
-                }
-                var sourceColorRGBA = CommonUtilities.hexToRgb(sourceColor, sourceOpacity).toString();
-                var targetColorRGBA = CommonUtilities.hexToRgb(targetColor, targetOpacity).toString();
-                var stops = [
-                    { offset: '0%', 'stop-color': sourceColorRGBA },
-                    { offset: '100%', 'stop-color': targetColorRGBA }
-                ];
-
-                // Calculate Gradient Direction
-                var start = this.getPointAtLength(0);
-                var end = this.getPointAtLength(this.getTotalLength());
-                var box = this.getBBox();
-                var x1 = ((start.x - box.x) / box.width) * 100 + "%";
-                var x2 = ((end.x - box.x) / box.width) * 100 + "%";
-                var y1 = ((start.y - box.y) / box.height) * 100 + "%";
-                var y2 = ((end.y - box.y) / box.height) * 100 + "%";
-
-                if ($("#" + id)[0]) $("#" + id)[0]["remove"]();
-                var grad = document.createElementNS(varNS, 'linearGradient');
-                grad.setAttribute('id', id);
-                grad.setAttribute('x1', x1);
-                grad.setAttribute('x2', x2);
-                grad.setAttribute('y1', y1);
-                grad.setAttribute('y2', y2);
-
-                for (var i = 0; i < stops.length; i++) {
-                    var attrs = stops[i];
-                    var stop = document.createElementNS(varNS, 'stop');
-                    for (var attr in attrs) {
-                        if (attrs.hasOwnProperty(attr)) stop.setAttribute(attr, attrs[attr]);
+                    if (edgeDirectionMode === "opacity") {
+                        sourceOpacity = 0;
+                        targetOpacity = 1;
                     }
-                    grad.appendChild(stop);
-                }
-                varDefs.appendChild(grad);
+                    var sourceColorRGBA = CommonUtilities.hexToRgb(sourceColor, sourceOpacity).toString();
+                    var targetColorRGBA = CommonUtilities.hexToRgb(targetColor, targetOpacity).toString();
+                    var stops = [
+                        { offset: '0%', 'stop-color': sourceColorRGBA },
+                        { offset: '100%', 'stop-color': targetColorRGBA }
+                    ];
 
-                var gID = 'url(#' + id + ')';
-                l['gradientID'] = gID;
-                l.color = gID;
+                    // Calculate Gradient Direction
+                    var start = this.getPointAtLength(0);
+                    var end = this.getPointAtLength(this.getTotalLength());
+                    var box = this.getBBox();
+                    var x1 = ((start.x - box.x) / box.width) * 100 + "%";
+                    var x2 = ((end.x - box.x) / box.width) * 100 + "%";
+                    var y1 = ((start.y - box.y) / box.height) * 100 + "%";
+                    var y2 = ((end.y - box.y) / box.height) * 100 + "%";
 
-                return l.color;
-            });
+                    if ($("#" + id)[0]) $("#" + id)[0]["remove"]();
+                    var grad = document.createElementNS(varNS, 'linearGradient');
+                    grad.setAttribute('id', id);
+                    grad.setAttribute('x1', x1);
+                    grad.setAttribute('x2', x2);
+                    grad.setAttribute('y1', y1);
+                    grad.setAttribute('y2', y2);
 
+                    for (var i = 0; i < stops.length; i++) {
+                        var attrs = stops[i];
+                        var stop = document.createElementNS(varNS, 'stop');
+                        for (var attr in attrs) {
+                            if (attrs.hasOwnProperty(attr)) stop.setAttribute(attr, attrs[attr]);
+                        }
+                        grad.appendChild(stop);
+                    }
+                    varDefs.appendChild(grad);
+
+                    var gID = 'url(#' + id + ')';
+                    l['gradientID'] = gID;
+                    l.color = gID;
+
+                    return l.color;
+                });
+        }
         // Add Nodes' id to Circular Graph
         this.svgAllElements.selectAll(".nodeCircular")
             .data(this.nodes.filter(function (n) {

@@ -98,7 +98,7 @@
 
             <div id="logos" class="row">
                 <img src="extern/splashPage/images/lab-bmh-rgb-flat-colour-master.png" width="438" height="130" class="pull-left"/>
-                <img src="extern/splashPage/images/marvl.png" class="pull-right" />
+                <img src="extern/splashPage/images/IALab-logo.jpg" class="pull-right" />
             </div>
         </div>
     </div>
@@ -240,9 +240,15 @@ R Amygdala ">Node labels (optional)</label>
                         <br />
                     </div>
                     <div id="div-batching-tab" class="tab-pane">
-                        <br/>
+                        <br />
+                        <div id="batching-tooltip" class="ui-visible-tooltip">
+                            <p>Batch mode allows you to apply a given display setting to multiple networks. </p>
+                            <p>
+                                Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.
+                            </p>
+                        </div>
                         <label class="control-label" data-toggle="tooltip" data-placement="right" title="Batch mode allows you to apply a given display setting to multiple networks. First, you can select one dataset and generate a particular visualisation. Then you use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.">Connectivity matrices</label>
-                        <input id="select-matrices-batching" style="display:none;" type="file" multiple/>
+                        <input id="select-matrices-batching" style="display:none;" type="file" multiple />
                         <div id="div-batching-tab" class="tab-pane">
                             <div class="input-group input-group-sm">
                                 <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="matrices-batching-status"
@@ -253,13 +259,13 @@ R Amygdala ">Node labels (optional)</label>
                         <br />
                         <br />
                         <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select a corresponding attribute file for the connectivity matrices. There should be one attribute file for each matrix. They should be listed in the same order as the matrices.">Node attributes</label>
-                        <input id="select-attrs-batching" style="display:none;" type="file" multiple/>
+                        <input id="select-attrs-batching" style="display:none;" type="file" multiple />
                         <div class="input-group input-group-sm">
                             <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="attrs-batching-status"
                                  data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
                             <button id="button-select-attrs-batching" class="form-control btn-default">Attribute files</button>
                         </div>
-                        <br/>
+                        <br />
                         <button id="btn-start-batching" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="right" title="Create batch images...">Batch</button>
                     </div>
 

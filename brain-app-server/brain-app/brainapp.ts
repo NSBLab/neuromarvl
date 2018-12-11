@@ -138,6 +138,7 @@ class NeuroMarvl {
 
     input: InputTargetManager;
 
+    exportCallbackFunction = null;
 
     constructor() {
         this.brainSurfaceColor = "0xe3e3e3";
@@ -218,7 +219,7 @@ class NeuroMarvl {
             var matrixFiles = (<any>$('#select-matrices-batching').get(0)).files;
             var attrFiles = (<any>$('#select-attrs-batching').get(0)).files;
 
-            if (matrixFiles.length === attrFiles.length) {
+            if (matrixFiles.length > 0 && attrFiles.length > 0 && matrixFiles.length === attrFiles.length) {
 
                 // Showing modal 
                 $("#alertModal")["modal"]({
@@ -236,10 +237,48 @@ class NeuroMarvl {
                 var numberOfFiles = attributes.length;
                 var i = 0;
 
-                this.batchProcess(i, numberOfFiles, attributes, matrices);
+                // use the export dialog to also save the batch export
+                let savecallback = this.exportCallbackFunction;
+                $('#button-export-submit').button().unbind('click');
+                let appref = this;
+
+                var savePrevFilename = $('#select-export-filename').val();
+                let batchExportCallback = function () {
+
+                    $("#exportModal")["modal"]('toggle');
+
+                    $('#button-export-submit').button().unbind('click');
+                    $('#button-export-submit').button().click(savecallback);
+
+                    var filename = $('#select-export-filename').val();
+                    if (filename.length == 0)
+                        filename = null;
+
+                    var viewport = $('#select-export-viewport').val();
+                    var type = $('#select-export-type').val();
+                    var strresolution = $('#select-export-resolution').val();
+
+                    strresolution = strresolution.split('x');
+                    var resolution = {
+                        x: parseInt(strresolution[0]),
+                        y: parseInt(strresolution[1])
+                    }
+                    appref.batchProcess(i, numberOfFiles, attributes, matrices, filename, type, resolution);
+
+                    $('#select-export-filename').val(savePrevFilename);
+                }
+                $('#button-export-submit').button().click(batchExportCallback);
+
+                $("#exportModal")["modal"]();
+                
 
             } else {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Number of Files do not match.");
+                if (matrixFiles.length == 0 || attrFiles.length == 0)
+                    confirm("Please add at least 2 connectivity matrix and 2 Node attribute files");
+                else {
+                    confirm("Please load the same number of connectivity matrix and attribute files");
+                }
+                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "No files given or number of Files do not match.");
             }
 
         });
@@ -413,7 +452,7 @@ class NeuroMarvl {
     }
 
     
-    batchProcess = (i, numberOfFiles, attributes, matrices) => {
+    batchProcess = (i, numberOfFiles, attributes, matrices, filename = null, filetype = "svg", resolution = { x: 1920, y: 1080 }) => {
         document.getElementById("alertModalMessage").innerHTML = "Started load of " + numberOfFiles + " file pairs...";
 
         let gotAttributes = false;
@@ -424,29 +463,45 @@ class NeuroMarvl {
             // Load the new dataset to the app (always use the first viewport - top left);
             this.setDataset(TL_VIEW);
 
-            // refresh the visualisation with current settings and new data
-            this.applicationsInstances[0].showNetwork(false, () => {
-                this.setNodeSizeOrColor();
-                this.setEdgeColor();
-                this.applicationsInstances[0].update(0);
-
+            let appref = this;
+            let fnExportFunctionAndContinue = function () {
                 // Capture and download the visualisation
-                this.exportSVG(0, "svg", {x:1920, y:1080}, null);
+                // callback is called, as soon as svg has been downloaded
+                appref.exportSVG(0, filetype, resolution, filename + '_' + (i+1), () => {
+                    // update status
+                    i++;
+                    var percentage = (i / numberOfFiles) * 100;
+                    $("#progressBar").css({
+                        "width": percentage + "%"
+                    });
+                    document.getElementById("alertModalMessage").innerHTML = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
 
-                // update status
-                i++;
-                var percentage = (i / numberOfFiles) * 100;
-                $("#progressBar").css({
-                    "width": percentage + "%"
+                    if (i < numberOfFiles) {
+                        setTimeout(() => {
+                            appref.batchProcess(i, numberOfFiles, attributes, matrices, filename, filetype, resolution);
+                        }, 0)
+
+                    } else {
+                        $("#alertModal")["modal"]('hide');
+                    }
                 });
-                document.getElementById("alertModalMessage").innerHTML = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
 
-                if (i < numberOfFiles) {
-                    this.batchProcess(i, numberOfFiles, attributes, matrices);
-                } else {
-                    $("#alertModal")["modal"]('hide');
-                }
-            });
+                
+            }
+
+            // refresh the visualisation with current settings and new data
+            if (this.applicationsInstances[0].networkType != undefined) {
+                this.applicationsInstances[0].showNetwork(false, () => {
+                    this.setNodeSizeOrColor();
+                    this.setEdgeColor();
+                    this.applicationsInstances[0].update(0);
+
+                    fnExportFunctionAndContinue();
+                });
+            } else {
+                this.applicationsInstances[0].update(0);
+                fnExportFunctionAndContinue();
+            }
         };
         
         // Load pair of files into dataset
@@ -1169,7 +1224,7 @@ class NeuroMarvl {
         setTimeout(() => window["URL"].revokeObjectURL(url), 10);
     }
 
-    exportSVG = (viewport, fileType, resolution, filename) => {
+    exportSVG = (viewport, fileType, resolution, filename, callback = null) => {
         var documents = [window.document],
             SVGSources = [];
 
@@ -1228,6 +1283,8 @@ class NeuroMarvl {
                     this.applicationsInstances[viewport].jDiv.height());
                 if (prevsvgtransform != null)
                     this.applicationsInstances[viewport].svgAllElements.attr("transform", prevsvgtransform);
+
+                if (callback) callback();
             });
             
             
@@ -2415,22 +2472,27 @@ class NeuroMarvl {
         });
         $('#button-export-svg').button().click(() => $("#exportModal")["modal"]());
 
-        $('#button-export-submit').button().click(() => {
+        // set default export callback function
+        // others can use the export dialog as well, but have to save this callback first
+        let appref = this;
+        this.exportCallbackFunction = function () {
             var filename = $('#select-export-filename').val();
             if (filename.length == 0)
                 filename = null;
-            
+
             var viewport = $('#select-export-viewport').val();
             var type = $('#select-export-type').val();
             var strresolution = $('#select-export-resolution').val();
-            
+
             strresolution = strresolution.split('x');
             var resolution = {
                 x: parseInt(strresolution[0]),
                 y: parseInt(strresolution[1])
             }
-            this.exportSVG(parseInt(viewport), type,  resolution, filename)
-        });
+            appref.exportSVG(parseInt(viewport), type, resolution, filename);
+        }
+
+        $('#button-export-submit').button().click(this.exportCallbackFunction);
 
         $('#button-save-app').button().click(() => {
             //Save all the applicationsInstances

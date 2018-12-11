@@ -400,33 +400,39 @@ class InputTargetManager {
         //this.keyboard['keyToggle'] = {};
 
         document.addEventListener('keydown', (evt) => {
-            //evt.preventDefault(); // Don't do browser built-in search with key press
-            var k = this.translateKeycode(evt.keyCode);
+            // somehow nodeName property is missing from typescript EventTarget object
+            if ((<Element>evt.target).nodeName == 'BODY') {
+                //evt.preventDefault(); // Don't do browser built-in search with key press
+                var k = this.translateKeycode(evt.keyCode);
 
-            if (!this.keyboardKey[k]) {
-                this.keyboardKey[k] = true;
-                //this.keyboardKeyToggle[k] = !this.keyboardKeyToggle[k];
-                //this.keyboardKeyPressed[k] = true;
-                // Make the callbacks for the active input target
-                var it = this.inputTargets[this.activeTarget];
-                if (it) {
-                    var callback = it.keyDownCallbacks[k];
-                    if (callback) callback(false);
+                if (!this.keyboardKey[k]) {
+                    this.keyboardKey[k] = true;
+                    //this.keyboardKeyToggle[k] = !this.keyboardKeyToggle[k];
+                    //this.keyboardKeyPressed[k] = true;
+                    // Make the callbacks for the active input target
+                    var it = this.inputTargets[this.activeTarget];
+                    if (it) {
+                        var callback = it.keyDownCallbacks[k];
+                        if (callback) callback(false);
 
-                    if (this.yokingView) varYokingViewAcrossPanels();
+                        if (this.yokingView) varYokingViewAcrossPanels();
+                    }
                 }
             }
         }, false);
 
         document.addEventListener('keyup', (evt) => {
-            var k = this.translateKeycode(evt.keyCode);
-            this.keyboardKey[k] = false;
-            //this.keyboardKeyReleased[k] = true;
-            // Make the callbacks for the active input target
-            var it = this.inputTargets[this.activeTarget];
-            if (it) {
-                var callback = it.keyUpCallbacks[k];
-                if (callback) callback();
+            // somehow nodeName property is missing from typescript EventTarget object
+            if ((<Element>evt.target).nodeName == 'BODY') {
+                var k = this.translateKeycode(evt.keyCode);
+                this.keyboardKey[k] = false;
+                //this.keyboardKeyReleased[k] = true;
+                // Make the callbacks for the active input target
+                var it = this.inputTargets[this.activeTarget];
+                if (it) {
+                    var callback = it.keyUpCallbacks[k];
+                    if (callback) callback();
+                }
             }
         }, false);
     }

@@ -138,6 +138,9 @@ class NeuroMarvl {
 
     input: InputTargetManager;
 
+    // reference to the export-dialog OK button callback handler
+    // The dialog is also used for the batch download, using another callback
+    // To not loose original reference, we save it in a variable
     exportCallbackFunction = null;
 
     constructor() {

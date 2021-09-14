@@ -1347,9 +1347,14 @@ class NeuroMarvl {
             image2d.setAttribute('xlink:href', this.applicationsInstances[0].canvasGraph.cy.png({
                 full: false
             }));
-            image2d.setAttribute('width', canvas2d.width.toString());
-            image2d.setAttribute('height', canvas2d.height.toString());
+            image2d.setAttribute('width', cy._private.sizeCache.width);
+            image2d.setAttribute('height', cy._private.sizeCache.height);
             image2d.removeAttribute('xmlns');
+
+            if (cy._private.sizeCache.width > svg.getAttribute('width')) {
+                svg.setAttribute('width', cy._private.sizeCache.width);
+                svg.setAttribute('height', cy._private.sizeCache.height);
+            }
         }
 
         // insert defs

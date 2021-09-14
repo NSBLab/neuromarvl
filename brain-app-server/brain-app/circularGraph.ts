@@ -812,8 +812,12 @@ class CircularGraph {
 
         this.svgAllElements.attr("transform", "translate(" + width + "," + height + ")");
 
-        this.d3Zoom.scale(1);
-        this.d3Zoom.translate([width, height]);
+		// Only set if not already moved
+		// If user moved the circular graph to another position and zoom level, keep it when reloading
+		if (this.d3Zoom.translate().reduce((a,b) =>a+b) == 0) {
+			this.d3Zoom.scale(1);
+			this.d3Zoom.translate([width, height]);
+		}
 
         // An alternative solutions to sorting the children while keeping 
         // the order of the clusters 

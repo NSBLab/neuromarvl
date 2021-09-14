@@ -7,3 +7,4 @@ brain-app-server/extern/ts/*.js
 brain-app-server/extern/ts/*.js.map
 brain-app-server/brain-app/save
 
+brain-app-server/Properties/

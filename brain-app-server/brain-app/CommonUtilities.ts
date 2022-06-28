@@ -1,5 +1,4 @@
 ﻿
-
 class CommonUtilities {
     static timeTracker = new Date().getMilliseconds();
     static alertType = {

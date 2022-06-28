@@ -841,7 +841,7 @@ class Brain3DApp implements Application, Loopable {
                         */
 
                         //clonedObject.add(new THREE.Mesh(child.geometry.clone(), surfaceMaterial));
-                        let mesh = new THREE.Mesh(child.geometry.clone(), surfaceMaterial);
+                        let mesh = new THREE.Mesh(<THREE.Geometry>child.geometry.clone(), surfaceMaterial);
                         mesh.renderOrder = RENDER_ORDER_BRAIN;
                         clonedObject.add(mesh);
 
@@ -851,7 +851,7 @@ class Brain3DApp implements Application, Loopable {
                         sphereMaterial.visible = false;
                         var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
                         var sphereObject = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                        sphereObject.position.copy(boundingSphere.center);
+                        sphereObject.position.copy((<THREE.Sphere>boundingSphere).center);
                         boundingSphereObject.add(sphereObject);
                     }
                 });
@@ -894,7 +894,8 @@ class Brain3DApp implements Application, Loopable {
                         */
                         // Need to edit geometries to "slice" them in half
                         // Each face is represented by a group 9 values (3 vertices * 3 dimensions). Move to other side if any face touches the right side (i.e. x > 0).
-                        var leftPositions = Array.prototype.slice.call(child.geometry.getAttribute("position").array);
+                        var attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position")
+                        var leftPositions = Array.prototype.slice.call(attribute.array);
                         var rightPositions = [];
                         const FACE_CHUNK = 9;
                         const VERT_CHUNK = 3;
@@ -945,7 +946,7 @@ class Brain3DApp implements Application, Loopable {
                         material.visible = false;
                         var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
                         var sphereObject = new THREE.Mesh(sphereGeometry, material);
-                        sphereObject.position.copy(boundingSphere.center);
+                        sphereObject.position.copy((<THREE.Sphere>boundingSphere).center);
 
                         boundingSphereObject.add(sphereObject);
                     }

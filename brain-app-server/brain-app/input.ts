@@ -351,14 +351,14 @@ class InputTargetManager {
         }, false);
 
         document.addEventListener('mousewheel', (event) => {
-            var viewID = this.mouseLocationCallback(event.clientX, event.clientY);         
+            var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);
 
             if (viewID == this.activeTarget) {
                 var it = this.inputTargets[this.activeTarget];
                 if (it) {
                     //console.log(event.wheelDelta);
                     var callback = it.mouseWheelCallback;
-                    if (callback) callback(-event.wheelDelta/2000);
+                    if (callback) callback((<WheelEvent>event).deltaY / 2000);
                 }
             }
 
@@ -649,7 +649,7 @@ class InputTargetManager {
         this.pointingHandCheckedIn = false;
         //this.grabbingHandCheckedIn = false;
     }
-
+    
     setActiveTarget(index: number) {
         this.activeTarget = index;
     }

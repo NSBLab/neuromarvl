@@ -558,7 +558,7 @@ class NeuroMarvl {
             //loadAttributes(file, dataSet);
             var reader = new FileReader();
             reader.onload = () => {
-                this.parseAttributes(reader.result, this.referenceDataSet);
+                this.parseAttributes(<string>reader.result, this.referenceDataSet);
                 this.referenceDataSet.notifyAttributes();
 
                 // 3. update file status
@@ -1173,11 +1173,11 @@ class NeuroMarvl {
             // Try new JSON settings file,
             // If not present, fall back to old YAML style
             try {
-                let jsonsettings = JSON.parse(reader.result);
+                let jsonsettings = JSON.parse(<string>reader.result);
                 this.saveFileObj = new SaveFile(jsonsettings);    
             } catch (exception) {
                 this.saveFileObj = new SaveFile({});    
-                this.saveFileObj.fromYaml(reader.result.toLowerCase());
+                this.saveFileObj.fromYaml((<string>reader.result).toLowerCase());
             }
             
 
@@ -1911,7 +1911,7 @@ class NeuroMarvl {
     loadCoordinates = file => {
         var reader = new FileReader();
         reader.onload = () => {
-            this.parseCoordinates(reader.result);
+            this.parseCoordinates(<string>reader.result);
             this.commonData.notifyCoords();
         }
         reader.readAsText(file);
@@ -1952,7 +1952,7 @@ class NeuroMarvl {
     loadLabels = file => {
         let reader = new FileReader();
         reader.onload = () => {
-            this.parseLabels(reader.result);
+            this.parseLabels(<string>reader.result);
             this.commonData.notifyLabels();
         }
         reader.readAsText(file);
@@ -2220,7 +2220,7 @@ class NeuroMarvl {
     loadSimilarityMatrix = (file, dataSet: DataSet, callback?) => {
         var reader = new FileReader();
         reader.onload = () => {
-            this.parseSimilarityMatrix(reader.result, dataSet);
+            this.parseSimilarityMatrix(<string>reader.result, dataSet);
             if (callback) callback();
         };
         reader.readAsText(file);
@@ -2258,7 +2258,7 @@ class NeuroMarvl {
     loadAttributes = (file, dataSet: DataSet, callback?) => {
         var reader = new FileReader();
         reader.onload = () => {
-            this.parseAttributes(reader.result, dataSet);
+            this.parseAttributes(<string>reader.result, dataSet);
             dataSet.notifyAttributes();
             if (callback) callback();
         };

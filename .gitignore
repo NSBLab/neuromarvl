@@ -1,10 +1,10 @@
 .vs
-brain-app-server/obj/
+brain-app-server/obj
 brain-app-server/bin
 brain-app-server/brain-app/*.js
 brain-app-server/brain-app/*.js.map
 brain-app-server/extern/ts/*.js
 brain-app-server/extern/ts/*.js.map
 brain-app-server/brain-app/save
-brain-app-server/brain-app/save_archive
+
 brain-app-server/Properties/

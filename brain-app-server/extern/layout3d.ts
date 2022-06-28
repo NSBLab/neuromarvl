@@ -62,7 +62,7 @@ module cola {
             const n = this.nodes.length;
 
             var linkAccessor = new LinkAccessor();
-            cola.jaccardLinkLengths(this.links, linkAccessor, 1.5);
+            cola.jaccardLinkLengths(1.5, this.links, linkAccessor);
             this.links.forEach(e => e.length *= this.idealLinkLength);
 
             // Create the distance matrix that Cola needs

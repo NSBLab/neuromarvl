@@ -289,6 +289,7 @@ class SaveFile {
     surfaceSettings;
     edgeSettings;
     nodeSettings;
+    displaySettings;
 
     // brain apps
     saveApps: SaveApp[];
@@ -341,6 +342,14 @@ class SaveFile {
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
             opacity: 0.5
         };
+
+        this.displaySettings = (sourceObject && sourceObject.displaySettings) || {
+            mode: 'Top',
+            labels: false,
+            split: false,
+            rotation:false
+        };
+
         let saveApps = (sourceObject && sourceObject.saveApps) || [];
         this.saveApps = saveApps
             .filter(d => !!d)       // Some save files have null instead of apps

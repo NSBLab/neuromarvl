@@ -212,8 +212,32 @@ class Brain3DApp implements Application, Loopable {
         this.circularGraph = new CircularGraph( this.id, this.jDiv, this.dataSet,
                                                 this.svg, this.svgDefs, this.svgAllElements,
                                                 this.d3Zoom, this.commonData, this.saveFileObj);
-        
-    }   
+
+        //initialize display
+        this.initialiseDisplay();
+    }
+    
+    initialiseDisplay() {
+        var displaySettings_mode = $('#display_settings_mode').val();
+        var displaySettings_labels = $('#display_settings_labels').val();
+        var displaySettings_split = $('#display_settings_split').val();
+        var displaySettings_rotation = $('#display_settings_rotation').val();
+
+        if (displaySettings_mode != 'top') {
+            this.defaultOrientationsOnClick(displaySettings_mode);
+        }
+        if (displaySettings_labels != 'false') {
+            this.allLabelsOnChange();
+        }
+        if (displaySettings_split != 'false') {
+
+
+        }
+        if (displaySettings_rotation != 'false') {
+            this.autoRotationOnChange('anticlockwise');
+        }
+    }
+
 
     setEdgeDirection(directionMode) {
         this.directionMode = directionMode;
@@ -344,6 +368,10 @@ class Brain3DApp implements Application, Loopable {
         var varBrainSurfaceModeOnChange = () => {
             if (this.brainSurfaceMode === 0) {
                 this.brainSurfaceMode = 1;
+
+                //record display settting
+                $('#display_settings_split').val('true');
+
                 this.setBrainMode(1);
                 if (this.dataSet) {
                     var newCoords = this.computeMedialViewCoords();
@@ -352,6 +380,10 @@ class Brain3DApp implements Application, Loopable {
                 }
             } else {
                 this.brainSurfaceMode = 0;
+
+                //record display setting
+                $('#display_settings_split').val('false');
+
                 this.setBrainMode(0);
                 if (this.dataSet) {
                     this.physioGraph.setNodePositions(this.dataSet.brainCoords);
@@ -1186,6 +1218,9 @@ class Brain3DApp implements Application, Loopable {
     defaultOrientationsOnClick(orientation: string) {
         if (!orientation) return;
 
+        //record display settting
+        $('#display_settings_mode').val(orientation);
+
         switch (orientation) {
             case "top":
                 this.brainObject.rotation.set(0,0,0);
@@ -1321,6 +1356,9 @@ class Brain3DApp implements Application, Loopable {
     autoRotationOnChange(s: string) {
         this.autoRotation = !this.autoRotation;
 
+        //record display settting
+        $('#display_settings_rotation').val(String(this.autoRotation));
+
         this.mouse.dx = 0;
         this.mouse.dy = 0;
 
@@ -1340,6 +1378,9 @@ class Brain3DApp implements Application, Loopable {
         if ((!this.physioGraph) || (!this.colaGraph)) return;
 
         this.allLabels = !this.allLabels;
+
+        //record display settting
+        $('#display_settings_labels').val(String(this.allLabels));
 
         this.physioGraph.allLabels = this.allLabels;
         this.colaGraph.allLabels = this.allLabels;
@@ -1932,6 +1973,13 @@ class Brain3DApp implements Application, Loopable {
 
         this.needUpdate = true;
         this.showNetwork(false);
+
+        // this should set after setting the data set
+        // load by saved file
+        var displaySettings_labels = $('#display_settings_labels').val();
+        if (displaySettings_labels != 'false') {
+            this.allLabelsOnChange();
+        }
     }
 
     computeMedialViewCoords() {

@@ -336,10 +336,6 @@ class NeuroMarvl {
         (<any>$("#input-edge-color")).colorpicker({ format: "hex" });
         (<any>$("#input-context-menu-node-color")).colorpicker({ format: "hex" });
         (<any>$("#input-edge-transitional-color")).colorpicker({ format: "hex" });
-
-
-
-
     }
 
     start = () => {
@@ -378,12 +374,18 @@ class NeuroMarvl {
                         // Ensure that data is not empty
                         if (!data || !data.length) return;
 
-                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));
+                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));                        
                         for (var app of this.saveFileObj.saveApps) {
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
+
+                                //to fix the model is not loading after save
+                                $('#select-brain3d-model').val(app.surfaceModel);
                             }
                         }
+
+                        // record display settings                        
+                        this.recordDisplaySettings();
                     }
                     else {
                         alert("Loading is: " + status + "\nData: " + data);
@@ -396,6 +398,17 @@ class NeuroMarvl {
         }
     }
 
+    recordDisplaySettings() {
+        // surfaceSettings.color                        
+        var col = this.saveFileObj.surfaceSettings.color;
+        $("#input-surface-color :input").val(col);
+
+        //set Display Mode
+        $('#display_settings_mode').val(this.saveFileObj.displaySettings.mode);
+        $('#display_settings_labels').val(this.saveFileObj.displaySettings.labels);
+        $('#display_settings_split').val(this.saveFileObj.displaySettings.split);
+        $('#display_settings_rotation').val(this.saveFileObj.displaySettings.rotation);
+    }
 
     /*
         Functions to work with app state
@@ -1674,7 +1687,7 @@ class NeuroMarvl {
     setBrainModel = (view: string, model: string) => {
         let id = this.viewToId(view);
         this.loadBrainModel(model, object => {
-            this.applicationsInstances[id].setBrainModelObject(object);
+            this.applicationsInstances[id].setBrainModelObject(object);            
         });
     }
 
@@ -2506,8 +2519,15 @@ class NeuroMarvl {
             //Save all the applicationsInstances
             for (var i = 0; i < 4; i++) {
                 var app = this.saveFileObj.saveApps[i];
+
+                //added to fix surfaceModel not saving issue
+                if (app && app.surfaceModel) app.surfaceModel = $('#select-brain3d-model').val();
+
                 if (this.applicationsInstances[i]) this.applicationsInstances[i].save(app);
             }
+
+            //reload display settings
+            this.reloadDisplay();
 
             var saveJson = JSON.stringify(this.saveFileObj);
             $.post("brain-app/saveapp.aspx",
@@ -2771,6 +2791,23 @@ class NeuroMarvl {
             this.viewWidth = newViewWidth;
             this.viewHeight = newViewHeight;
         }, false);
+
+        //set colour after initialise from file----------------------------------------------
+        var color = $("#input-surface-color :input").val()
+        this.saveFileObj.surfaceSettings.color = color;
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setSurfaceColor(color);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setSurfaceColor(color);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setSurfaceColor(color);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setSurfaceColor(color);
+        //-----------------------------------------------------------------------------------
+    }
+
+    //reload the display settings
+    reloadDisplay() {
+        this.saveFileObj.displaySettings.mode = $('#display_settings_mode').val();
+        this.saveFileObj.displaySettings.labels = $('#display_settings_labels').val();
+        this.saveFileObj.displaySettings.split = $('#display_settings_split').val();
+        this.saveFileObj.displaySettings.rotation = $('#display_settings_rotation').val();
     }
 
 }

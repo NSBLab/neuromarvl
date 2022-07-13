@@ -661,37 +661,41 @@ class CircularGraph {
                 //TODO: this grouping algorithm could be used in all other graph types
                 if (attributes.info[colname].isDiscrete) { // if the attribute is discrete
                     // If the attribute is discrete then grouping is clear for simple values, but for multivalue attributes we get the position of the largest value
-                    if (value.length > 1) {
-                        //Using heaviest position:
-                        //nodeObject['bundle_group_' + colname] = value.indexOf(Math.max(...value));
+                    // value can be null due to data mismatch
+                    if (value != null) {
+                        if (value.length > 1) {
+                            //Using heaviest position:
+                            //nodeObject['bundle_group_' + colname] = value.indexOf(Math.max(...value));
 
-                        // Using base-max numeration (e.g. if max is 7, use octal encoding):
-                        let groupValue = 0;
-                        let i = value.length;
-                        while (i--) {
-                            groupValue += (value[i] * Math.pow(max + 1, i));
-                        }
-                        // Add a bundle sorting value using sum of weighted vectors from module positions on circle
-                        let rev = 2 * Math.PI;
-                        let sortValuePos = value.reduce((sum, d, i) => {
-                            let theta = rev * i / value.length;
-                            return {
-                                x: sum.x + Math.sin(theta) * d,
-                                y: sum.y + Math.cos(theta) * d
+                            // Using base-max numeration (e.g. if max is 7, use octal encoding):
+                            let groupValue = 0;
+                            let i = value.length;
+                            while (i--) {
+                                groupValue += (value[i] * Math.pow(max + 1, i));
                             }
-                        }, {x: 0, y: 0});
-                        let sortValue = Math.atan2(sortValuePos.x, sortValuePos.y);
-                        // Map sortValue from -PI..PI to integers in range 0..attributes.numRecords
-                        sortValue = Math.floor((sortValue < 0 ? sortValue + rev : sortValue) / rev * attributes.numRecords);
-                        nodeObject['bundle_group_' + colname] = groupValue;
-                        nodeObject['bundleSort'][colname] = sortValue;
-                        // Concentric offset is just the number of significant values
-                        nodeObject['bundleHeight'][colname] = value.reduce((acc, d) => d > 0 ? acc + 1 : acc, 0);
-                    }
-                    else {
-                        nodeObject['bundle_group_' + colname] = value[0];
-                        nodeObject['bundleSort'][colname] = value[0];
-                        nodeObject['bundleHeight'][colname] = 1;
+                            // Add a bundle sorting value using sum of weighted vectors from module positions on circle
+                            let rev = 2 * Math.PI;
+                            let sortValuePos = value.reduce((sum, d, i) => {
+                                let theta = rev * i / value.length;
+                                return {
+                                    x: sum.x + Math.sin(theta) * d,
+                                    y: sum.y + Math.cos(theta) * d
+                                }
+                            }, { x: 0, y: 0 });
+                            let sortValue = Math.atan2(sortValuePos.x, sortValuePos.y);
+                            // Map sortValue from -PI..PI to integers in range 0..attributes.numRecords
+                            sortValue = Math.floor((sortValue < 0 ? sortValue + rev : sortValue) / rev * attributes.numRecords);
+                            nodeObject['bundle_group_' + colname] = groupValue;
+                            nodeObject['bundleSort'][colname] = sortValue;
+                            // Concentric offset is just the number of significant values
+                            nodeObject['bundleHeight'][colname] = value.reduce((acc, d) => d > 0 ? acc + 1 : acc, 0);
+                        }
+                        else {
+                            nodeObject['bundle_group_' + colname] = value[0];
+                            nodeObject['bundleSort'][colname] = value[0];
+                            nodeObject['bundleHeight'][colname] = 1;
+                        }
+                        
                     }
                 } else { // if the attribute is continuous
                     // Scale to group attributes 

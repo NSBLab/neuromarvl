@@ -1530,8 +1530,10 @@ class NeuroMarvl {
 
         var scaleArray: number[];
         var scaleFactor = 1;
-
-        scaleArray = attrArray.map((value) => { return scaleFactor * value[0]; });
+        //this can be null due to data mismatch
+        if (attrArray != null) {
+            scaleArray = attrArray.map((value) => { return scaleFactor * value[0]; });
+        }
 
         return scaleArray;
     }

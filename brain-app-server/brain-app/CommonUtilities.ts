@@ -144,8 +144,11 @@ class CommonUtilities {
 
     static concatTwoDimensionalArray(array) {
         var newArray = [];
-        for (var i = 0; i < array.length; i++) {
-            newArray = newArray.concat(array[i]);
+        //this can be null due to data mismatch
+        if (array != null) {
+            for (var i = 0; i < array.length; i++) {
+                newArray = newArray.concat(array[i]);
+            }
         }
         return newArray;
     }

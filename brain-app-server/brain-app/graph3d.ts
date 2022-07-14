@@ -599,7 +599,9 @@ class Graph3D {
     setNodesColor(colorArray: { color: number, portion: number }[][]) {
         if (!colorArray) return;
         if (colorArray.length != this.nodeMeshes.length) {
-            throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
+            alert("ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match")
+            return;
+            //throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
         }
         this.nodeCurrentColor = colorArray.map(a => this.averageColor(a)); // Use average color
 

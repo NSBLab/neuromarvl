@@ -1072,41 +1072,43 @@ class NeuroMarvl {
         }
         else if (sizeOrColor == "node-color") {
             var nodeColorMode = $('#checkbox-node-color-continuous').is(":checked");
-            if (this.referenceDataSet.attributes.info[attribute].isDiscrete && !nodeColorMode) {
-                var keyArray: number[] = [];
-                var colorArray: string[] = [];
+            //this can be null due to data mismatch
+            if ((this.referenceDataSet.attributes.info[attribute] != null) && (this.referenceDataSet.attributes.info[attribute].isDiscrete && !nodeColorMode)) {
+                    var keyArray: number[] = [];
+                    var colorArray: string[] = [];
 
-                var keySelection = <any>document.getElementById('select-node-key');
+                    var keySelection = <any>document.getElementById('select-node-key');
 
-                for (var i = 0; i < keySelection.length; i++) {
-                    //var key = keySelection.options[i].value;
-                    var key = parseInt(keySelection.options[i].value);
-                    var color = keySelection.options[i].style.backgroundColor;
-                    var hex: string = this.colorToHex(color);
-                    keyArray.push(key);
-                    colorArray.push(hex);
-                }
-                this.saveFileObj.nodeSettings.nodeColorMode = "discrete";
-                this.saveFileObj.nodeSettings.nodeColorDiscrete = colorArray.slice(0);
-                
-                if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeColorDiscrete(attribute, keyArray, colorArray);
-                if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeColorDiscrete(attribute, keyArray, colorArray);
-                if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeColorDiscrete(attribute, keyArray, colorArray);
-                if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    for (var i = 0; i < keySelection.length; i++) {
+                        //var key = keySelection.options[i].value;
+                        var key = parseInt(keySelection.options[i].value);
+                        var color = keySelection.options[i].style.backgroundColor;
+                        var hex: string = this.colorToHex(color);
+                        keyArray.push(key);
+                        colorArray.push(hex);
+                    }
+                    this.saveFileObj.nodeSettings.nodeColorMode = "discrete";
+                    this.saveFileObj.nodeSettings.nodeColorDiscrete = colorArray.slice(0);
+
+                    if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeColorDiscrete(attribute, keyArray, colorArray);
             }
             else {
-                let minColor = (<any>$('#input-min-color')).colorpicker("getValue");
-                let maxColor = (<any>$('#input-max-color')).colorpicker("getValue");
+                    let minColor = (<any>$('#input-min-color')).colorpicker("getValue");
+                    let maxColor = (<any>$('#input-max-color')).colorpicker("getValue");
 
-                if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeColor(attribute, minColor, maxColor);
-                if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeColor(attribute, minColor, maxColor);
-                if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeColor(attribute, minColor, maxColor);
-                if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeColor(attribute, minColor, maxColor);
 
-                this.saveFileObj.nodeSettings.nodeColorMode = "continuous";
-                this.saveFileObj.nodeSettings.nodeColorContinuousMin = minColor;
-                this.saveFileObj.nodeSettings.nodeColorContinuousMax = maxColor;
-            }
+                    this.saveFileObj.nodeSettings.nodeColorMode = "continuous";
+                    this.saveFileObj.nodeSettings.nodeColorContinuousMin = minColor;
+                    this.saveFileObj.nodeSettings.nodeColorContinuousMax = maxColor;
+                }
+
 
             this.saveFileObj.nodeSettings.nodeColorAttribute = attribute;
 

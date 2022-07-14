@@ -1731,21 +1731,33 @@ class Brain3DApp implements Application, Loopable {
     setNodeColor(attribute: string, minColor: string, maxColor: string) {
         
         if (!attribute || !minColor || !maxColor) {
-            throw "Invalid arguments for setNodeColor."
+            //to avoid the freeze, accordingto current designed these errors should go to logs
+            //throw "Invalid arguments for setNodeColor."
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Attributes are empty. Load a valid attributes file.");
+            return;
         }
         if (!this.dataSet || !this.dataSet.attributes) {
-            alert("Dataset is not loaded or does not contain attributes.")
+            //to avoid the freeze, accordingto current designed these errors should go to logs
+            //throw "Dataset is not loaded or does not contain attributes.";
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Dataset is not loaded or does not contain attributes.");
             return;
         }
         var attrArray = this.dataSet.attributes.get(attribute);
         if (!attrArray) {
-            throw "Attribute " + attribute + " does not exist.";
+            //to avoid the freeze, accordingto current designed these errors should go to logs
+            //throw "Attribute " + attribute + " does not exist.";
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Invalid arguments for setNodeColor.");
+            return;
         }
 
         let colorArray = this.getNodeColors(attribute, parseInt(minColor.replace("#", "0x")), parseInt(maxColor.replace("#", "0x")));
 
         if (!colorArray) {
-            throw "Encountered error in generating color array.";
+            //to avoid the freeze, accordingto current designed these errors should go to logs
+            //throw "Encountered error in generating color array.";
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Encountered error in generating color array.");
+            return;
+            
         }
 
         // update graphs

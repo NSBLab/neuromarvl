@@ -1,167 +1,362 @@
+/* General styling */
 
-html {
-  min-width: 1040px;
+html, body {
+    height: 100%;
+    width: 100%;
 }
 
 body {
-  font-family: "Helvetica Neue", Helvetica, sans-serif;
-  margin: 1em auto 4em auto;
-  width: 960px;
-}
-
-#body {
-  position: relative;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
 }
 
 h1 {
-  font-size: 64px;
-  font-weight: 300;
-  letter-spacing: -2px;
-  margin: .3em 0 .1em 0;
+    font-size: 30px;
+    font-weight: bold;
+    line-height: normal;
 }
 
 h2 {
-  margin-top: 2em;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: normal;
 }
 
-h1, h2 {
-  text-rendering: optimizeLegibility;
+h3 {
+    font-size: 12px;
+    font-weight: bold;
+    line-height: normal;
+    margin-bottom: 5px;
 }
 
-h2 a {
-  color: #ccc;
-  left: -20px;
-  position: absolute;
-  width: 740px;
+#control-panel-bottom {
+    position: absolute;
+    left: 0px;
+    width: 270px;
+    height: 70px;
+    bottom: 0px;
+    right: 0px;
+    margin-bottom: 0px;
+    font-size: 12px;
+    z-index: 20;
 }
 
-footer {
-  font-size: small;
-  margin-top: 8em;
+/* Holds the #view-panel and the #pin. */
+#outer-view-panel {
+    position: absolute;
+    left: 272px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
 }
 
-header aside {
-  margin-top: 82px;
+#control-panel {
+    position: absolute;
+    left: 0px;
+    width: 270px;
+    top: 0px;
+    bottom: 70px;
+    padding: 10px;
+    font-size: 12px;
+    z-index: 10;
+
 }
 
-header aside,
-footer aside {
-  color: #636363;
-  text-align: right;
+#view-panel {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 12px;
+    bottom: 12px;
+    z-index: 0;
 }
 
-aside {
-  font-size: small;
-  left: 780px;
-  position: absolute;
-  width: 180px;
+#view-top-left {
+    top: 0px;
+    left: 0px;
+    background-color: #ffe5e5;
 }
 
-.attribution {
-  font-size: small;
-  margin-bottom: 2em;
+#view-top-right {
+    top: 0px;
+    right: 0px;
+    background-color: #d7e8ff;
 }
 
-#body > p, li > p {
-  line-height: 1.5em;
+#view-bottom-left {
+    bottom: 0px;
+    left: 0px;
+    background-color: #fcffb2;
 }
 
-#body > p {
-  width: 720px;
+#view-bottom-right {
+    bottom: 0px;
+    right: 0px;
+    background-color: #d2ffbd;
 }
 
-#body > blockquote {
-  width: 640px;
+.h3-span {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
-li {
-  width: 680px;
+.view {
+    position: absolute;
+    overflow: hidden;
+    border: 2px solid;
+    border-color: white;
 }
 
-a {
-  color: steelblue;
+.tab {
+    padding: 0px;
+    margin-left: -16px;
+    margin-right: -16px;
 }
 
-a:not(:hover) {
-  text-decoration: none;
+#accordion {
+    height: 380px;
 }
 
-pre, code, textarea {
-  font-family: "Menlo", monospace;
+#accordion .ui-accordion-content {
+    padding: 12px;
 }
 
-code {
-  line-height: 1em;
+/* Used to set the size of the input (type = 'file') elements in the accordion */
+/*input {
+    width: 196px;
+}*/
+
+.fold {
+    padding: 0;
+}
+        
+/* The element situated at the intersection of the four views that is dragged to resize them */
+#pin {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-color: grey;
+    opacity: 0.2;
 }
 
-textarea {
-  font-size: 100%;
+#pin:hover {
+    opacity: 1;
 }
 
-#body > pre {
-  border-left: solid 2px #ccc;
-  padding-left: 18px;
-  margin: 2em 0 2em -20px;
+.icon {
+    width: 96px;
+    height: 32px;
+    z-index: 10;
+    text-align: center;
+    line-height: 32px; /* Force vertical alignment to be centred (for text) */
+    font-size: 14px;
+    font-weight: bold;
 }
 
-.html .value,
-.javascript .string,
-.javascript .regexp {
-  color: #756bb1;
+/* The draggable part of an icon */
+.icon-front {
+    position: absolute;
+    z-index: 10;
+    cursor: move;
 }
 
-.html .tag,
-.css .tag,
-.javascript .keyword {
-  color: #3182bd;
+
+#dataset1-icon-back, #dataset2-icon-back, #brain3d-icon-back {
+    background-color: #133cac;
 }
 
-.comment {
-  color: #636363;
+#dataset1-icon-front, #dataset2-icon-front, #brain3d-icon-front {
+    background-color: #6d89d5;
 }
 
-.html .doctype,
-.javascript .number {
-  color: #31a354;
+.dataset-info {
+    height: 100px;
 }
 
-.html .attribute,
-.css .attribute,
-.javascript .class,
-.javascript .special {
-  color: #e6550d;
+.dataset-component {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 7px;
+    color: red;
 }
 
-svg {
-  font: 10px sans-serif;
+#leap-pointer {
+    width: 12px;
+    height: 12px;
+    background-color: blue;
 }
 
-.axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+.view-panel-span {
+    position: absolute;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+    /*font-weight: bold;*/
+    /*border: 2px solid black;*/
+    display: inline-block;
+    line-height: 0px;
+    opacity: 0.2;
 }
 
-sup, sub {
-  line-height: 0;
+.view-panel-span:hover {
+    opacity: 1;
 }
 
-q:before,
-blockquote:before {
-  content: "â";
+.node {
+    stroke: #fff;
+    stroke-width: 0.5px;
+    /*stroke-opacity: .5;*/
+    /*opacity: 0.5;*/
 }
 
-q:after,
-blockquote:after {
-  content: "â";
+.nodeLable {
+    font: 10px, Arial, sans-serif;
 }
 
-blockquote:before {
-  position: absolute;
-  left: 2em;
+.link {
+    stroke: #999;
+    /*stroke-opacity: .8;*/
 }
 
-blockquote:after {
-  position: absolute;
+.nodeCircular {
+    font: 11px,  Arial, sans-serif;
 }
 
+.linkCircular {
+    stroke: steelblue;
+    stroke-opacity: .4;
+    fill: none;
+}
+
+.rect1Circular {
+    fill: #d3d3d3;
+}
+
+.rect2Circular {
+    fill: #d3d3d3;
+}
+
+.network-type-appended-element-0 {
+    position: relative;
+}
+
+.network-type-appended-element-1 {
+    position: relative;
+}
+
+.network-type-appended-element-2 {
+    position: relative;
+}
+
+.network-type-appended-element-3 {
+    position: relative;
+}
+
+.status-changed {
+    background-color: #f1c40f;
+}
+
+.status-updated {
+    background-color: #2ecc71;
+}
+
+#ex1Slider .slider-selection {
+	background: #BABABA;
+}
+
+.popup-modal{
+    position: absolute;
+    top:10px;
+    left:50%;
+    width: 200px;
+    z-index: 1000;
+}
+
+.modal-backdrop{
+    opacity: 0.2 !important;
+}
+
+#divAlerts {
+    position: absolute;
+    top: 20px;
+    right: 5%;
+    width: 250px;
+    z-index: 2000;
+}
+
+.alert {
+    margin-bottom: 2px !important;
+}
+
+
+
+
+
+/* Bootstrap overrides */
+.input-group {
+    overflow: hidden !important;
+}
+
+.input-group button span {
+    text-overflow: ellipsis !important;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.clip-to-bottom {
+    top: auto !important;
+    bottom: 0 !important;
+}
+
+input.select-network-type-input {
+    width: 0 !important;
+}
+
+.tooltip-inner {
+    white-space:pre-wrap;
+    text-align: left;
+}
+
+
+/* General fixes */
+
+text {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+
+/*
+    File save dialog
+*/
+.ui-widget-content {
+    background: #d9edf7;
+}
+
+.ui-widget-header {
+    background: #c8dce6;
+    color: #444;
+}
+#file-save-dialog input {
+    font-size: 120%;
+}
+
+.ui-dialog-buttonset button {
+    font-size: 120%;
+    font-weight:bold;
+    background-color : #eff5e5;
+    border: 3px solid #aaa;
+    border-radius: 5px;
+}
+
+.ui-visible-tooltip {
+    background-color:#fafafa;
+    border: 1px solid #999;
+    border-radius: 5px;
+    padding:5px;
+    margin-bottom:10px;
+}

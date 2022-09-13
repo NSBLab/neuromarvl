@@ -132,6 +132,15 @@
     <Content Include="brain-app\save\e240a759-3652-4e28-a742-0efd8fd272a6_coordinates.txt" />
     <Content Include="brain-app\save\e4943e5c-18fb-4a06-a251-0be84d9736f9.txt" />
     <Content Include="brain-app\save\f629a2c2-109b-4b26-b961-8091dcb025a8.txt" />
+    <Content Include="brain-app\save_examples\40496078-effa-4ac3-9d3e-cb7f946e7dd1_137.147.133.145.txt" />
+    <Content Include="brain-app\save_examples\5168206f-e59b-4301-9de1-7c25b4e570cd_211.27.92.117.txt" />
+    <Content Include="brain-app\save_examples\664e89bc-ae33-4503-803b-f9bbd54e40b0_58.178.234.18.txt" />
+    <Content Include="brain-app\save_examples\8a9703ac-d047-4021-853e-5239a1051ded_137.147.133.145_attributes.txt" />
+    <Content Include="brain-app\save_examples\bcc69707-4e70-418c-86ed-3f5bc4bbcb77_137.147.133.145_matrix.txt" />
+    <Content Include="brain-app\save_examples\cef210d4-31a2-496b-9c2f-d64d1c9d9cc3_137.147.133.145_coordinates.txt" />
+    <Content Include="brain-app\save_examples\d598e6ef-f38b-4895-a22b-aa1fddc0cde3_58.178.234.18.txt" />
+    <Content Include="brain-app\save_examples\dfcba247-07ae-404e-b82b-c0811b5d4dd4_58.178.234.18.txt" />
+    <Content Include="brain-app\save_examples\e4e59658-c7c6-4092-b19c-14fbde2dd14b_58.178.236.210.txt" />
     <Content Include="brain-app\state.js.map" />
     <Content Include="examples\graphdata\reverse-winding.py" />
     <Content Include="extern\bootstrap-3.3.7-dist\css\bootstrap-theme.css.map" />

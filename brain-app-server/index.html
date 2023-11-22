@@ -7,11 +7,13 @@
 
     <!-- Latest compiled and minified CSS -->
     <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">-->
-    <link rel="stylesheet" href="extern/bootstrap-3.3.7-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="extern/bootstrap-5.3.2-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="extern/splashPage/splashPage.css" />
     <link rel="stylesheet" href="extern/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css" />
     <link rel="stylesheet" href="extern/bootstrap-slider/css/bootstrap-slider.min.css" />
-    <link rel="stylesheet" href="extern/jquery-ui-1.10.4.custom/css/sunny/jquery-ui-1.10.4.custom.min.css" />
+    <link rel="stylesheet" href="extern/jquery-ui-1.13.2/jquery-ui.min.css" />
+    <link rel="stylesheet" href="extern/bootstrap-icons-1.11.2/font/bootstrap-icons.min.css">
+
 
     <link rel="stylesheet" type="text/css" href="style.css" />
     <!-- <script>var exports = {};</script>-->
@@ -108,16 +110,16 @@
         <div id="control-panel-bottom-close" class="btn btn-primary" style="height: 50%; width: 100%;" data-toggle="tooltip" data-placement="top" title="Show introduction with example links">Splash Page</div>
         <div class="btn-group btn-group-justified bg-info" style="height: 50%; width: 100%;">
             <div id="button-export-svg" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Download visualisation as an image file">
-                <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                <i class="bi bi-download"></i>
             </div>
             <div id="button-save-settings" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Save settings for reload in another session">
-                <span class="glyphicon glyphicon glyphicon-floppy-save" aria-hidden="true"></span>
+                <i class="bi bi-file-arrow-down-fill"></i>
             </div>
             <div id="button-load-settings" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Load settings from a previously saved session file. Will work best when the basic characteristics of the current and initial dataset (e.g., number of nodes, node labels, etc) are the same.">
-                <span class="glyphicon glyphicon glyphicon-floppy-open" aria-hidden="true"></span>
+                <i class="bi bi-file-arrow-up-fill"></i>
             </div>
             <div id="button-save-app" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Share visualisation as a web link">
-                <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
+                <i class="bi bi-send"></i>
             </div>
         </div>
     </div>
@@ -714,11 +716,16 @@ R Amygdala ">Node labels (optional)</label>
     <input type="hidden" id="display_settings_rotation" name="display_settings_rotation" value="false">
 
     <!-- Required scripts -->
-
-    <script src="extern/jquery-1.10.2.min.js"></script>
-    <script src="extern/jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.min.js"></script>
+    <!--<script src="extern/jquery-1.10.2.min.js"></script>-->
+    <!--<script src="extern/jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.min.js"></script>-->
     <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>-->
-    <script src="extern/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <!--<script src="extern/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>-->
+
+    <script src="extern/jquery-3.7.1.min.js"></script>
+    <script src="extern/jquery-ui-1.13.2.custom/jquery-ui.min.js"></script>
+    <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>-->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="extern/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
 
     <script src="extern/three.js"></script>
     <script src="extern/OBJLoader.js"></script>

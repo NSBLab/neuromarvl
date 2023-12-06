@@ -1,6 +1,6 @@
-/*! jQuery UI - v1.13.2 - 2023-11-21
+/*! jQuery UI - v1.13.2 - 2023-12-06
 * http://jqueryui.com
-* Includes: draggable.css, core.css, resizable.css, selectable.css, sortable.css, accordion.css, autocomplete.css, menu.css, button.css, controlgroup.css, checkboxradio.css, datepicker.css, dialog.css, progressbar.css, selectmenu.css, slider.css, spinner.css, tabs.css, tooltip.css, theme.css
+* Includes: draggable.css, core.css, resizable.css, selectable.css, sortable.css, accordion.css, autocomplete.css, menu.css, button.css, controlgroup.css, checkboxradio.css, datepicker.css, dialog.css, progressbar.css, selectmenu.css, spinner.css, tabs.css, tooltip.css, theme.css
 * To view and modify this theme, visit http://jqueryui.com/themeroller/?scope=&folderName=sunny&cornerRadiusShadow=8px&offsetLeftShadow=-7px&offsetTopShadow=-7px&thicknessShadow=7px&opacityShadow=60&bgImgOpacityShadow=30&bgTextureShadow=flat&bgColorShadow=cccccc&opacityOverlay=80&bgImgOpacityOverlay=50&bgTextureOverlay=flat&bgColorOverlay=5c5c5c&iconColorError=ffe180&fcError=ffffff&borderColorError=ffb73d&bgImgOpacityError=20&bgTextureError=diagonals_medium&bgColorError=d34d17&iconColorHighlight=ed9f26&fcHighlight=1f1f1f&borderColorHighlight=eeb420&bgImgOpacityHighlight=90&bgTextureHighlight=gloss_wave&bgColorHighlight=fff9e5&iconColorActive=eb990f&fcActive=0074c7&borderColorActive=655e4e&bgImgOpacityActive=30&bgTextureActive=inset_soft&bgColorActive=ffffff&iconColorHover=bd7b00&fcHover=381f00&borderColorHover=a45b13&bgImgOpacityHover=70&bgTextureHover=gloss_wave&bgColorHover=ffdd57&iconColorDefault=3d3d3d&fcDefault=4c3000&borderColorDefault=d19405&bgImgOpacityDefault=60&bgTextureDefault=gloss_wave&bgColorDefault=fece2f&iconColorContent=d19405&fcContent=383838&borderColorContent=8e846b&bgImgOpacityContent=100&bgTextureContent=highlight_soft&bgColorContent=feeebd&iconColorHeader=fadc7a&fcHeader=ffffff&borderColorHeader=494437&bgImgOpacityHeader=45&bgTextureHeader=gloss_wave&bgColorHeader=817865&cornerRadius=8px&fsDefault=1.1em&fwDefault=bold&ffDefault=Segoe%20UI%2CArial%2Csans-serif
 * Copyright jQuery Foundation and other contributors; Licensed MIT */
 
@@ -722,71 +722,6 @@ button.ui-button::-moz-focus-inner {
 .ui-selectmenu-icon.ui-icon {
 	float: right;
 	margin-top: 0;
-}
-.ui-slider {
-	position: relative;
-	text-align: left;
-}
-.ui-slider .ui-slider-handle {
-	position: absolute;
-	z-index: 2;
-	width: 1.2em;
-	height: 1.2em;
-	cursor: pointer;
-	-ms-touch-action: none;
-	touch-action: none;
-}
-.ui-slider .ui-slider-range {
-	position: absolute;
-	z-index: 1;
-	font-size: .7em;
-	display: block;
-	border: 0;
-	background-position: 0 0;
-}
-
-/* support: IE8 - See #6727 */
-.ui-slider.ui-state-disabled .ui-slider-handle,
-.ui-slider.ui-state-disabled .ui-slider-range {
-	filter: inherit;
-}
-
-.ui-slider-horizontal {
-	height: .8em;
-}
-.ui-slider-horizontal .ui-slider-handle {
-	top: -.3em;
-	margin-left: -.6em;
-}
-.ui-slider-horizontal .ui-slider-range {
-	top: 0;
-	height: 100%;
-}
-.ui-slider-horizontal .ui-slider-range-min {
-	left: 0;
-}
-.ui-slider-horizontal .ui-slider-range-max {
-	right: 0;
-}
-
-.ui-slider-vertical {
-	width: .8em;
-	height: 100px;
-}
-.ui-slider-vertical .ui-slider-handle {
-	left: -.3em;
-	margin-left: 0;
-	margin-bottom: -.6em;
-}
-.ui-slider-vertical .ui-slider-range {
-	left: 0;
-	width: 100%;
-}
-.ui-slider-vertical .ui-slider-range-min {
-	bottom: 0;
-}
-.ui-slider-vertical .ui-slider-range-max {
-	top: 0;
 }
 .ui-spinner {
 	position: relative;

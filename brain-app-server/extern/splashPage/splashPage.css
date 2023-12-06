@@ -108,7 +108,7 @@
 #splashPage .thumbnail {
     background-color: rgba(52, 152, 219,1.0);
     position: relative;
-    width: 30%;
+/*    #width: 30%;*/
     margin: 1.5%;
     display:inline-block;
 }

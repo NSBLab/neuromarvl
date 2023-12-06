@@ -851,11 +851,13 @@ class Edge {
     }
 
     initializeLine() {
-        this.geometry = new THREE.Geometry();
-        this.geometry.vertices.push(
-            new THREE.Vector3(0, this.unitLength / 2, 0),
-            new THREE.Vector3(0, -this.unitLength / 2, 0)
-            );
+        this.geometry = new THREE.BufferGeometry();
+
+
+        //this.geometry.vertices.push(
+        //    new THREE.Vector3(0, this.unitLength / 2, 0),
+        //    new THREE.Vector3(0, -this.unitLength / 2, 0)
+        //    );
         this.cone = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius * 3, this.unitLength / 5, 12);
         // Material 
         // using local positions 

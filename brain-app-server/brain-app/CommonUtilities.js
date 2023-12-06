@@ -1,7 +1,5 @@
-var CommonUtilities = /** @class */ (function () {
-    function CommonUtilities() {
-    }
-    CommonUtilities.isDiscreteValues = function (values, threshold) {
+class CommonUtilities {
+    static isDiscreteValues(values, threshold) {
         if (!threshold)
             threshold = 10;
         var flags = [], distincts = [], l = values.length;
@@ -15,8 +13,8 @@ var CommonUtilities = /** @class */ (function () {
             }
         }
         return true;
-    };
-    CommonUtilities.isSymmetrical = function (matrix) {
+    }
+    static isSymmetrical(matrix) {
         if (matrix.length !== matrix[0].length)
             return false;
         for (var i = 0; i < matrix.length; i++) {
@@ -27,8 +25,8 @@ var CommonUtilities = /** @class */ (function () {
             }
         }
         return true;
-    };
-    CommonUtilities.getDistinctValues = function (values) {
+    }
+    static getDistinctValues(values) {
         var flags = [], distincts = [], l = values.length;
         for (var i = 0; i < l; i++) {
             if (flags[values[i]])
@@ -37,8 +35,8 @@ var CommonUtilities = /** @class */ (function () {
             distincts.push(values[i]);
         }
         return distincts;
-    };
-    CommonUtilities.matrixToArray = function (matrix, adjMatrix) {
+    }
+    static matrixToArray(matrix, adjMatrix) {
         var array = [];
         if (adjMatrix) { // if adjMatrix exist => assume columns === rows
             var len = adjMatrix.length;
@@ -56,8 +54,8 @@ var CommonUtilities = /** @class */ (function () {
             console.log("WARNING: MatrixToArray has not been implemented logic without adjMatrix!");
             return null;
         }
-    };
-    CommonUtilities.launchAlertMessage = function (alertType, alertMessage) {
+    }
+    static launchAlertMessage(alertType, alertMessage) {
         var alertID = "alert" + this.alertNumber;
         var alertIcon;
         var alertTypeString;
@@ -93,8 +91,8 @@ var CommonUtilities = /** @class */ (function () {
         setTimeout(function () {
             newAlert['alert']('close');
         }, 5000);
-    };
-    CommonUtilities.hexToRgb = function (hex, alpha) {
+    }
+    static hexToRgb(hex, alpha) {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         var toString = function () {
             if (this.alpha == undefined) {
@@ -129,8 +127,8 @@ var CommonUtilities = /** @class */ (function () {
             alpha: alpha,
             toString: toString
         } : null;
-    };
-    CommonUtilities.concatTwoDimensionalArray = function (array) {
+    }
+    static concatTwoDimensionalArray(array) {
         var newArray = [];
         //this can be null due to data mismatch
         if (array != null) {
@@ -139,15 +137,14 @@ var CommonUtilities = /** @class */ (function () {
             }
         }
         return newArray;
-    };
-    CommonUtilities.timeTracker = new Date().getMilliseconds();
-    CommonUtilities.alertType = {
-        "ERROR": 2,
-        "SUCCESS": 0,
-        "WARNING": 1,
-        "INFO": -1
-    };
-    CommonUtilities.alertNumber = 0;
-    return CommonUtilities;
-}());
+    }
+}
+CommonUtilities.timeTracker = new Date().getMilliseconds();
+CommonUtilities.alertType = {
+    "ERROR": 2,
+    "SUCCESS": 0,
+    "WARNING": 1,
+    "INFO": -1
+};
+CommonUtilities.alertNumber = 0;
 //# sourceMappingURL=CommonUtilities.js.map

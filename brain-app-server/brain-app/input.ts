@@ -1,4 +1,5 @@
-/// <reference path="../extern/three.d.ts"/>
+
+/// <reference path="../node_modules/@types/three/index.d.ts"/>
 /*
 Copyright (c) 2013, Faculty of Information Technology, Monash University.
 All rights reserved.
@@ -188,10 +189,10 @@ class InputTargetManager {
 
         // Leap controller variables
         this.leap = new Leap.Controller();
-        this.leap.on('deviceConnected', function () {
+        this.leap.on('deviceStarted', function () {
             console.log("The Leap device has been connected.");
         });
-        this.leap.on('deviceDisconnected', function () {
+        this.leap.on('deviceStopped', function () {
             console.log("The Leap device has been disconnected.");
         });
 
@@ -252,22 +253,25 @@ class InputTargetManager {
             }
 
             this.contextMenuColorChanged = false;
-            this.mouseDownMode = event.which;
+            this.mouseDownMode = event.button;
 
-            var viewID = this.mouseLocationCallback(event.clientX, event.clientY);
+            if (this.mouseLocationCallback) {
+                var viewID = this.mouseLocationCallback(event.clientX, event.clientY);
 
-            if (viewID == this.activeTarget) {
-                var it = this.inputTargets[this.activeTarget];
-                if (it && (it.sliderEvent)) return;
+                if (viewID == this.activeTarget) {
+                    var it = this.inputTargets[this.activeTarget];
+                    if (it && (it.sliderEvent)) return;
 
-                this.isMouseDown = true;
+                    this.isMouseDown = true;
 
-                this.mouse.x = event.clientX;
-                this.mouse.y = event.clientY;
+                    this.mouse.x = event.clientX;
+                    this.mouse.y = event.clientY;
 
-                this.onMouseDownPosition.x = event.clientX;
-                this.onMouseDownPosition.y = event.clientY;
+                    this.onMouseDownPosition.x = event.clientX;
+                    this.onMouseDownPosition.y = event.clientY;
+                }
             }
+            
         }, false);
 
         document.addEventListener('contextmenu', (event) => {
@@ -403,7 +407,7 @@ class InputTargetManager {
             // somehow nodeName property is missing from typescript EventTarget object
             if ((<Element>evt.target).nodeName == 'BODY') {
                 //evt.preventDefault(); // Don't do browser built-in search with key press
-                var k = this.translateKeycode(evt.keyCode);
+                var k = this.translateKey(evt.key);
 
                 if (!this.keyboardKey[k]) {
                     this.keyboardKey[k] = true;
@@ -424,7 +428,7 @@ class InputTargetManager {
         document.addEventListener('keyup', (evt) => {
             // somehow nodeName property is missing from typescript EventTarget object
             if ((<Element>evt.target).nodeName == 'BODY') {
-                var k = this.translateKeycode(evt.keyCode);
+                var k = this.translateKey(evt.key);
                 this.keyboardKey[k] = false;
                 //this.keyboardKeyReleased[k] = true;
                 // Make the callbacks for the active input target
@@ -460,31 +464,48 @@ class InputTargetManager {
         }
     }
 
-    translateKeycode(code) {
-        if (code >= 65 && code < 65 + 26)
-            return "abcdefghijklmnopqrstuvwxyz"[code - 65];
-        if (code >= 48 && code < 48 + 10)
-            return "0123456789"[code - 48];
-        if (code >= 37 && code <= 40)
-            return "AWDS"[code - 37];
+    // replaces translateKeycode since keyCode is deprecated
+    translateKey(key) {
+        let retVal;
 
-        if (code == 32)
-            return ' ';
-        if (code == 27)
-            return 0x1B;
-        if (code == 192)
-            return '`';
-        if (code == 13)
-            return '\n';
-        if (code == 59)
-            return ';';
-        if (code == 61)
-            return '=';
-        if (code == 173)
-            return '-';
+        retVal = key;
 
-        return code;
+        if (retVal == "Enter") {
+            retVal = '\n';
+        }
+        if (retVal == "Escape") {
+            retVal = 0x1B;
+        }
+
+        return retVal;
     }
+
+    //translateKeycode(code) {
+
+    //    if (code >= 65 && code < 65 + 26)
+    //        return "abcdefghijklmnopqrstuvwxyz"[code - 65];
+    //    if (code >= 48 && code < 48 + 10)
+    //        return "0123456789"[code - 48];
+    //    if (code >= 37 && code <= 40)
+    //        return "AWDS"[code - 37];
+
+    //    if (code == 32)
+    //        return ' ';
+    //    if (code == 27)
+    //        return 0x1B;
+    //    if (code == 192)
+    //        return '`';
+    //    if (code == 13)
+    //        return '\n';
+    //    if (code == 59)
+    //        return ';';
+    //    if (code == 61)
+    //        return '=';
+    //    if (code == 173)
+    //        return '-';
+
+    //    return code;
+    //}
 
     update(deltaTime: number) {
         // Make callbacks for keys held down

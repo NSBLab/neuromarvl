@@ -1,9 +1,6 @@
-/// <reference path="CommonUtilities.ts"/>
-
-var RENDER_ORDER_EDGE = 1.1;
-var Graph3D = /** @class */ (function () {
-    function Graph3D(parentObject, adjMatrix, nodeColorings, weightMatrix, labels, commonData, saveObj) {
-        var _this = this;
+const RENDER_ORDER_EDGE = 1.1;
+class Graph3D {
+    constructor(parentObject, adjMatrix, nodeColorings, weightMatrix, labels, commonData, saveObj) {
         this.edgeMaxWeight = Number.MIN_VALUE;
         this.edgeMinWeight = Number.MAX_VALUE;
         this.edgeList = [];
@@ -15,9 +12,9 @@ var Graph3D = /** @class */ (function () {
         // Shared for optimisation
         this._sphereGeometry = new THREE.SphereGeometry(2, 10, 10);
         this.allLabels = false;
-        this.averageColor = function (colors) {
-            return colors.reduce(function (acc, color) {
-                var threeColor = new THREE.Color(color.color);
+        this.averageColor = (colors) => {
+            return colors.reduce((acc, color) => {
+                let threeColor = new THREE.Color(color.color);
                 return acc.add(threeColor.multiplyScalar(color.portion));
             }, new THREE.Color(0, 0, 0)).getHex();
         };
@@ -34,12 +31,12 @@ var Graph3D = /** @class */ (function () {
                 isSelected: false
             };
         });
-        this.nodeCurrentColor = nodeColorings.map(function (a) { return _this.averageColor(a); }); // Use average color for base, used generally and when restoring from highlights
+        this.nodeCurrentColor = nodeColorings.map(a => this.averageColor(a)); // Use average color for base, used generally and when restoring from highlights
         for (var i = 0; i < adjMatrix.length; ++i) {
             //TODO: Originally using spheres, but can switch to sprites for pie chart representations
             var nodeObject = this.nodeMeshes[i] = new THREE.Mesh(this._sphereGeometry, new THREE.MeshLambertMaterial({
                 color: this.nodeCurrentColor[i],
-                transparent: true,
+                transparent: true, // Not actually transparent, but need this or three.js will render it before the brain surface
                 depthWrite: false,
                 depthTest: false
             }));
@@ -92,7 +89,7 @@ var Graph3D = /** @class */ (function () {
             adjMatrix[len - 1][len - 1] = null;
         this.edgeMatrix = adjMatrix;
     }
-    Graph3D.prototype.generateSprite = function (nodeColouring) {
+    generateSprite(nodeColouring) {
         // TODO: This isn't currently being used, but could be useful if using sprites for nodes, so multimodule pies are possible
         var canvas = document.createElement('canvas');
         canvas.width = 64;
@@ -112,11 +109,11 @@ var Graph3D = /** @class */ (function () {
         });
         var sprite = new THREE.Sprite(material);
         return sprite;
-    };
+    }
     //////////////////////////////////////////////
     /////// Node's Functions /////////////////////
     //////////////////////////////////////////////
-    Graph3D.prototype.createNodeLabel = function (text, fontSize) {
+    createNodeLabel(text, fontSize) {
         // draw text on canvas 
         var multiplyScale = 3; // for higher resolution of the label
         var varFontSize = fontSize * multiplyScale;
@@ -148,8 +145,8 @@ var Graph3D = /** @class */ (function () {
         sprite.scale.set(canvas.width / multiplyScale, canvas.height / multiplyScale, 1);
         sprite.renderOrder = RENDER_ORDER_EDGE;
         return sprite;
-    };
-    Graph3D.prototype.nextPowerOf2 = function (n) {
+    }
+    nextPowerOf2(n) {
         var i = 0;
         var s = 0;
         while (s < n) {
@@ -157,8 +154,8 @@ var Graph3D = /** @class */ (function () {
             s = Math.pow(2, i);
         }
         return s;
-    };
-    Graph3D.prototype.setNodePositions = function (colaCoords) {
+    }
+    setNodePositions(colaCoords) {
         this.nodePositions = colaCoords;
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             var x, y, z;
@@ -168,10 +165,10 @@ var Graph3D = /** @class */ (function () {
             this.nodeMeshes[i].position.set(x, y, z);
             this.nodeInfo[i]["label"].position.set(x + 5, y + 5, z);
         }
-    };
+    }
     // Lerp between the physio and Cola positions of the nodes
     // 0 <= t <= 1
-    Graph3D.prototype.setNodePositionsLerp = function (colaCoords1, colaCoords2, t) {
+    setNodePositionsLerp(colaCoords1, colaCoords2, t) {
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             var x, y, z;
             x = colaCoords1[0][i] * (1 - t) + colaCoords2[0][i] * t;
@@ -180,8 +177,8 @@ var Graph3D = /** @class */ (function () {
             this.nodeMeshes[i].position.set(x, y, z);
             this.nodeInfo[i]["label"].position.set(x + 5, y + 5, z);
         }
-    };
-    Graph3D.prototype.setVisible = function (flag) {
+    }
+    setVisible(flag) {
         if (flag) {
             if (!this.visible) {
                 this.parentObject.add(this.rootObject);
@@ -194,11 +191,11 @@ var Graph3D = /** @class */ (function () {
                 this.visible = false;
             }
         }
-    };
-    Graph3D.prototype.isVisible = function () {
+    }
+    isVisible() {
         return this.visible;
-    };
-    Graph3D.prototype.findNodeConnectivity = function (filteredAdjMatrix, dissimilarityMatrix, edges) {
+    }
+    findNodeConnectivity(filteredAdjMatrix, dissimilarityMatrix, edges) {
         for (var i = 0; i < this.nodeMeshes.length - 1; ++i) {
             for (var j = i + 1; j < this.nodeMeshes.length; ++j) {
                 if (filteredAdjMatrix[i][j] === 1) {
@@ -215,9 +212,9 @@ var Graph3D = /** @class */ (function () {
                 }
             }
         }
-    };
-    Graph3D.prototype.setNodeVisibilities = function () {
-        var i = this.nodeMeshes.length;
+    }
+    setNodeVisibilities() {
+        let i = this.nodeMeshes.length;
         while (i--) {
             if (this.filteredNodeIDs.indexOf(i) != -1) {
                 this.rootObject.add(this.nodeMeshes[i]);
@@ -228,8 +225,8 @@ var Graph3D = /** @class */ (function () {
                 this.nodeMeshes[i].userData.filtered = true;
             }
         }
-    };
-    Graph3D.prototype.highlightSelectedNodes = function (filteredIDs) {
+    }
+    highlightSelectedNodes(filteredIDs) {
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             if (filteredIDs.indexOf(i) == -1) {
                 this.nodeMeshes[i].material.color.setHex(this.nodeCurrentColor[i]);
@@ -248,14 +245,14 @@ var Graph3D = /** @class */ (function () {
         else {
             this.setEdgeColorConfig(this.colorMode);
         }
-    };
-    Graph3D.prototype.setDefaultNodeScale = function () {
+    }
+    setDefaultNodeScale() {
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             this.nodeMeshes[i].scale.set(1, 1, 1);
         }
-    };
-    Graph3D.prototype.setDefaultNodeColor = function () {
-        var DEFAULT_COLOR = {
+    }
+    setDefaultNodeColor() {
+        const DEFAULT_COLOR = {
             color: 0xcfcfcf,
             portion: 1
         };
@@ -271,8 +268,8 @@ var Graph3D = /** @class */ (function () {
                 edge.isColorChanged = true;
             }
         }
-    };
-    Graph3D.prototype.setNodesScale = function (scaleArray) {
+    }
+    setNodesScale(scaleArray) {
         if (!scaleArray)
             return;
         if (scaleArray.length != this.nodeMeshes.length)
@@ -281,11 +278,11 @@ var Graph3D = /** @class */ (function () {
             var scale = scaleArray[i];
             this.nodeMeshes[i].scale.set(scale, scale, scale);
         }
-    };
+    }
     //////////////////////////////////////////////
     /////// Edge's Functions /////////////////////
     //////////////////////////////////////////////
-    Graph3D.prototype.setEdgeDirection = function (directionMode) {
+    setEdgeDirection(directionMode) {
         if (this.edgeDirectionMode === directionMode)
             return;
         // remove old direction mode
@@ -342,8 +339,8 @@ var Graph3D = /** @class */ (function () {
                 this.edgeList[i].updateColor();
             }
         }
-    };
-    Graph3D.prototype.setEdgeOpacity = function (opacity) {
+    }
+    setEdgeOpacity(opacity) {
         for (var i = 0; i < this.edgeList.length; i++) {
             var edge = this.edgeList[i];
             edge.uniforms.endOpacity.value = opacity;
@@ -352,8 +349,8 @@ var Graph3D = /** @class */ (function () {
             }
             edge.isColorChanged = true;
         }
-    };
-    Graph3D.prototype.setEdgeDirectionGradient = function () {
+    }
+    setEdgeDirectionGradient() {
         var startRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionStartColor, 1.0);
         var endRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionEndColor, 1.0);
         for (var i = 0; i < this.edgeList.length; i++) {
@@ -361,8 +358,8 @@ var Graph3D = /** @class */ (function () {
             edge.uniforms.startColor.value = new THREE.Vector4(startRGB.r / 255, startRGB.g / 255, startRGB.b / 255, 1.0);
             edge.uniforms.endColor.value = new THREE.Vector4(endRGB.r / 255, endRGB.g / 255, endRGB.b / 255, 1.0);
         }
-    };
-    Graph3D.prototype.setEdgeColorConfig = function (colorMode, config) {
+    }
+    setEdgeColorConfig(colorMode, config) {
         this.colorMode = colorMode;
         this.edgeColorConfig = config;
         if (colorMode === "weight") {
@@ -411,7 +408,7 @@ var Graph3D = /** @class */ (function () {
             for (var i = 0; i < this.edgeList.length; i++) {
                 var edge = this.edgeList[i];
                 if (config && config.useTransitionColor) {
-                    var transitionColor = parseInt(config.edgeTransitionColor.substring(1), 16);
+                    let transitionColor = parseInt(config.edgeTransitionColor.substring(1), 16);
                     edge.colorMode = "node-transitioning";
                     edge.transitionColor = transitionColor;
                 }
@@ -428,8 +425,8 @@ var Graph3D = /** @class */ (function () {
                 edge.isColorChanged = true;
             }
         }
-    };
-    Graph3D.prototype.setEdgeVisibilities = function (visMatrix) {
+    }
+    setEdgeVisibilities(visMatrix) {
         var len = visMatrix.length;
         // reset minWeight and maxWeight values of the edges
         this.edgeMaxWeight = Number.MIN_VALUE;
@@ -473,31 +470,31 @@ var Graph3D = /** @class */ (function () {
         else {
             this.setEdgeColorConfig(this.colorMode);
         }
-    };
-    Graph3D.prototype.addBundlingEdge = function (line) {
+    }
+    addBundlingEdge(line) {
         line.isBundlingEdge = true;
         this.bundlingEdgeList.push(line);
         this.rootObject.add(line);
-    };
-    Graph3D.prototype.removeAllBundlingEdges = function () {
+    }
+    removeAllBundlingEdges() {
         for (var i = 0; i < this.bundlingEdgeList.length; ++i) {
             this.rootObject.remove(this.bundlingEdgeList[i]);
         }
         // remove all elements in the list
         this.bundlingEdgeList.splice(0, this.bundlingEdgeList.length);
-    };
-    Graph3D.prototype.removeAllEdges = function () {
+    }
+    removeAllEdges() {
         for (var i = 0; i < this.edgeList.length; i++) {
             var e = this.edgeList[i];
             if (e.visible) {
                 e.setVisible(false);
             }
         }
-    };
+    }
     //////////////////////////////////////////////
     /////// Label's Functions ////////////////////
     //////////////////////////////////////////////
-    Graph3D.prototype.showAllLabels = function (ignore3dControl) {
+    showAllLabels(ignore3dControl) {
         this.hideAllLabels();
         for (var i = 0; i < this.nodeInfo.length; ++i) {
             if (this.nodeInfo[i]["label"]) {
@@ -506,30 +503,28 @@ var Graph3D = /** @class */ (function () {
                 }
             }
         }
-    };
-    Graph3D.prototype.hideAllLabels = function () {
+    }
+    hideAllLabels() {
         for (var i = 0; i < this.nodeInfo.length; ++i) {
             if (this.nodeInfo[i]["label"]) {
                 this.rootObject.remove(this.nodeInfo[i]["label"]);
             }
         }
-    };
-    Graph3D.prototype.setEdgeScale = function (scale) {
+    }
+    setEdgeScale(scale) {
         this.edgeList.forEach(function (edge) {
             edge.setScale(scale);
         });
-    };
-    Graph3D.prototype.setNodesColor = function (colorArray) {
-        var _this = this;
+    }
+    setNodesColor(colorArray) {
         if (!colorArray)
             return;
         if (colorArray.length != this.nodeMeshes.length) {
-            //throw will hold the process
-            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match");            
+            alert("ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match");
             return;
             //throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
         }
-        this.nodeCurrentColor = colorArray.map(function (a) { return _this.averageColor(a); }); // Use average color
+        this.nodeCurrentColor = colorArray.map(a => this.averageColor(a)); // Use average color
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             this.nodeMeshes[i].material.color.set(this.nodeCurrentColor[i]);
             this.nodeMeshes[i].userData.colors = colorArray[i];
@@ -541,14 +536,14 @@ var Graph3D = /** @class */ (function () {
                 edge.isColorChanged = true;
             }
         }
-    };
-    Graph3D.prototype.getNodeColor = function (id) {
+    }
+    getNodeColor(id) {
         return this.nodeMeshes[id].material.color.getHex();
-    };
-    Graph3D.prototype.setNodeColor = function (id, color) {
+    }
+    setNodeColor(id, color) {
         this.nodeMeshes[id].material.color.setHex(color);
-    };
-    Graph3D.prototype.selectNode = function (id, ignore3dControl) {
+    }
+    selectNode(id, ignore3dControl) {
         if (!this.nodeInfo[id].isSelected) {
             this.nodeInfo[id].isSelected = true;
             var x = this.nodeMeshes[id].scale.x;
@@ -569,8 +564,8 @@ var Graph3D = /** @class */ (function () {
                 }
             }
         }
-    };
-    Graph3D.prototype.deselectNode = function (id) {
+    }
+    deselectNode(id) {
         if (this.nodeInfo[id].isSelected && this.commonData.selectedNode != id) {
             this.nodeInfo[id].isSelected = false;
             var x = this.nodeMeshes[id].scale.x;
@@ -589,21 +584,20 @@ var Graph3D = /** @class */ (function () {
                 }
             }
         }
-    };
-    Graph3D.prototype.update = function () {
+    }
+    update() {
         var weightEdges = this.edgeThicknessByWeight;
-        this.edgeList.forEach(function (edge) {
+        this.edgeList.forEach(edge => {
             edge.update(weightEdges);
         });
-    };
+    }
     // Remove self from the scene so that the object can be GC'ed
-    Graph3D.prototype.destroy = function () {
+    destroy() {
         this.parentObject.remove(this.rootObject);
-    };
-    return Graph3D;
-}());
-var Edge = /** @class */ (function () {
-    function Edge(graph, sourceNode, targetNode, weight) {
+    }
+}
+class Edge {
+    constructor(graph, sourceNode, targetNode, weight) {
         this.weight = weight;
         this.visible = true;
         // unit shape
@@ -677,13 +671,13 @@ var Edge = /** @class */ (function () {
             w = 0;
         this.scaleWeight += w;
     }
-    Edge.prototype.getWeight = function () {
+    getWeight() {
         return this.weight;
-    };
-    Edge.prototype.toggleArrow = function (show) {
+    }
+    toggleArrow(show) {
         this.pointer.visible = show;
-    };
-    Edge.prototype.initializeCylinder = function () {
+    }
+    initializeCylinder() {
         this.geometry = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius, this.unitLength, 12);
         this.cone = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius * 3, this.unitLength / 5, 12);
         // Material 
@@ -708,10 +702,13 @@ var Edge = /** @class */ (function () {
         this.pointer.position.set(0, this.unitLength * 2 / 5, 0);
         this.pointer.visible = false;
         this.shape.add(this.pointer);
-    };
-    Edge.prototype.initializeLine = function () {
-        this.geometry = new THREE.Geometry();
-        this.geometry.vertices.push(new THREE.Vector3(0, this.unitLength / 2, 0), new THREE.Vector3(0, -this.unitLength / 2, 0));
+    }
+    initializeLine() {
+        this.geometry = new THREE.BufferGeometry();
+        //this.geometry.vertices.push(
+        //    new THREE.Vector3(0, this.unitLength / 2, 0),
+        //    new THREE.Vector3(0, -this.unitLength / 2, 0)
+        //    );
         this.cone = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius * 3, this.unitLength / 5, 12);
         // Material 
         // using local positions 
@@ -734,16 +731,16 @@ var Edge = /** @class */ (function () {
         this.pointer.position.set(0, this.unitLength * 2 / 5, 0);
         this.pointer.visible = false;
         this.shape.add(this.pointer);
-    };
-    Edge.prototype.setOpacity = function (startOpacity, endOpacity) {
+    }
+    setOpacity(startOpacity, endOpacity) {
         this.uniforms.startOpacity.value = startOpacity;
         this.uniforms.endOpacity.value = endOpacity;
-    };
-    Edge.prototype.updateColor = function () {
+    }
+    updateColor() {
         this.isColorChanged = false;
         // Overwriter current color setting if directionMode is gradient
         if (this.directionMode === "gradient") {
-            var edgeSettings = this.saveObj.edgeSettings;
+            let edgeSettings = this.saveObj.edgeSettings;
             if (!edgeSettings.directionStartColor)
                 edgeSettings.directionStartColor = "#ff0000";
             if (!edgeSettings.directionEndColor)
@@ -766,24 +763,24 @@ var Edge = /** @class */ (function () {
             this.uniforms.endColor.value = new THREE.Vector4(targetColor.r, targetColor.g, targetColor.b, 1.0);
         }
         else if (this.colorMode === "node-transitioning") {
-            var sourceColor_1;
-            var targetColor_1;
+            let sourceColor;
+            let targetColor;
             if (this.sourceNode.material.color.getHex() === this.targetNode.material.color.getHex()) {
-                sourceColor_1 = new THREE.Color(this.sourceNode.material.color.getHex());
-                targetColor_1 = new THREE.Color(this.targetNode.material.color.getHex());
+                sourceColor = new THREE.Color(this.sourceNode.material.color.getHex());
+                targetColor = new THREE.Color(this.targetNode.material.color.getHex());
             }
             else {
-                sourceColor_1 = new THREE.Color(this.transitionColor);
-                targetColor_1 = new THREE.Color(this.transitionColor);
+                sourceColor = new THREE.Color(this.transitionColor);
+                targetColor = new THREE.Color(this.transitionColor);
             }
-            this.uniforms.startColor.value = new THREE.Vector4(sourceColor_1.r, sourceColor_1.g, sourceColor_1.b, 1.0);
-            this.uniforms.endColor.value = new THREE.Vector4(targetColor_1.r, targetColor_1.g, targetColor_1.b, 1.0);
+            this.uniforms.startColor.value = new THREE.Vector4(sourceColor.r, sourceColor.g, sourceColor.b, 1.0);
+            this.uniforms.endColor.value = new THREE.Vector4(targetColor.r, targetColor.g, targetColor.b, 1.0);
         }
-    };
-    Edge.prototype.getColor = function () {
+    }
+    getColor() {
         return this.color;
-    };
-    Edge.prototype.setScale = function (scale) {
+    }
+    setScale(scale) {
         this.baseScale = scale;
         this.scaleNoWeight = this.baseScale;
         this.scaleWeight = this.baseScale * 0.5;
@@ -791,12 +788,12 @@ var Edge = /** @class */ (function () {
         if (w < 0)
             w = 0;
         this.scaleWeight += w;
-    };
-    Edge.prototype.multiplyScale = function (s) {
+    }
+    multiplyScale(s) {
         this.scaleWeight *= s;
         this.scaleNoWeight *= s;
-    };
-    Edge.prototype.setVisible = function (flag) {
+    }
+    setVisible(flag) {
         if (flag) {
             if (!this.visible) {
                 this.parentObject.add(this.shape);
@@ -809,8 +806,8 @@ var Edge = /** @class */ (function () {
                 this.visible = false;
             }
         }
-    };
-    Edge.prototype.update = function (weightEdges) {
+    }
+    update(weightEdges) {
         // update animation time
         this.timeTracker = new Date().getMilliseconds();
         this.uniforms.timeTracker.value = this.timeTracker / 1000;
@@ -853,7 +850,6 @@ var Edge = /** @class */ (function () {
             }
             this.updateColor();
         }
-    };
-    return Edge;
-}());
+    }
+}
 //# sourceMappingURL=graph3d.js.map

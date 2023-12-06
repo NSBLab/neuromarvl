@@ -10,3 +10,17 @@ C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.
 C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.CoreCompileInputs.cache
 C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.dll
 C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.pdb
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\bin\brain-app-server.dll.config
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\bin\brain-app-server.dll
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\bin\brain-app-server.pdb
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.AssemblyReference.cache
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.CoreCompileInputs.cache
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.dll
+C:\Users\Chris Adamson\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.pdb
+H:\My Drive\neuromarvl\brain-app-server\bin\brain-app-server.dll.config
+H:\My Drive\neuromarvl\brain-app-server\bin\brain-app-server.dll
+H:\My Drive\neuromarvl\brain-app-server\bin\brain-app-server.pdb
+H:\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.AssemblyReference.cache
+H:\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.CoreCompileInputs.cache
+H:\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.dll
+H:\My Drive\neuromarvl\brain-app-server\obj\Release\brain-app-server.pdb

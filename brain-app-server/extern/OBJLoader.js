@@ -18,7 +18,7 @@ THREE.OBJLoader.prototype = {
 
 		var scope = this;
 
-		var loader = new THREE.XHRLoader( scope.manager );
+		var loader = new THREE.FileLoader( scope.manager );
 		loader.setPath( this.path );
 		loader.load( url, function ( text ) {
 			onLoad( scope.parse( text ) );
@@ -351,11 +351,11 @@ THREE.OBJLoader.prototype = {
 
 			var buffergeometry = new THREE.BufferGeometry();
 
-			buffergeometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( geometry.vertices ), 3 ) );
+			buffergeometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( geometry.vertices ), 3 ) );
 
 			if ( geometry.normals.length > 0 ) {
 
-				buffergeometry.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
+				buffergeometry.setAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
 
 			} else {
 
@@ -365,7 +365,7 @@ THREE.OBJLoader.prototype = {
 
 			if ( geometry.uvs.length > 0 ) {
 
-				buffergeometry.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( geometry.uvs ), 2 ) );
+				buffergeometry.setAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( geometry.uvs ), 2 ) );
 
 			}
 

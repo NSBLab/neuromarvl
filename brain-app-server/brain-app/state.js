@@ -2,8 +2,8 @@
     All classes responsible for the application state, i.e. the "source of truth" go here.
 */
 // Holds data common to all datasets, and sends notifications when data changes
-var CommonData = /** @class */ (function () {
-    function CommonData() {
+class CommonData {
+    constructor() {
         this.selectedNode = -1;
         this.nodeIDUnderPointer = [-1, -1, -1, -1, -1]; // for yoked display; the last one is for svg graphs
         this.edgeColorMode = "none";
@@ -15,30 +15,29 @@ var CommonData = /** @class */ (function () {
         this.labelCallbacks = new Array();
         this.surfaceCallbacks = new Array();
     }
-    CommonData.prototype.regNotifyCoords = function (callback) {
+    regNotifyCoords(callback) {
         this.coordCallbacks.push(callback);
-    };
-    CommonData.prototype.regNotifyLabels = function (callback) {
+    }
+    regNotifyLabels(callback) {
         this.labelCallbacks.push(callback);
-    };
-    CommonData.prototype.regNotifySurface = function (callback) {
+    }
+    regNotifySurface(callback) {
         this.surfaceCallbacks.push(callback);
-    };
+    }
     // TODO: add deregistration capability
-    CommonData.prototype.notifyCoords = function () {
+    notifyCoords() {
         this.coordCallbacks.forEach(function (c) { c(); });
-    };
-    CommonData.prototype.notifyLabels = function () {
+    }
+    notifyLabels() {
         this.labelCallbacks.forEach(function (c) { c(); });
-    };
-    CommonData.prototype.notifySurface = function () {
+    }
+    notifySurface() {
         this.surfaceCallbacks.forEach(function (c) { c(); });
-    };
-    return CommonData;
-}());
+    }
+}
 // Holds data for a specific dataset, and sends notifications when data changes
-var DataSet = /** @class */ (function () {
-    function DataSet() {
+class DataSet {
+    constructor() {
         this.simMatrix = [];
         this.brainCoords = [[]];
         this.brainLabels = [];
@@ -53,7 +52,7 @@ var DataSet = /** @class */ (function () {
             isSymmetricalMatrix: true
         };
     }
-    DataSet.prototype.verify = function () {
+    verify() {
         // Give a boolean result that indicates whether there is enough data to produce an interactive model.
         // Note that incomplete data will sometimes be progressively loaded, so error alerts should be less
         // dramatic and more informative in these cases.
@@ -62,13 +61,13 @@ var DataSet = /** @class */ (function () {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Node coordinates are empty. Load a valid coordinates file.");
             return true;
         }
-        var isValid = true;
+        let isValid = true;
         if (this.brainCoords[0].length !== this.attributes.numRecords) {
             if (!this.attributes.numRecords) {
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Attributes are empty. Load a valid attributes file.");
             }
             else {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Attribute and coordinate files do not match! (" + this.attributes.numRecords + " attributes for " + this.brainCoords[0].length + " columns)");
+                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, `Attribute and coordinate files do not match! (${this.attributes.numRecords} attributes for ${this.brainCoords[0].length} columns)`);
             }
             isValid = false;
         }
@@ -77,13 +76,13 @@ var DataSet = /** @class */ (function () {
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Similarity matrix is empty. Load a valid matrix file.");
             }
             else {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Similarity matrix and coordinates files do not match! (lengths " + this.brainCoords[0].length + " and " + this.simMatrix.length + ")");
+                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, `Similarity matrix and coordinates files do not match! (lengths ${this.brainCoords[0].length} and ${this.simMatrix.length})`);
             }
             isValid = false;
         }
         return isValid;
-    };
-    DataSet.prototype.clone = function () {
+    }
+    clone() {
         var newDataset = new DataSet();
         // clone simMatrix
         var newSimMatrix = [];
@@ -111,8 +110,8 @@ var DataSet = /** @class */ (function () {
         newDataset.sortedSimilarities = newSorted;
         newDataset.info = newInfo;
         return newDataset;
-    };
-    DataSet.prototype.adjMatrixWithoutEdgesCrossHemisphere = function (count) {
+    }
+    adjMatrixWithoutEdgesCrossHemisphere(count) {
         var max = this.info.nodeCount * (this.info.nodeCount - 1) / 2;
         if (count > max)
             count = max;
@@ -143,9 +142,9 @@ var DataSet = /** @class */ (function () {
             }
         }
         return adjMatrix;
-    };
+    }
     // Create a matrix where a 1 in (i, j) means the edge between node i and node j is selected
-    DataSet.prototype.adjMatrixFromEdgeCount = function (count) {
+    adjMatrixFromEdgeCount(count) {
         var max = this.info.nodeCount * (this.info.nodeCount - 1) / 2;
         if (count > max)
             count = max;
@@ -175,8 +174,8 @@ var DataSet = /** @class */ (function () {
             }
         }
         return adjMatrix;
-    };
-    DataSet.prototype.getRecord = function (index) {
+    }
+    getRecord(index) {
         var record = {};
         var columns = this.attributes.columnNames.length;
         if (this.brainLabels)
@@ -187,8 +186,8 @@ var DataSet = /** @class */ (function () {
             record[this.attributes.columnNames[i]] = value;
         }
         return record;
-    };
-    DataSet.prototype.setSimMatrix = function (simMatrix) {
+    }
+    setSimMatrix(simMatrix) {
         this.simMatrix = simMatrix;
         this.info.isSymmetricalMatrix = CommonUtilities.isSymmetrical(this.simMatrix);
         this.sortedSimilarities = [];
@@ -216,32 +215,30 @@ var DataSet = /** @class */ (function () {
         }
         // Notify all registered 
         this.notifySim();
-    };
-    DataSet.prototype.regNotifySim = function (callback) {
+    }
+    regNotifySim(callback) {
         this.simCallback = callback;
-    };
-    DataSet.prototype.regNotifyAttributes = function (callback) {
+    }
+    regNotifyAttributes(callback) {
         this.attCallback = callback;
-    };
+    }
     // TODO: add deregistration capability
-    DataSet.prototype.notifySim = function () {
+    notifySim() {
         if (this.simCallback)
             this.simCallback();
-    };
-    DataSet.prototype.notifyAttributes = function () {
+    }
+    notifyAttributes() {
         if (this.attCallback)
             this.attCallback();
-    };
-    return DataSet;
-}());
-var SaveFile = /** @class */ (function () {
-    function SaveFile(sourceObject) {
-        var _this = this;
+    }
+}
+class SaveFile {
+    constructor(sourceObject) {
         // Use the hardcoded example data iff the minimal required source files aren't specified.
-        this.useExampleData = function () { return !_this.serverFileNameCoord || !_this.serverFileNameMatrix || !_this.serverFileNameAttr; };
+        this.useExampleData = () => !this.serverFileNameCoord || !this.serverFileNameMatrix || !this.serverFileNameAttr;
         this.edgeSettings = (sourceObject && sourceObject.edgeSettings) || {
-            colorBy: "none",
-            size: 1,
+            colorBy: "none", // node (default), none or weight 
+            size: 1, // default
             thicknessByWeight: false,
             directionMode: "none",
             directionStartColor: "#FF0000",
@@ -285,10 +282,10 @@ var SaveFile = /** @class */ (function () {
             split: false,
             rotation: false
         };
-        var saveApps = (sourceObject && sourceObject.saveApps) || [];
+        let saveApps = (sourceObject && sourceObject.saveApps) || [];
         this.saveApps = saveApps
-            .filter(function (d) { return !!d; }) // Some save files have null instead of apps
-            .map(function (d) { return new SaveApp(d); });
+            .filter(d => !!d) // Some save files have null instead of apps
+            .map(d => new SaveApp(d));
         if (sourceObject) {
             if (sourceObject.serverFileNameCoord)
                 this.serverFileNameCoord = sourceObject.serverFileNameCoord;
@@ -302,7 +299,7 @@ var SaveFile = /** @class */ (function () {
                 this.serverFileNameCoord = sourceObject.filteredRecords;
         }
     }
-    SaveFile.prototype.toYaml = function () {
+    toYaml() {
         var yamlObj = {};
         yamlObj["Edge Settings"] = {
             "Color By": this.edgeSettings.colorBy,
@@ -344,8 +341,8 @@ var SaveFile = /** @class */ (function () {
         //}
         yamlObj["viewport0"] = this.saveApps[0].toYaml();
         return jsyaml.safeDump(yamlObj);
-    };
-    SaveFile.prototype.fromYaml = function (yaml) {
+    }
+    fromYaml(yaml) {
         var yamlObj = jsyaml.safeLoad(yaml);
         this.edgeSettings.colorBy = yamlObj["edge settings"]["color by"];
         this.edgeSettings.size = yamlObj["edge settings"]["size"];
@@ -389,11 +386,10 @@ var SaveFile = /** @class */ (function () {
             this.saveApps[0] = new SaveApp({});
             this.saveApps[0].fromYaml(yamlObj["viewport0"]);
         }
-    };
-    return SaveFile;
-}());
-var SaveApp = /** @class */ (function () {
-    function SaveApp(sourceObject) {
+    }
+}
+class SaveApp {
+    constructor(sourceObject) {
         this.surfaceModel = (sourceObject && sourceObject.surfaceModel) || "";
         this.brainSurfaceMode = (sourceObject && sourceObject.brainSurfaceMode) || "";
         this.view = (sourceObject && sourceObject.view) || TL_VIEW;
@@ -411,7 +407,7 @@ var SaveApp = /** @class */ (function () {
         this.bundle2d = (sourceObject && sourceObject.bundle2d) || "none";
         this.scale2d = (sourceObject && sourceObject.scale2d) || 5;
     }
-    SaveApp.prototype.toYaml = function () {
+    toYaml() {
         var showGraph = (this.showingTopologyNetwork) ? "Yes" : "No";
         var yamlObj = {
             "Surface Model": this.surfaceModel,
@@ -437,8 +433,8 @@ var SaveApp = /** @class */ (function () {
         }
         ;
         return yamlObj;
-    };
-    SaveApp.prototype.fromYaml = function (yamlObj) {
+    }
+    fromYaml(yamlObj) {
         this.surfaceModel = yamlObj["surface model"];
         this.edgeCount = yamlObj["number of edges"];
         this.brainSurfaceMode = yamlObj["brain surface mode"];
@@ -456,12 +452,29 @@ var SaveApp = /** @class */ (function () {
             this.scale2d = yamlObj["2d settings"]["scale"];
         }
         ;
-    };
-    return SaveApp;
-}());
+    }
+}
 // Parses, stores, and provides access to brain node attributes from a file
-var Attributes = /** @class */ (function () {
-    function Attributes(text) {
+class Attributes {
+    clone() {
+        var newAttr = new Attributes();
+        // clone attrValues 
+        var newAttrValues = [];
+        for (var i = 0; i < this.attrValues.length; i++) {
+            newAttrValues.push(this.attrValues[i].slice());
+        }
+        // clone columnNames
+        var newColumnNames = this.columnNames;
+        // clone num records
+        var newNumRecords = this.numRecords;
+        var newInfo = jQuery.extend(true, {}, this.info);
+        newAttr.info = newInfo;
+        newAttr.attrValues = newAttrValues;
+        newAttr.columnNames = newColumnNames;
+        newAttr.numRecords = newNumRecords;
+        return newAttr;
+    }
+    constructor(text) {
         this.columnNames = [];
         this.numRecords = 0;
         this.info = {};
@@ -542,47 +555,28 @@ var Attributes = /** @class */ (function () {
         }
         this.attrValues = values;
     }
-    Attributes.prototype.clone = function () {
-        var newAttr = new Attributes();
-        // clone attrValues 
-        var newAttrValues = [];
-        for (var i = 0; i < this.attrValues.length; i++) {
-            newAttrValues.push(this.attrValues[i].slice());
-        }
-        // clone columnNames
-        var newColumnNames = this.columnNames;
-        // clone num records
-        var newNumRecords = this.numRecords;
-        var newInfo = jQuery.extend(true, {}, this.info);
-        newAttr.info = newInfo;
-        newAttr.attrValues = newAttrValues;
-        newAttr.columnNames = newColumnNames;
-        newAttr.numRecords = newNumRecords;
-        return newAttr;
-    };
-    Attributes.prototype.getValue = function (columnIndex, index) {
+    getValue(columnIndex, index) {
         return this.attrValues[columnIndex][index];
-    };
-    Attributes.prototype.getMin = function (columnIndex) {
+    }
+    getMin(columnIndex) {
         var array = CommonUtilities.concatTwoDimensionalArray(this.attrValues[columnIndex]);
         array.sort(function (a, b) {
             return a - b;
         });
         return array[0];
-    };
-    Attributes.prototype.getMax = function (columnIndex) {
+    }
+    getMax(columnIndex) {
         var array = CommonUtilities.concatTwoDimensionalArray(this.attrValues[columnIndex]);
         array.sort(function (a, b) {
             return b - a;
         });
         return array[0];
-    };
-    Attributes.prototype.get = function (attribute) {
+    }
+    get(attribute) {
         var columnIndex = this.columnNames.indexOf(attribute);
         if (columnIndex != -1)
             return this.attrValues[columnIndex];
         return null;
-    };
-    return Attributes;
-}());
+    }
+}
 //# sourceMappingURL=state.js.map

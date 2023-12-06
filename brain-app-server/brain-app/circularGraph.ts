@@ -127,7 +127,7 @@ class CircularGraph {
         if ($("#checkbox-tips").is(":checked")) $button.tooltip(<any>{ container: 'body', trigger: 'hover' });
         $button.css({ 'position': 'relative', 'margin-left': '5px', 'font-size': '12px', 'z-index': 500 });
         this.jDiv.find("#div-graph-controls").append($button);
-        $button.click(function () { varCircularLayoutHistogramButtonOnClick(); })
+        $button.on('click', function () { varCircularLayoutHistogramButtonOnClick(); })
 
 
         //------------------------------------------------------------------------
@@ -160,7 +160,7 @@ class CircularGraph {
         if ($("#checkbox-tips").is(":checked")) $divBundle.tooltip(<any>{ container: 'body', trigger: 'hover' });
         $divBundle.append($('<select id="select-circular-layout-bundle-' + this.id + '" class=' + this.circularCSSClass + '></select>')
             .css({ 'margin-left': '5px', 'margin-bottom': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' })
-            .on("change", function () { varCircularLayoutBundleOnChange($(this).val()); }));
+            .on("change", function () { varCircularLayoutBundleOnChange($(this).val() as string); }));
 
         $('#select-circular-layout-bundle-' + this.id).empty();
 
@@ -183,7 +183,7 @@ class CircularGraph {
         if ($("#checkbox-tips").is(":checked")) $divSort.tooltip(<any>{ container: 'body', trigger: 'hover' });
         $divSort.append($('<select id="select-circular-layout-sort-' + this.id + '" class=' + this.circularCSSClass + '></select>')
             .css({ 'margin-left': '5px', 'margin-bottom': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' })
-            .on("change", function () { varCircularLayoutSortOnChange($(this).val()); }));
+            .on("change", function () { varCircularLayoutSortOnChange($(this).val() as string); }));
 
         $('#select-circular-layout-sort-' + this.id).empty();
 
@@ -206,7 +206,7 @@ class CircularGraph {
         if ($("#checkbox-tips").is(":checked")) $divLabel.tooltip(<any>{ container: 'body', trigger: 'hover' });
         $divLabel.append($('<select id="select-circular-label-' + this.id + '" class=' + this.circularCSSClass + '></select>')
             .css({ 'margin-left': '5px', 'margin-bottom': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' })
-            .on("change", function () { varCircularLayoutLabelOnChange($(this).val()); }));
+            .on("change", function () { varCircularLayoutLabelOnChange($(this).val() as string); }));
 
         $('#select-circular-label-' + this.id).empty();
 
@@ -244,7 +244,7 @@ class CircularGraph {
         if ($("#checkbox-tips").is(":checked")) $divHisto.tooltip(<any>{ container: 'body', trigger: 'hover' });
         $('#div-circular-layout-menu-' + this.id).append($('<button id="button-circular-add-bar-' + this.id + '" class=' + this.circularCSSClass + '>Add more</button>')
             .css({ 'margin-left': '5px', 'font-size': '12px' })
-            .click(function () { varCircularAddMoreButtonOnClick(); }));
+            .on('click', function () { varCircularAddMoreButtonOnClick(); }));
 
 
         //---
@@ -290,9 +290,9 @@ class CircularGraph {
         }
         this.checkIfAttributesMatchOptionMenu();
         // Get all values
-        var attrLabel = $('#select-circular-label-' + this.id).val();
-        var attrBundle = $('#select-circular-layout-bundle-' + this.id).val();
-        var attrSort = $('#select-circular-layout-sort-' + this.id).val();
+        var attrLabel = $('#select-circular-label-' + this.id).val() as string;
+        var attrBundle = $('#select-circular-layout-bundle-' + this.id).val() as string;
+        var attrSort = $('#select-circular-layout-sort-' + this.id).val() as string;
 
         this.generateCircularData(attrBundle);
         this.createCircularGraph(attrSort, attrBundle);
@@ -306,8 +306,8 @@ class CircularGraph {
             return;
         }
 
-        let attrSort = $('#select-circular-layout-sort-' + this.id).val();
-        let attrBundle = $('#select-circular-layout-bundle-' + this.id).val();
+        let attrSort = $('#select-circular-layout-sort-' + this.id).val() as string;
+        let attrBundle = $('#select-circular-layout-bundle-' + this.id).val() as string;
 
         let attributes = this.dataSet.attributes;
         let edgeSettings = this.saveObj.edgeSettings;
@@ -1110,7 +1110,7 @@ class CircularGraph {
         $('#div-circular-bar' + bar.id + '-' + this.id).append($('<select id="select-circular-layout-attribute-' + bar.id + '-' + this.id + '" class=' + this.circularCSSClass + '></select>')
             .css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' })
             .on("change", function () {
-                varCircularLayoutAttributeOnChange(bar.id, $(this).val());
+                varCircularLayoutAttributeOnChange(bar.id, $(this).val() as string);
             }));
         $('#div-circular-bar' + bar.id + '-' + this.id)
             .append($(`
@@ -1327,14 +1327,14 @@ class CircularGraph {
     }
 
     circularLayoutSortOnChange(attr: string) {
-        this.circularSortAttribute = $('#select-circular-layout-sort-' + this.id).val();
+        this.circularSortAttribute = $('#select-circular-layout-sort-' + this.id).val() as string;
         this.clear();
         this.create(); // recreate the graph
         //this.showNetwork(true); // Is there another way to update the graph without calling this function
     }
 
     circularLayoutBundleOnChange(attr: string) {
-        this.circularBundleAttribute = $('#select-circular-layout-bundle-' + this.id).val();
+        this.circularBundleAttribute = $('#select-circular-layout-bundle-' + this.id).val() as string;
         this.clear();
         this.create(); // recreate the graph
     }

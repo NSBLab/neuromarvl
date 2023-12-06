@@ -10,6 +10,7 @@ declare var d3;
 declare var numeric;
 declare var packages;
 
+
 var colans = <any>cola;
 var sliderSpace = 70; // The number of pixels to reserve at the bottom of the div for the slider
 //var uniqueID = 0; // Each instance of this application is given a unique ID so that the DOM elements they create can be identified as belonging to them
@@ -84,7 +85,7 @@ class Brain3DApp implements Application, Loopable {
     svgNodeBundleArray: any[];
     isControllingGraphOnly: boolean = false;
     svgNeedsUpdate: boolean = false;
-    d3Zoom = d3.behavior.zoom();
+    d3Zoom = d3.zoom();
 
     dissimilarityMatrix: number[][] = []; // An inversion of the similarity matrix, used for Cola graph distances
 
@@ -218,10 +219,10 @@ class Brain3DApp implements Application, Loopable {
     }
     
     initialiseDisplay() {
-        var displaySettings_mode = $('#display_settings_mode').val();
-        var displaySettings_labels = $('#display_settings_labels').val();
-        var displaySettings_split = $('#display_settings_split').val();
-        var displaySettings_rotation = $('#display_settings_rotation').val();
+        var displaySettings_mode = $('#display_settings_mode').val() as string;
+        var displaySettings_labels = $('#display_settings_labels').val() as string;
+        var displaySettings_split = $('#display_settings_split').val() as string;
+        var displaySettings_rotation = $('#display_settings_rotation').val() as string;
 
         if (displaySettings_mode != 'top') {
             this.defaultOrientationsOnClick(displaySettings_mode);
@@ -230,8 +231,6 @@ class Brain3DApp implements Application, Loopable {
             this.allLabelsOnChange();
         }
         if (displaySettings_split != 'false') {
-
-
         }
         if (displaySettings_rotation != 'false') {
             this.autoRotationOnChange('anticlockwise');
@@ -409,34 +408,34 @@ class Brain3DApp implements Application, Loopable {
         jDiv
             //.append($('<span id="close-brain-app-' + this.id + '" title="Close" class="view-panel-span"  data-toggle="tooltip" data-placement="bottom">x</span>')
             //.css({ 'right': '6px', 'top': '10px', 'font-size': '12px', 'z-index': 1000 })
-            //.click(function () { varCloseBrainAppOnClick(); }))
+            //.on("click", function () { varCloseBrainAppOnClick(); }))
             .append($('<span id="top-view-' + this.id + '" title="Top view" class="view-panel-span" data-toggle="tooltip" data-placement="left">T</span>')
                 .css({ 'right': '6px', 'top': '30px', 'z-index': 1000 })
-                .click(function () { varDefaultOrientationsOnClick("top"); }))
+                .on("click", function () { varDefaultOrientationsOnClick("top"); }))
             .append($('<span id="bottom-view-' + this.id + '" title="Bottom view" class="view-panel-span" data-toggle="tooltip" data-placement="left">B</span>')
                 .css({ 'right': '6px', 'top': '50px', 'z-index': 1000 })
-                .click(function () { varDefaultOrientationsOnClick("bottom"); }))
+                .on("click", function () { varDefaultOrientationsOnClick("bottom"); }))
             .append($('<span id="left-view-' + this.id + '" title="Left view" class="view-panel-span" data-toggle="tooltip" data-placement="left">L</span>')
                 .css({ 'right': '6px', 'top': '70px', 'z-index': 1000 })
-                .click(function () { varDefaultOrientationsOnClick("left"); }))
+                .on("click", function () { varDefaultOrientationsOnClick("left"); }))
             .append($('<span id="right-view-' + this.id + '" title="Right view" class="view-panel-span" data-toggle="tooltip" data-placement="left">R</span>')
                 .css({ 'right': '6px', 'top': '90px', 'z-index': 1000 })
-                .click(function () { varDefaultOrientationsOnClick("right"); }))
+                .on("click", function () { varDefaultOrientationsOnClick("right"); }))
             .append($('<span id="front-view-' + this.id + '" title="Front view" class="view-panel-span" data-toggle="tooltip" data-placement="left">F</span>')
                 .css({ 'right': '6px', 'top': '110px', 'z-index': 1000 })
-                .click(function () { varDefaultOrientationsOnClick("front"); }))
+                .on("click", function () { varDefaultOrientationsOnClick("front"); }))
             .append($('<span id="back-view-' + this.id + '" title="Back view" class="view-panel-span" data-toggle="tooltip" data-placement="left">B</span>')
                 .css({ 'right': '6px', 'top': '130px', 'z-index': 1000 })
-                .click(function () { varDefaultOrientationsOnClick("back"); }))
+                .on("click", function () { varDefaultOrientationsOnClick("back"); }))
             .append($('<span id="all-labels-' + this.id + '" title="Show/hide all node labels" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8704</span>')
                 .css({ 'right': '6px', 'top': '150px', 'z-index': 1000 })
-                .click(function () { varAllLabelsOnChange(); }))
+                .on("click", function () { varAllLabelsOnChange(); }))
             .append($('<span id="top-view-' + this.id + '" title="Split brain" class="view-panel-span" data-toggle="tooltip" data-placement="left">M</span>')
                 .css({ 'right': '6px', 'top': '170px', 'z-index': 1000 })
-                .click(function () { varBrainSurfaceModeOnChange(); }))
+                .on("click", function () { varBrainSurfaceModeOnChange(); }))
             .append($('<span id="anti-auto-rotation-' + this.id + '" title="Anticlockwise auto-rotation" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8634</span>')
                 .css({ 'right': '6px', 'top': '190px', 'z-index': 1000 })
-                .click(function () { varAutoRotationOnChange("anticlockwise"); }))
+                .on("click", function () { varAutoRotationOnChange("anticlockwise"); }))
 
 
             // Circular Graph
@@ -496,10 +495,10 @@ class Brain3DApp implements Application, Loopable {
                 $("[data-toggle='tooltip']").tooltip("destroy");
             }
         };
-        $checkboxTips.change(onToggleTips);
+        $checkboxTips.on("change", onToggleTips);
         onToggleTips();
         
-        $(`input[name=select-network-type-${this.id}]:radio`).change(event => varNetworkTypeOnChange(event.target["value"]));
+        $(`input[name=select-network-type-${this.id}]:radio`).on("change", (event => varNetworkTypeOnChange(event.target["value"])));
 
 
         // Graph canvas setup
@@ -510,10 +509,9 @@ class Brain3DApp implements Application, Loopable {
                 height: "100%",
                 position: "absolute",
                 top: 0
-            })
-            .classed("graph2dContainer", true)
-            .node();
-
+            });
+        console.log($(this.graph2dContainer));
+        $(this.graph2dContainer).addClass("graph2dContainer");
         // SVG Initializing
         var varSVGZoom = () => { this.svgZoom(); }
         this.svg = d3.select('#div-graph-' + this.id).append("svg")
@@ -873,7 +871,7 @@ class Brain3DApp implements Application, Loopable {
                         */
 
                         //clonedObject.add(new THREE.Mesh(child.geometry.clone(), surfaceMaterial));
-                        let mesh = new THREE.Mesh(<THREE.Geometry>child.geometry.clone(), surfaceMaterial);
+                        let mesh = new THREE.Mesh(<THREE.BufferGeometry>child.geometry.clone(), surfaceMaterial);
                         mesh.renderOrder = RENDER_ORDER_BRAIN;
                         clonedObject.add(mesh);
 
@@ -942,16 +940,16 @@ class Brain3DApp implements Application, Loopable {
                         }
 
                         var leftGeometry = new THREE.BufferGeometry;
-                        leftGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array(leftPositions), VERT_CHUNK));
+                        leftGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(leftPositions), VERT_CHUNK));
                         leftGeometry.computeVertexNormals();
-                        leftGeometry.computeFaceNormals();
+                        //leftGeometry.computeFaceNormals();
                         var leftBrain = new THREE.Mesh(leftGeometry, surfaceMaterial);
                         leftBrain.renderOrder = RENDER_ORDER_BRAIN;
 
                         var rightGeometry = new THREE.BufferGeometry;
-                        rightGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array(rightPositions), VERT_CHUNK));
+                        rightGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(rightPositions), VERT_CHUNK));
                         rightGeometry.computeVertexNormals();
-                        rightGeometry.computeFaceNormals();
+                        //rightGeometry.computeFaceNormals();
                         var rightBrain = new THREE.Mesh(rightGeometry, surfaceMaterial);
                         rightBrain.renderOrder = RENDER_ORDER_BRAIN;
 

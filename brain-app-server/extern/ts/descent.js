@@ -7,8 +7,8 @@ var cola;
      * Descent respects a collection of locks over nodes that should not move
      * @class Locks
      */
-    var Locks = /** @class */ (function () {
-        function Locks() {
+    class Locks {
+        constructor() {
             this.locks = {};
         }
         /**
@@ -17,37 +17,36 @@ var cola;
          * @param id index of node to be locked
          * @param x required position for node
          */
-        Locks.prototype.add = function (id, x) {
+        add(id, x) {
             if (isNaN(x[0]) || isNaN(x[1]))
                 debugger;
             this.locks[id] = x;
-        };
+        }
         /**
          * @method clear clear all locks
          */
-        Locks.prototype.clear = function () {
+        clear() {
             this.locks = {};
-        };
+        }
         /**
          * @isEmpty
          * @returns false if no locks exist
          */
-        Locks.prototype.isEmpty = function () {
+        isEmpty() {
             for (var l in this.locks)
                 return false;
             return true;
-        };
+        }
         /**
          * perform an operation on each lock
          * @apply
          */
-        Locks.prototype.apply = function (f) {
+        apply(f) {
             for (var l in this.locks) {
                 f(l, this.locks[l]);
             }
-        };
-        return Locks;
-    }());
+        }
+    }
     cola.Locks = Locks;
     /**
      * Uses a gradient descent approach to reduce a stress or p-stress goal function over a graph with specified ideal edge lengths or a square matrix of dissimilarities.
@@ -59,7 +58,7 @@ var cola;
      *
      * @class Descent
      */
-    var Descent = /** @class */ (function () {
+    class Descent {
         /**
          * @method constructor
          * @param x {number[][]} initial coordinates for nodes
@@ -68,8 +67,7 @@ var cola;
          * If G[i][j] > 1 and the separation between nodes i and j is greater than their ideal distance, then there is no contribution for this pair to the goal
          * If G[i][j] <= 1 then it is used as a weighting on the contribution of the variance between ideal and actual separation between i and j to the goal function
          */
-        function Descent(x, D, G) {
-            if (G === void 0) { G = null; }
+        constructor(x, D, G = null) {
             this.D = D;
             this.G = G;
             this.threshold = 0.0001;
@@ -129,7 +127,7 @@ var cola;
                 this.xtmp[i] = new Array(n);
             }
         }
-        Descent.createSquareMatrix = function (n, f) {
+        static createSquareMatrix(n, f) {
             var M = new Array(n);
             for (var i = 0; i < n; ++i) {
                 M[i] = new Array(n);
@@ -138,9 +136,8 @@ var cola;
                 }
             }
             return M;
-        };
-        Descent.prototype.offsetDir = function () {
-            var _this = this;
+        }
+        offsetDir() {
             var u = new Array(this.k);
             var l = 0;
             for (var i = 0; i < this.k; ++i) {
@@ -148,11 +145,10 @@ var cola;
                 l += x * x;
             }
             l = Math.sqrt(l);
-            return u.map(function (x) { return x *= _this.minD / l; });
-        };
+            return u.map(x => x *= this.minD / l);
+        }
         // compute first and second derivative information storing results in this.g and this.H
-        Descent.prototype.computeDerivatives = function (x) {
-            var _this = this;
+        computeDerivatives(x) {
             var n = this.n;
             if (n < 1)
                 return;
@@ -240,10 +236,10 @@ var cola;
                 }
             }
             if (!this.locks.isEmpty()) {
-                this.locks.apply(function (u, p) {
-                    for (i = 0; i < _this.k; ++i) {
-                        _this.H[i][u][u] += maxH;
-                        _this.g[i][u] -= maxH * (p[i] - x[i][u]);
+                this.locks.apply((u, p) => {
+                    for (i = 0; i < this.k; ++i) {
+                        this.H[i][u][u] += maxH;
+                        this.g[i][u] -= maxH * (p[i] - x[i][u]);
                     }
                 });
             }
@@ -255,23 +251,23 @@ var cola;
                                     if (isNaN(this.H[i][u][v])) debugger;
                             }
             DEBUG */
-        };
-        Descent.dotProd = function (a, b) {
+        }
+        static dotProd(a, b) {
             var x = 0, i = a.length;
             while (i--)
                 x += a[i] * b[i];
             return x;
-        };
+        }
         // result r = matrix m * vector v
-        Descent.rightMultiply = function (m, v, r) {
+        static rightMultiply(m, v, r) {
             var i = m.length;
             while (i--)
                 r[i] = Descent.dotProd(m[i], v);
-        };
+        }
         // computes the optimal step size to take in direction d using the
         // derivative information in this.g and this.H
         // returns the scalar multiplier to apply to d to get the optimal step
-        Descent.prototype.computeStepSize = function (d) {
+        computeStepSize(d) {
             var numerator = 0, denominator = 0;
             for (var i = 0; i < this.k; ++i) {
                 numerator += Descent.dotProd(this.g[i], d[i]);
@@ -281,31 +277,30 @@ var cola;
             if (denominator === 0 || !isFinite(denominator))
                 return 0;
             return 1 * numerator / denominator;
-        };
-        Descent.prototype.reduceStress = function () {
+        }
+        reduceStress() {
             this.computeDerivatives(this.x);
             var alpha = this.computeStepSize(this.g);
             for (var i = 0; i < this.k; ++i) {
                 this.takeDescentStep(this.x[i], this.g[i], alpha);
             }
             return this.computeStress();
-        };
-        Descent.copy = function (a, b) {
+        }
+        static copy(a, b) {
             var m = a.length, n = b[0].length;
             for (var i = 0; i < m; ++i) {
                 for (var j = 0; j < n; ++j) {
                     b[i][j] = a[i][j];
                 }
             }
-        };
+        }
         // takes a step of stepSize * d from x0, and then project against any constraints.
         // result is returned in r.
         // x0: starting positions
         // r: result positions will be returned here
         // d: unconstrained descent vector
         // stepSize: amount to step along d
-        Descent.prototype.stepAndProject = function (x0, r, d, stepSize) {
-            var _this = this;
+        stepAndProject(x0, r, d, stepSize) {
             Descent.copy(x0, r);
             this.takeDescentStep(r[0], d[0], stepSize);
             if (this.project)
@@ -317,26 +312,25 @@ var cola;
             for (var i = 2; i < this.k; i++)
                 this.takeDescentStep(r[i], d[i], stepSize);
             if (!this.locks.isEmpty()) {
-                this.locks.apply(function (u, p) {
-                    for (var i = 0; i < _this.k; i++) {
+                this.locks.apply((u, p) => {
+                    for (var i = 0; i < this.k; i++) {
                         r[i][u] = p[i];
                     }
                 });
             }
-        };
-        Descent.mApply = function (m, n, f) {
+        }
+        static mApply(m, n, f) {
             var i = m;
             while (i-- > 0) {
                 var j = n;
                 while (j-- > 0)
                     f(i, j);
             }
-        };
-        Descent.prototype.matrixApply = function (f) {
+        }
+        matrixApply(f) {
             Descent.mApply(this.k, this.n, f);
-        };
-        Descent.prototype.computeNextPosition = function (x0, r) {
-            var _this = this;
+        }
+        computeNextPosition(x0, r) {
             this.computeDerivatives(x0);
             var alpha = this.computeStepSize(this.g);
             this.stepAndProject(x0, r, this.g, alpha);
@@ -345,13 +339,13 @@ var cola;
                     if (isNaN(r[i][u]))
                         debugger;
             if (this.project) {
-                this.matrixApply(function (i, j) { return _this.e[i][j] = x0[i][j] - r[i][j]; });
+                this.matrixApply((i, j) => this.e[i][j] = x0[i][j] - r[i][j]);
                 var beta = this.computeStepSize(this.e);
                 beta = Math.max(0.2, Math.min(beta, 1));
                 this.stepAndProject(x0, r, this.e, beta);
             }
-        };
-        Descent.prototype.run = function (iterations) {
+        }
+        run(iterations) {
             var stress = Number.MAX_VALUE, converged = false;
             while (!converged && iterations-- > 0) {
                 var s = this.rungeKutta();
@@ -359,9 +353,8 @@ var cola;
                 stress = s;
             }
             return stress;
-        };
-        Descent.prototype.rungeKutta = function () {
-            var _this = this;
+        }
+        rungeKutta() {
             this.computeNextPosition(this.x, this.a);
             Descent.mid(this.x, this.a, this.ia);
             this.computeNextPosition(this.ia, this.b);
@@ -369,24 +362,22 @@ var cola;
             this.computeNextPosition(this.ib, this.c);
             this.computeNextPosition(this.c, this.d);
             var disp = 0;
-            this.matrixApply(function (i, j) {
-                var x = (_this.a[i][j] + 2.0 * _this.b[i][j] + 2.0 * _this.c[i][j] + _this.d[i][j]) / 6.0, d = _this.x[i][j] - x;
+            this.matrixApply((i, j) => {
+                var x = (this.a[i][j] + 2.0 * this.b[i][j] + 2.0 * this.c[i][j] + this.d[i][j]) / 6.0, d = this.x[i][j] - x;
                 disp += d * d;
-                _this.x[i][j] = x;
+                this.x[i][j] = x;
             });
             return disp;
-        };
-        Descent.mid = function (a, b, m) {
-            Descent.mApply(a.length, a[0].length, function (i, j) {
-                return m[i][j] = a[i][j] + (b[i][j] - a[i][j]) / 2.0;
-            });
-        };
-        Descent.prototype.takeDescentStep = function (x, d, stepSize) {
+        }
+        static mid(a, b, m) {
+            Descent.mApply(a.length, a[0].length, (i, j) => m[i][j] = a[i][j] + (b[i][j] - a[i][j]) / 2.0);
+        }
+        takeDescentStep(x, d, stepSize) {
             for (var i = 0; i < this.n; ++i) {
                 x[i] = x[i] - stepSize * d[i];
             }
-        };
-        Descent.prototype.computeStress = function () {
+        }
+        computeStress() {
             var stress = 0;
             for (var u = 0, nMinus1 = this.n - 1; u < nMinus1; ++u) {
                 for (var v = u + 1, n = this.n; v < n; ++v) {
@@ -405,15 +396,13 @@ var cola;
                 }
             }
             return stress;
-        };
-        Descent.zeroDistance = 1e-10;
-        return Descent;
-    }());
+        }
+    }
+    Descent.zeroDistance = 1e-10;
     cola.Descent = Descent;
     // Linear congruential pseudo random number generator
-    var PseudoRandom = /** @class */ (function () {
-        function PseudoRandom(seed) {
-            if (seed === void 0) { seed = 1; }
+    class PseudoRandom {
+        constructor(seed = 1) {
             this.seed = seed;
             this.a = 214013;
             this.c = 2531011;
@@ -421,16 +410,15 @@ var cola;
             this.range = 32767;
         }
         // random real between 0 and 1
-        PseudoRandom.prototype.getNext = function () {
+        getNext() {
             this.seed = (this.seed * this.a + this.c) % this.m;
             return (this.seed >> 16) / this.range;
-        };
+        }
         // random real between min and max
-        PseudoRandom.prototype.getNextBetween = function (min, max) {
+        getNextBetween(min, max) {
             return min + this.getNext() * (max - min);
-        };
-        return PseudoRandom;
-    }());
+        }
+    }
     cola.PseudoRandom = PseudoRandom;
 })(cola || (cola = {}));
 //# sourceMappingURL=descent.js.map

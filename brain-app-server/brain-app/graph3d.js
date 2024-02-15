@@ -366,7 +366,7 @@ class Graph3D {
             if (config.type === "continuous-normal") {
                 this.edgeMinColor = config.minColor;
                 this.edgeMaxColor = config.maxColor;
-                var func = d3.scale.linear()
+                var func = d3.scaleLinear()
                     .domain([this.edgeMinWeight, this.edgeMaxWeight])
                     .range([config.minColor, config.maxColor]);
                 for (var i = 0; i < this.edgeList.length; i++) {
@@ -377,7 +377,7 @@ class Graph3D {
                 }
             }
             else if (config.type === "discrete") {
-                var func = d3.scale.ordinal()
+                var func = d3.scaleOrdinal()
                     .domain(config.valueArray)
                     .range(config.colorArray);
                 for (var i = 0; i < this.edgeList.length; i++) {

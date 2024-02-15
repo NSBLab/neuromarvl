@@ -1,15 +1,15 @@
-/// <reference path="../extern/ts/descent.ts"/>
-/// <reference path="../extern/ts/shortestpaths.ts"/>
+///<reference path="../extern/WebCola-3.3.8/index.ts"/>
 /**
     This application uses similarity data between areas of the brain to construct a thresholded graph with edges
     between the most similar areas. It is designed to be embedded in a view defined in brainapp.html / brainapp.ts.
 */
 
+//import * as cola from '../extern/WebCola-3.3.8/index'
 // GLOBAL VARIABLES
 declare var d3;
 declare var numeric;
 declare var packages;
-
+declare var cola;
 
 var colans = <any>cola;
 var sliderSpace = 70; // The number of pixels to reserve at the bottom of the div for the slider
@@ -280,17 +280,28 @@ class Brain3DApp implements Application, Loopable {
         // D3 can scale colours, but needs to use color strings
         let minString = "#" + minColor.toString(16);
         let maxString = "#" + maxColor.toString(16);
-        
+        console.log(minString);
+        console.log(maxString);
         // Continuous has each value mapped with equal proportion
         let i = a.columnNames.indexOf(colorAttribute);
         let singlePortion = (1 / a.info[colorAttribute].numElements) || 0;
-        let colorMap = d3.scale
-            .linear()
+        let colorMap = d3.scaleLinear()
             .domain([a.getMin(i), a.getMax(i)])
             .range([minString, maxString])
             ;
+        //console.log(valueArray);
+        //console.log(colorMap(valueArray[0]));
+        //let T = valueArray.map(aArray => aArray.map(value => ({
+        //    color: parseInt(d3.color(colorMap(value)).formatHex(), 16),
+        //    portion: singlePortion
+        //})));
+        //console.log(T);
+        //console.log([a.getMin(i), a.getMax(i)]);
+        //console.log(singlePortion);
+
+        // the colorMap function now returns rgb(R, G, B) strings, so convert to hex
         return valueArray.map(aArray => aArray.map(value => ({
-            color: parseInt(colorMap(value).substring(1), 16),
+            color: parseInt(d3.color(colorMap(value)).formatHex().substring(1), 16),
             portion: singlePortion
         })));
     }
@@ -328,8 +339,7 @@ class Brain3DApp implements Application, Loopable {
         }
         else {
             // Discrete single value is just an ordinal mapping
-            let colorMap = d3.scale
-                .ordinal()
+            let colorMap = d3.scaleOrdinal()
                 .domain(discreteValues)
                 .range(discreteColors)
                 ;
@@ -475,9 +485,10 @@ class Brain3DApp implements Application, Loopable {
             max: maxEdgesShowable,
             step: 1,
             value: initialEdgesShown,
-            id: "edge-count-slider-" + this.id + "-slider"
+            id: "edge-count-slider-" + this.id + "-slider",
+            tooltip: "hide"
         });
-        $("#edge-count-slider-" + this.id).on("slide", event => varEdgeCountSliderOnChange(event["value"]));
+        $("#edge-count-slider-" + this.id).on("slide", event => varEdgeCountSliderOnChange(event["value"]) );
         $("#edge-count-slider-" + this.id).on("slideStop", event => this.showNetwork(false));
         $("#edge-count-slider-" + this.id + "-slider").css({
             'width': '300px',
@@ -485,6 +496,7 @@ class Brain3DApp implements Application, Loopable {
             'margin-left': 10,
             'z-index': 1000
         });
+        
 
         let $checkboxTips = $("#checkbox-tips");
         let onToggleTips = () => {
@@ -492,26 +504,23 @@ class Brain3DApp implements Application, Loopable {
                 $("[data-toggle='tooltip']").tooltip(<any>{ container: 'body', trigger: 'hover' });
             }
             else {
-                $("[data-toggle='tooltip']").tooltip("destroy");
+                $("[data-toggle='tooltip']").tooltip("dispose");
             }
         };
         $checkboxTips.on("change", onToggleTips);
         onToggleTips();
-        
         $(`input[name=select-network-type-${this.id}]:radio`).on("change", (event => varNetworkTypeOnChange(event.target["value"])));
 
 
         // Graph canvas setup
         this.graph2dContainer = d3.select('#div-graph-' + this.id)
             .append("div")
-            .style({
-                width: "100%",
-                height: "100%",
-                position: "absolute",
-                top: 0
-            });
-        console.log($(this.graph2dContainer));
-        $(this.graph2dContainer).addClass("graph2dContainer");
+            .style("width", '100%')
+            .style("height", "100%")
+            .style("position", "absolute")
+            .style("top", "0")
+            .attr("class", 'graph2dContainer');
+
         // SVG Initializing
         var varSVGZoom = () => { this.svgZoom(); }
         this.svg = d3.select('#div-graph-' + this.id).append("svg")
@@ -519,9 +528,14 @@ class Brain3DApp implements Application, Loopable {
             .attr("height", jDiv.height() - sliderSpace)
             .call(this.d3Zoom.on("zoom", varSVGZoom));
 
+        //console.log(this.svg);
         try {
-            this.svg[0][0].setAttribute("id", "svgGraph" + this.id);
-            this.svg[0][0].setAttribute("style", "position: absolute; top: 0; left: 0");
+            this.svg.attr("id", "svgGraph" + this.id);
+            this.svg
+                .style('position', 'absolute')
+                .style('top', '0')
+                .style("left", "0");
+
             this.svgAllElements = this.svg.append("g"); // svg Group of shapes
 
             // add arrow marker
@@ -547,7 +561,8 @@ class Brain3DApp implements Application, Loopable {
                 .append("path")
                 .attr("d", "M 0,0 V 4 L6,2 Z"); //this is actual shape for arrowhead
 
-            var varSvg = this.svg[0];
+            // I think this is the first element
+            var varSvg = this.svg._groups[0];
             var varNamespaceURI = varSvg[0].namespaceURI;
             this.svgDefs = document.createElementNS(varNamespaceURI, 'defs');
 
@@ -614,8 +629,9 @@ class Brain3DApp implements Application, Loopable {
         this.input.regMouseDragCallback((dx: number, dy: number, mode: number) => {
             if (this.isControllingGraphOnly) return;
 
+            // these numbers need to be updated
             // right button: rotation
-            if (mode == 3) {
+            if (mode == 2) {
                 if (this.autoRotation == false) {
                     var pixelAngleRatio = 50;
 
@@ -636,7 +652,7 @@ class Brain3DApp implements Application, Loopable {
                     this.mouse.dy = dy;
                 }
             }
-            // left button: pan
+            // middle button: pan
             else if (mode == 1) {
                 var pixelDistanceRatio = 1.6; // with: defaultCameraFov = 25; defaultViewWidth = 800;
                 var defaultCameraFov = 25
@@ -1434,7 +1450,8 @@ class Brain3DApp implements Application, Loopable {
             }
 
             var varType = this.networkType;
-            
+            console.log(cola);
+            console.log(cola.shortestpaths);
             // Create the distance matrix that Cola needs
             var distanceMatrix = (new cola.shortestpaths.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();
             var D = cola.Descent.createSquareMatrix(this.dataSet.info.nodeCount, (i, j) => {
@@ -1678,6 +1695,7 @@ class Brain3DApp implements Application, Loopable {
 
         if (this.bundlingEdges) this.edgesBundlingOnChange(); // turn off edge bundling
 
+        console.log(this.physioGraph);
         this.physioGraph.filteredNodeIDs = filteredIDs;
         this.physioGraph.setNodeVisibilities();
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);

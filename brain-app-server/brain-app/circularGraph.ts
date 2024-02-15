@@ -533,14 +533,14 @@ class CircularGraph {
 
                 if (nodeSettings.nodeColorMode === "discrete") {
                     var distincts = attributes.info[colorAttr].distinctValues;
-                    var colorMap = d3.scale.ordinal().domain(distincts).range(nodeSettings.nodeColorDiscrete);
+                    var colorMap = d3.scaleOrdinal().domain(distincts).range(nodeSettings.nodeColorDiscrete);
                 } else {
                     var columnIndex = attributes.columnNames.indexOf(colorAttr);
                     var min = attributes.getMin(columnIndex);
                     var max = attributes.getMax(columnIndex);
                     var minColor = nodeSettings.nodeColorContinuousMin;
                     var maxColor = nodeSettings.nodeColorContinuousMax;
-                    var colorMap = d3.scale.linear().domain([min, max]).range([minColor, maxColor]);
+                    var colorMap = d3.scaleLinear().domain([min, max]).range([minColor, maxColor]);
                 }
 
                 if (attributes.info[colorAttr].numElements === 1) {
@@ -654,7 +654,7 @@ class CircularGraph {
                 var max = attributes.getMax(columnIndex);
 
                 // Scale value to between 0.05 to 1 
-                var attrMap = d3.scale.linear().domain([min, max]).range([0.05, 1]);
+                var attrMap = d3.scaleLinear().domain([min, max]).range([0.05, 1]);
                 var scalevalue = attrMap(Math.max.apply(Math, value));
                 nodeObject['scale_' + colname] = scalevalue;
 
@@ -699,7 +699,7 @@ class CircularGraph {
                     }
                 } else { // if the attribute is continuous
                     // Scale to group attributes 
-                    var bundleGroupMap = d3.scale.linear().domain([min, max]).range([0, 9.99]); // use 9.99 instead of 10 to avoid a group of a single element (that has the max attribute value)
+                    var bundleGroupMap = d3.scaleLinear().domain([min, max]).range([0, 9.99]); // use 9.99 instead of 10 to avoid a group of a single element (that has the max attribute value)
                     var bundleGroup = bundleGroupMap(Math.max.apply(Math, value)); // group
                     bundleGroup = Math.floor(bundleGroup);
                     nodeObject['bundle_group_' + colname] = bundleGroup;
@@ -1015,14 +1015,14 @@ class CircularGraph {
                 } else {
                     if (nodeSettings.nodeColorMode === "discrete") {
                         var distincts = attributes.info[colorAttr].distinctValues;
-                        var colorMap = d3.scale.ordinal().domain(distincts).range(nodeSettings.nodeColorDiscrete);
+                        var colorMap = d3.scaleOrdinal().domain(distincts).range(nodeSettings.nodeColorDiscrete);
                     } else {
                         var columnIndex = attributes.columnNames.indexOf(colorAttr);
                         var min = attributes.getMin(columnIndex);
                         var max = attributes.getMax(columnIndex);
                         var minColor = nodeSettings.nodeColorContinuousMin;
                         var maxColor = nodeSettings.nodeColorContinuousMax;
-                        var colorMap = d3.scale.linear().domain([min, max]).range([minColor, maxColor]);
+                        var colorMap = d3.scaleLinear().domain([min, max]).range([minColor, maxColor]);
                     }
                     if (attributes.info[colorAttr].numElements === 1) {
                         var color = chartData[colorAttr].map(function (val) {

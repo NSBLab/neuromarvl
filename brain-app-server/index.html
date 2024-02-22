@@ -6,7 +6,7 @@
     <link rel="stylesheet" type="text/css" href="extern/dc-4.2.7.min.css" />
 
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="extern/bootstrap-5.3.2-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="extern/bootstrap-4.6.2-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="extern/splashPage/splashPage.css" />
     <link rel="stylesheet" href="extern/bootstrap-slider-11.0.2.min.css" />
     <link rel="stylesheet" href="extern/jquery-ui-1.13.2.custom/jquery-ui.min.css" />
@@ -231,7 +231,7 @@
                         <label class="control-label" data-bs-toggle="tooltip" data-bs-placement="right" title="An N*N adjacency or connectivity matrix, where N is the number of nodes. Can be tab, space or comma delimited. Order of rows/columns should correspond to the row order of the node coordinates.">Connectivity matrix</label>
                         <input id="select-matrix" style="display:none;" type="file" />
                         <div class="input-group input-group-sm">
-                            <button class="input-group-addon bi bi-info-circle status-changed" id="coords-status"
+                            <button class="input-group-addon bi bi-info-circle status-changed" id="matrix-status"
                                     data-bs-toggle="tooltip" data-bs-placement="bottom" title="File is not uploaded"></button>
                             <button id="button-select-matrix" class="form-control btn-default"><span id="button-select-matrix-filename">Matrix file</span></button>
                         </div>
@@ -246,7 +246,7 @@ If one of the attributes represents module affiliation for an overlapping module
 0|0|0|1|2|0">Node attributes</label>
                         <input id="select-attrs" style="display:none;" type="file" />
                         <div class="input-group input-group-sm">
-                            <button class="input-group-addon bi bi-info-circle status-changed" id="ords-status"
+                            <button class="input-group-addon bi bi-info-circle status-changed" id="attrs-status"
                                     data-bs-toggle="tooltip" data-bs-placement="bottom" title="File is not uploaded"></button>
                             <button id="button-select-attrs" class="form-control btn-default"><span id="button-select-attrs-filename">Attributes file</span></button>
                         </div>
@@ -297,22 +297,24 @@ R Amygdala ">Node labels (optional)</label>
                         <button id="btn-start-batching" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" data-bs-placement="right" title="Create batch images...">Batch</button>
                     </div>
                 </div>
-
             </div>
             <div id="tab-3" class="tab-pane" style="height: 100%;">
-                <br />
-                <div class="btn-group btn-group-justified" data-bs-toggle="btns">
-                    <a class="btn btn-sm btn-primary active" href="#div-node-attribute-tab" data-bs-toggle="tab">
-                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Visual settings and selection filtering for nodes">Node Attrs</span>
-                    </a>
-                    <a class="btn btn-sm btn-primary" href="#div-edge-attribute-tab" data-bs-toggle="tab">
-                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Visual settings for edges">Edge Attrs</span>
-                    </a>
-                </div>
+                <ul class="nav nav-pills mb-3" role="tablist">
+                    <div id="tab-3" class="tab-pane" style="height: 100%;">
 
+                        <div class="btn-group btn-group-justified" data-bs-toggle="btns">
+                            <a class="btn btn-sm btn-primary active" href="#div-node-attribute-tab" data-bs-toggle="tab">
+                                <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Visual settings and selection filtering for nodes">Node Attrs</span>
+                            </a>
+                            <a class="btn btn-sm btn-primary" href="#div-edge-attribute-tab" data-bs-toggle="tab">
+                                <span data-bs-toggle="tooltip" data-bs-placement="bottom" title="Visual settings for edges">Edge Attrs</span>
+                            </a>
+                        </div>
+                    </div>
+                </ul>
                 <br>
                 <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
-                    <div id="div-node-attribute-tab" class="tab-pane active">
+                    <div id="div-node-attribute-tab" class="tab-pane active" role="tabpanel">
                         <div>
                             <div id="div-set-node-scale" style="display: none; margin-bottom: 5px; ">
                                 <label class="control-label" data-bs-toggle="tooltip" data-bs-placement="right" title="Select node property to change">Set</label>
@@ -367,7 +369,7 @@ R Amygdala ">Node labels (optional)</label>
                             <span class="filter-count"></span> selected out of <span class="total-count"></span> | <a href="javascript:dc.filterAll();dc.renderAll();">Reset</a>
                         </div>
                     </div>
-                    <div id="div-edge-attribute-tab" class="tab-pane">
+                    <div id="div-edge-attribute-tab" class="tab-pane" role="tabpanel">
                         <div id="div-edge-size" style="margin-left: 0px; margin-bottom: 10px;" data-bs-toggle="tooltip" data-bs-placement="right" title="Adjust edge thickness">
                             <p><strong>Edge size</strong></p>
                             <input id="div-edge-size-slider" data-slider-id='edge-size-slider' type="text"
@@ -522,14 +524,13 @@ R Amygdala ">Node labels (optional)</label>
                     </div>
                 </div>
             </div>
-        </div>
-        <div style="position: absolute; bottom: 0">
-            <label data-bs-toggle="tooltip" data-bs-placement="top" title="Toggle tooltip help">
-                <input id="checkbox-tips" type="checkbox" value="" checked>Show tips
-            </label>
+            <div style="position: absolute; bottom: 0">
+                <label data-bs-toggle="tooltip" data-bs-placement="top" title="Toggle tooltip help">
+                    <input id="checkbox-tips" type="checkbox" value="" checked>Show tips
+                </label>
+            </div>
         </div>
     </div>
-
 
 
     <!-- Page structure -->
@@ -702,7 +703,7 @@ R Amygdala ">Node labels (optional)</label>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
                     <button id="button-export-submit" type="button" class="btn btn-primary">Export</button>
                 </div>
 
@@ -733,9 +734,18 @@ R Amygdala ">Node labels (optional)</label>
 
     <script src="extern/jquery-3.7.1.min.js"></script>
     <script src="extern/jquery-ui-1.13.2.custom/jquery-ui.min.js"></script>
-    <script src="extern/bootstrap-5.3.2-dist/js/bootstrap.min.js"></script>
-    <script src="extern/popper-2.11.8.min.js"></script>
+    <script src="extern/bootstrap-4.6.2-dist/js/bootstrap.bundle.js"></script>
+    <script src="extern/popper-1.16.1.umd.min.js"></script>
+
+    <!--<script type="importmap">
+        {
+            "imports": {
+                "three": "./extern/three-0.159.0.module.min.js"
+            }
+        }
+    </script>-->
     <script src="extern/three-0.159.0.min.js"></script>
+    <!--<script src="extern/three-0.159.0.module.min.js" type="module"></script>-->
 
     <script src="extern/bootstrap-colorpicker-3.4.0/js/bootstrap-colorpicker.min.js"></script>
 
@@ -762,12 +772,13 @@ R Amygdala ">Node labels (optional)</label>
     <script src="extern/numeric-1.2.6.min.js"></script>
 
     <!--<script src="../node_modules/numeric/numeric-1.2.6.min.js"></script>-->
-    <!--<script src="../node_modules/packages/lib/index.js" type="module"></script>-->
-    <script src="extern/cola-3.3.8.min.js"></script>
-
+    <!--<script src="extern/WebCola-3.3.8/cola.min.js"></script>-->
+    <!--<script src="extern/WebCola-3.3.8/cola.min.js"></script>-->
+    <script src="extern/webcola-3.4.0/cola.umd.production.min.js"></script>
+    <!--<script src="https://cdn.jsdelivr.net/gh/tgdwyer/WebCola/WebCola/cola.min.js"></script>-->
     <!--<script src="extern/d3adaptor.js"></script>-->
 
-    <script src="extern/cytoscape-3.27.0.min.js"></script>
+    <script src="extern/cytoscape-3.28.1.umd.js"></script>
     <script src="extern/cytoscape-cola-2.5.1.js"></script>
     <script src="extern/layout-base-2.0.1.min.js"></script>
     <script src="extern/cose-base-2.2.0.js"></script>

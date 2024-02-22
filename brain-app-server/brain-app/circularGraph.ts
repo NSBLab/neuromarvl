@@ -363,7 +363,7 @@ class CircularGraph {
             .outerRadius(5);
 
         var cluster;
-        cluster = d3.layout.cluster()
+        cluster = d3.cluster()
             .size([360, innerRadius])
             .sort(null)
             .value(function (d) { return d.size; })
@@ -772,6 +772,7 @@ class CircularGraph {
     }
 
     createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
+        console.log(this.svgNodeBundleArray);
         // Based on http://bl.ocks.org/mbostock/1044242
         if (this.svgNodeBundleArray.length == 0)
             return;
@@ -780,8 +781,9 @@ class CircularGraph {
         let edgeSettings = this.saveObj.edgeSettings;
         let nodeSettings = this.saveObj.nodeSettings;
 
+        // this seems to be a deep copy
         let nodeJson = JSON.parse(JSON.stringify(this.svgNodeBundleArray));
-
+        console.log(nodeJson);
         let width = 250 + this.jDiv.width() / 2;
         let height = (this.jDiv.height() - sliderSpace) / 2;
 
@@ -789,43 +791,61 @@ class CircularGraph {
             radius = diameter / 2,
             innerRadius = radius - 120;
 
-        let cluster = d3.layout.cluster()
+        //let cluster = d3.cluster()
+        //    .size([360, innerRadius])
+        //    .sort(null) // Using built-in D3 sort destroy the order of the cluster => need to be investigated
+        //    .value(function (d) { return d.size; })
+        //    ;
+
+        let cluster = d3.cluster()
             .size([360, innerRadius])
-            .sort(null) // Using built-in D3 sort destroy the order of the cluster => need to be investigated
-            .value(function (d) { return d.size; })
             ;
 
-
-        let bundle = d3.layout.bundle();
+        // this makes curved lines using Bezier curves
+        let bundle = d3.curveBundle();
 
         // Node pie chart
-        let pie = d3.layout.pie();
-        let dot = d3.svg.arc()
+        let pie = d3.pie();
+        let dot = d3.arc()
             .innerRadius(0)
-            .outerRadius(5);
+            .outerRadius(5)
+            ;
 
         // Link path
-        let line = d3.svg.line.radial()
-            .interpolate("bundle")
-            .tension(.8)
+        //#let line = d3.svg.line.radial()
+        let line = d3.lineRadial()
+            .curve(d3.curveBasis)
             .radius(function (d) {
                 return d.y;
             })
             .angle(function (d) { return d.x / 180 * Math.PI; })
-        ;
+            ;
 
         this.svgAllElements.attr("transform", "translate(" + width + "," + height + ")");
 
-		// Only set if not already moved
-		// If user moved the circular graph to another position and zoom level, keep it when reloading
-		if (this.d3Zoom.translate().reduce((a,b) =>a+b) == 0) {
-			this.d3Zoom.scale(1);
-			this.d3Zoom.translate([width, height]);
+        // Only set if not already moved
+        // If user moved the circular graph to another position and zoom level, keep it when reloading
+        // d3Zoom = d3.zoom()
+
+        var curTransform = d3.zoomTransform(this.svgAllElements.node());
+
+        // if (this.d3Zoom.translate().reduce((a, b) => a + b) == 0) {
+        //this.d3Zoom.scale(1);
+        //this.d3Zoom.translate([width, height]);
+        //}
+        // d3 v7 change
+        if (curTransform.x == 0 && curTransform.y == 0) {
+            this.svgAllElements.call(
+                this.d3Zoom.transform,
+                d3.ZoomTransform(1, width, height)
+            );
 		}
 
-        // An alternative solutions to sorting the children while keeping 
+        // An alternative solutions to sorting the children while keeping
         // the order of the clusters 
+        
         let tree = packages.root(nodeJson);
+        console.log(tree);
         // Tree may have a false root. Remove it.
         if (tree.children.length === 1) tree = tree.children[0];
         let groups = tree.children;
@@ -1425,8 +1445,10 @@ class CircularGraph {
                 //bar.colorPicker = $('#span-circular-layout-bar'+ bar.id +'-color-picker').detach();
             }
         }
-        $('#div-circular-layout-menu-' + this.id).zIndex(1000);
-        $('#div-circular-layout-menu-' + this.id).css({ left: l, bottom: b, height: 'auto' });
+
+        //.zIndex() was removed from jqueryui
+        //$('#div-circular-layout-menu-' + this.id).zIndex(1000);
+        $('#div-circular-layout-menu-' + this.id).css({ left: l, bottom: b, height: 'auto', zIndex: 1000});
         $('#div-circular-layout-menu-' + this.id).fadeToggle('fast');
     }
 

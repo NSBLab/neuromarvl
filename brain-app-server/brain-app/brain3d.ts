@@ -1,15 +1,16 @@
-///<reference path="../extern/WebCola-3.3.8/index.ts"/>
+///<reference path="../extern/webcola-3.4.0/cola.d.ts"/>
 /**
     This application uses similarity data between areas of the brain to construct a thresholded graph with edges
     between the most similar areas. It is designed to be embedded in a view defined in brainapp.html / brainapp.ts.
 */
 
-//import * as cola from '../extern/WebCola-3.3.8/index'
+//import * as cola from '../node_modules/webcola/dist/index'
+
 // GLOBAL VARIABLES
 declare var d3;
 declare var numeric;
 declare var packages;
-declare var cola;
+
 
 var colans = <any>cola;
 var sliderSpace = 70; // The number of pixels to reserve at the bottom of the div for the slider
@@ -519,7 +520,8 @@ class Brain3DApp implements Application, Loopable {
             .style("height", "100%")
             .style("position", "absolute")
             .style("top", "0")
-            .attr("class", 'graph2dContainer');
+            .attr("class", 'graph2dContainer')
+            .attr("id", "cy");
 
         // SVG Initializing
         var varSVGZoom = () => { this.svgZoom(); }
@@ -1451,9 +1453,9 @@ class Brain3DApp implements Application, Loopable {
 
             var varType = this.networkType;
             console.log(cola);
-            console.log(cola.shortestpaths);
+            
             // Create the distance matrix that Cola needs
-            var distanceMatrix = (new cola.shortestpaths.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();
+            var distanceMatrix = (new cola.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();
             var D = cola.Descent.createSquareMatrix(this.dataSet.info.nodeCount, (i, j) => {
                 return distanceMatrix[i][j] * this.colaLinkDistance;
             });
@@ -1977,8 +1979,11 @@ class Brain3DApp implements Application, Loopable {
         if (this.colaGraph) this.colaGraph.destroy();
         this.colaGraph = new Graph3D(this.colaObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj);
         this.colaGraph.setVisible(false);
-        
-        this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer, this.commonData, this.saveFileObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
+        //console.log("this.graph2dContainer");
+        //console.log(this.graph2dContainer.selection());
+        //console.log(this.graph2dContainer._groups[0]);
+        // extract the DOM element from graph2dContainer
+        this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer._groups[0][0], this.commonData, this.saveFileObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
 
         // Initialise the filtering
         if (this.brainSurfaceMode === 0) {

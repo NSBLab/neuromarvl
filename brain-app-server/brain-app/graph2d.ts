@@ -84,7 +84,7 @@ class Graph2D {
                 // If the attribute is continuous, split into 10 bands - TODO: could use user specified ranges
                 let min = this.dataSet.attributes.getMin(columnIndex);
                 let max = this.dataSet.attributes.getMax(columnIndex);
-                let bundleGroupMap = d3.scale.linear().domain([min, max]).range([0, 9.99]); // use 9.99 instead of 10 to avoid a group of a single element (that has the max attribute value)
+                let bundleGroupMap = d3.scaleLinear().domain([min, max]).range([0, 9.99]); // use 9.99 instead of 10 to avoid a group of a single element (that has the max attribute value)
                 getGroup = value => {
                     let bundleGroup = bundleGroupMap(Math.max.apply(Math, value));
                     return Math.floor(bundleGroup);
@@ -276,6 +276,7 @@ class Graph2D {
                 h: container.offsetHeight * 0.5
             }
         }
+        console.log(this.layout);
         switch (this.layout) {
             case "cose":
                 // This layout gets something very wrong with the boundingBox, possibly ignoring node radii, so we need to compensate
@@ -316,6 +317,7 @@ class Graph2D {
                 layoutOptions.userConstIter = 0;
                 layoutOptions.allConstIter = 5;
 
+                
                 //layoutOptions.flow = false;
 
                 break;
@@ -338,7 +340,7 @@ class Graph2D {
                         minColor = Math.min(minColor, color);
                         maxColor = Math.max(maxColor, color);
                     }
-                    let f = d3.scale.linear().domain([minColor, maxColor]).range([0, 9.99]);
+                    let f = d3.scaleLinear().domain([minColor, maxColor]).range([0, 9.99]);
                     layoutOptions.concentric = node => Math.floor(f(parseInt(node.data("color").substring(1), 16)));
                 }
                 else {
@@ -349,10 +351,11 @@ class Graph2D {
                 break;
         }
         
-
+        //console.log(container);
+        console.log(elements);
         this.cy = cytoscape({
-            container,
-            elements,
+            container: container,
+            elements: elements,
             style: [
                 {
                     selector: "node.child",
@@ -533,14 +536,14 @@ class Graph2D {
 
             // Edge color setting changes
             if ((this.graph3d.colorMode === "weight") || (this.graph3d.colorMode === "none")) {
-                this.cy.elements("edge").each((i, e) => {
+                this.cy.elements("edge").each((e, i) => {
                     let edge = this.graph3d.edgeList[e.data("edgeListIndex")];
                     e.data("color", edge.color);
                 });
             }
             else {
                 // "node"
-                this.cy.elements("edge").each((i, e) => {
+                this.cy.elements("edge").each((e, i) => {
                     let colorVectorSource = this.graph3d.edgeList[e.data("edgeListIndex")].uniforms.startColor.value;
                     let colorVectorTarget = this.graph3d.edgeList[e.data("edgeListIndex")].uniforms.endColor.value;
                     let colorVector = (new THREE.Vector4()).lerpVectors(colorVectorSource, colorVectorTarget, 0.5);
@@ -550,7 +553,7 @@ class Graph2D {
 
             // Node size/color changes - TODO: color
             let nodes = this.graph3d.nodeMeshes;
-            this.cy.elements("node.child").each((i, e) => {
+            this.cy.elements("node.child").each((e, i) => {
                 // Size
                 let node = nodes[e.data("sourceId")];
                 let radius = node.scale.x * this.scale * this.BASE_RADIUS
@@ -607,13 +610,15 @@ class Graph2D {
     settingOnChange() {
         // Styling changes not affecting layout, triggered by 2d settings
         this.cy.batch(() => {
+            console.log(this.cy.elements("node.child"));
             this.cy.elements("node.child")
                 .data("border", this.scale * this.BASE_BORDER_WIDTH)
                 .data("labelSize", this.scale * this.BASE_LABEL_SIZE)
-                .each((i, e) => e.data("radius", e.data("nodeRadius") * this.scale * this.BASE_RADIUS))
+                .each((e, i) => { e.data("radius", e.data("nodeRadius") * this.scale * this.BASE_RADIUS);
+        })
                 ;
             this.cy.elements("edge")
-                .each((i, e) => {
+                .each((e, i) => {
                     let width = this.graph3d.edgeList[e.data("edgeListIndex")].shape.scale.x;
                     this.links[i].width = width;
                     e.data("edgeWeight", width);
@@ -624,11 +629,12 @@ class Graph2D {
     }
 
     menuButtonOnClick() {
+        console.log("menuButtonOnClick()");
         let l = $('#button-graph2d-option-menu-' + this.id).position().left + 5;
         let b = $('#button-graph2d-option-menu-' + this.id).outerHeight();
         
-        $('#div-graph2d-layout-menu-' + this.id).zIndex(1000);
-        $('#div-graph2d-layout-menu-' + this.id).css({ left: l, bottom: b, height: 'auto' });
+        //$('#div-graph2d-layout-menu-' + this.id).zIndex(1000);
+        $('#div-graph2d-layout-menu-' + this.id).css({ left: l, bottom: b, height: 'auto', zIndex: 1000 });
         $('#div-graph2d-layout-menu-' + this.id).fadeToggle('fast');
     }
 
@@ -672,7 +678,7 @@ class Graph2D {
         if ($("#checkbox-tips").is(":checked")) $button.tooltip(<any>{ container: 'body', trigger: 'hover' });
         $button.css({ 'position': 'relative', 'margin-left': '5px', 'font-size': '12px', 'z-index': 500 })
         this.jDiv.find("#div-graph-controls").append($button);
-        $button.click(function () { varMenuButtonOnClick(); });
+        $button.on("click", function () { varMenuButtonOnClick(); });
 
 
         //------------------------------------------------------------------------

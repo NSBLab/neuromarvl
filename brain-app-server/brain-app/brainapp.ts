@@ -1,7 +1,7 @@
 /// <reference path="../node_modules/@types/three/index.d.ts"/>
 /// <reference path="../node_modules/@types/jquery/index.d.ts"/>
-// /// <reference path="../node_modules/@types/jqueryui/index.d.ts"/>
 /// <reference path="../node_modules/@types/bootstrap/index.d.ts"/>
+/// <reference path="../extern/webcola-3.4.0/cola.d.ts"/>
 
 /**
     This file contains all the control logic for brainapp.html (to manage interaction with
@@ -17,7 +17,6 @@ declare var dc;
 declare var crossfilter;
 declare var jsyaml;
 declare var extra;
-declare var cola;
 
 const TYPE_COORD = "coordinates";
 const TYPE_MATRIX = "matrix";
@@ -187,7 +186,7 @@ class NeuroMarvl {
             $("[data-toggle='tooltip']").tooltip(<any>{ container: 'body', trigger: 'hover' });
         }
         else {
-            $("[data-toggle='tooltip']").tooltip("destroy");
+            $("[data-toggle='tooltip']").tooltip("dispose");
         }
 
         /*
@@ -303,6 +302,8 @@ class NeuroMarvl {
             let y = ui.position.top;
             this.setViewCrossroads(x, y);
         });
+
+
 
         $("#div-surface-opacity-slider")['bootstrapSlider']({
             formatter: value => 'Current value: ' + value
@@ -889,7 +890,7 @@ class NeuroMarvl {
 
     applyFilterButtonOnClick = () => {
         if (!this.referenceDataSet.attributes.filteredRecords) {
-            $('#button-apply-filter').button("disable");
+            $('#button-apply-filter').attr("disabled", "true");
             return;
         }
 
@@ -1751,7 +1752,7 @@ class NeuroMarvl {
             save.surfaceModel = model;
             save.view = viewType;
 
-            $('#button-save-app').button({ disabled: false });
+            $('#button-save-app').attr("disabled", "disabled");
 
             // Load dataset into the webapp
             if (source === "empty") {
@@ -2365,7 +2366,7 @@ class NeuroMarvl {
             this.referenceDataSet.attributes.filteredRecordsHighlightChanged = true;
             console.log(this.referenceDataSet);
             console.log('filtered()');
-            $('#button-apply-filter').button("enable");
+            $('#button-apply-filter').attr("disabled", "false");
         }
         for (var j = 0; j < attrs.columnNames.length; ++j) {
             $('#barCharts').append('<div id="barChart' + j + '"></div>');
@@ -2397,7 +2398,7 @@ class NeuroMarvl {
         // keep track of total readings
         d3.select("#total").text(totalReadings);
 
-        $('#button-apply-filter').button("disable");
+        $('#button-apply-filter').attr("disabled", "disabled");
 
         // render all charts
         dc.renderAll();

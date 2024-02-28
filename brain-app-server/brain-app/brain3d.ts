@@ -1639,7 +1639,7 @@ class Brain3DApp implements Application, Loopable {
   
     svgZoom() {
         if (this.isControllingGraphOnly) {
-            this.svgAllElements.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            this.svgAllElements.attr("transform", d3.zoomTransform(this.svgAllElements.node()).toString());
         }
     }
    

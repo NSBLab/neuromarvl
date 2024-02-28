@@ -3,14 +3,15 @@
   "name": "asp.net",
   "private": true,
   "devDependencies": {
+    "@popperjs/core": "2.11.8",
     "@svgdotjs/svg.draggable.js": "3.0.3",
     "@svgdotjs/svg.js": "3.2.0",
-    "@types/bootstrap": "5.2.10",
+    "@types/bootstrap": "4.6.6",
     "@types/d3": "7.4.3",
     "@types/jquery": "3.5.29",
     "@types/jqueryui": "1.12.21",
     "@types/three": "0.158.3",
     "@types/webcola": "3.2.0",
-    "@popperjs/core": "2.11.8"
+    "eslint": "^8.56.0"
   }
 }

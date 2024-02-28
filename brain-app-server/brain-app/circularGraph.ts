@@ -16,8 +16,8 @@ class CircularGraph {
     saveObj;
 
     // Circular Only data
-    nodes = [];
-    links = [];
+    nodes;
+    links;
 
     // Save html elements
     circularBar1ColorPicker;
@@ -358,7 +358,7 @@ class CircularGraph {
 
         // Node pie chart
         var pie = d3.layout.pie();
-        var dot = d3.svg.arc()
+        var dot = d3.arc()
             .innerRadius(0)
             .outerRadius(5);
 
@@ -552,7 +552,7 @@ class CircularGraph {
                         return colorMap(i).replace("0x", "#");
                     });
                 }
-
+                
                 group.selectAll(".path")
                     .data(function () {
                         var tmp = chartData[colorAttr].map(function (val) { return val; });
@@ -772,7 +772,7 @@ class CircularGraph {
     }
 
     createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
-        console.log(this.svgNodeBundleArray);
+        //console.log(this.svgNodeBundleArray);
         // Based on http://bl.ocks.org/mbostock/1044242
         if (this.svgNodeBundleArray.length == 0)
             return;
@@ -797,12 +797,9 @@ class CircularGraph {
         //    .value(function (d) { return d.size; })
         //    ;
 
-        let cluster = d3.cluster()
-            .size([360, innerRadius])
-            ;
-
+  
         // this makes curved lines using Bezier curves
-        let bundle = d3.curveBundle();
+        //let bundle = d3.curveBundle();
 
         // Node pie chart
         let pie = d3.pie();
@@ -812,13 +809,13 @@ class CircularGraph {
             ;
 
         // Link path
+        //.curve(d3.curveBundle.beta(0.95))
         //#let line = d3.svg.line.radial()
         let line = d3.lineRadial()
-            .curve(d3.curveBasis)
-            .radius(function (d) {
-                return d.y;
-            })
-            .angle(function (d) { return d.x / 180 * Math.PI; })
+            .curve(d3.curveBundle.beta(0.95))
+            .radius(d => { return d.y; }) // d.y
+            .angle(d => { return d.x / 180 * Math.PI; })
+            //.angle(d => { return Math.PI; })
             ;
 
         this.svgAllElements.attr("transform", "translate(" + width + "," + height + ")");
@@ -844,8 +841,27 @@ class CircularGraph {
         // An alternative solutions to sorting the children while keeping
         // the order of the clusters 
         
-        let tree = packages.root(nodeJson);
+        let tree = d3.hierarchy(packages.root(nodeJson));
         console.log(tree);
+
+        // this takes the 
+        let cluster = d3.cluster()
+            .size([360, innerRadius])
+            ;
+
+        //const data22 = {
+        //    name: "Eve",
+        //    children: [
+        //        { name: "Cain" },
+        //        { name: "Seth", children: [{ name: "Enos" }, { name: "Noam" }] },
+        //        { name: "Abel" },
+        //        { name: "Awan", children: [{ name: "Enoch" }] },
+        //        { name: "Azura" }
+        //    ]
+        //};
+        //let tree22 = d3.hierarchy(data22);
+        //console.log(tree22);
+
         // Tree may have a false root. Remove it.
         if (tree.children.length === 1) tree = tree.children[0];
         let groups = tree.children;
@@ -868,7 +884,12 @@ class CircularGraph {
         if (bundleByAttribute !== "none") {
             groups.sort((a, b) => a.children[0].bundleSort[bundleByAttribute] - b.children[0].bundleSort[bundleByAttribute]);
         }
-        this.nodes = cluster.nodes(tree);
+
+        // this nodes is the original hierarchy with .x and .y location parameters added
+        // to draw the nodes in radial layout
+
+        this.nodes = cluster(tree);
+        console.log(this.nodes);
         if (bundleByAttribute !== "none") {
             // Offset nodes bundled by multivalue attributes into concentric rings
             let offset = radius / 16;
@@ -880,7 +901,9 @@ class CircularGraph {
             }
         }
 
-        this.links = packages.imports(this.nodes);
+        //console.log(this.nodes.children);
+
+        this.links = packages.edgesD3V7(this.nodes.children);
 
         var varMouseOveredSetNodeID = (id) => { this.mouseOveredSetNodeID(id); }
         var varMouseOutedSetNodeID = () => { this.mouseOutedSetNodeID(); }
@@ -892,41 +915,60 @@ class CircularGraph {
         ///////////// Adding Elements to SVG to create Cicular Graph ///////////////
         ////////////////////////////////////////////////////////////////////////////
         // Add Links to Circular Graph
-        var links = this.links;
+        var linksForPlotting = [];
         var edgeColorMode = this.circularEdgeColorMode;
         var edgeColorConfig = this.edgeColorConfig;
         var edgeDirectionMode = this.circularEdgeDirectionMode;
-        var varSvg = this.svg[0];
-        var varNS = varSvg[0].namespaceURI;
+        var varSvg = this.svg.node();
+        var varNS = varSvg.namespaceURI;
         var varDefs = this.svgDefs;
-        var bundledLinks = bundle(links);
 
-        if (bundledLinks.length > 0) {
+        // we put the parent in the centre as a control point to arc the curves
+        this.links.forEach(function (curLink) {
+            linksForPlotting.push([curLink.source, curLink.source.parent, curLink.target]);
+        })
+        console.log(linksForPlotting);
+        //console.log(this.svgAllElements);
+        //var bundledLinks = bundle(links);
+        
+        if (this.links.length > 0) {
+            // create the edges
+
             this.svgAllElements.selectAll(".linkCircular")
-                .data(function () {
-                    if (bundledLinks[0][0].bundleByAttribute == "none") {
-                        for (var i = 0; i < bundledLinks.length; i++) {
-                            bundledLinks[i][1].y = 70;
-                        }
-                    }
-                    return bundledLinks;
-                })
+                .data(linksForPlotting
+                    //function () {
+                    //if (bundledLinks[0][0].bundleByAttribute == "none") {
+                    //    for (var i = 0; i < bundledLinks.length; i++) {
+                    //        bundledLinks[i][1].y = 70;
+                    //    }
+                    //}
+                    //return bundledLinks;
+                //}
+                )
                 .enter()
                 .append("path") // Appending Element
-                .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
-                .attr("class", "linkCircular")
-                .attr("d", function (d) {
-                    return line(d);
+                .each(function (d) {
+                    d.source = d[0], d.target = d[d.length - 1];
                 })
+                .attr("class", "linkCircular")
+                .attr("d", line)
+                //    function (d) {
+                //    console.log(line);
+                //    console.log(line(d));
+
+                //    return line(d);
+                //})
                 .style("stroke-opacity", 1)
                 .style("stroke", function (l) {
-                    var id = 'gradient_' + l.source.id + '_' + l.target.id;
+                    console.log(this);
+                    console.log(l);
+                    var id = 'gradient_' + l.source.data.id + '_' + l.target.data.id;
                     var sourceOpacity = 1, targetOpacity = 1;
 
                     if (edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode != "node") {
-                        return l.color = l.source.linkColors[l.target.id];
-                    } else if (l.source.color === l.target.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
-                        return l.color = "#" + l.source.color;
+                        return l.color = l.source.data.linkColors[l.target.data.id];
+                    } else if (l.source.data.color === l.target.data.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
+                        return l.color = "#" + l.source.data.color;
                     }
 
                     if (edgeDirectionMode === "gradient") {
@@ -935,17 +977,17 @@ class CircularGraph {
                     } else if (edgeColorMode === "node") {
                         var sourceColor: string;
                         var targetColor: string;
-                        if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.color !== l.target.color)) {
+                        if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.data.color !== l[1].data.color)) {
                             sourceColor = String(edgeColorConfig.edgeTransitionColor);
                             targetColor = String(edgeColorConfig.edgeTransitionColor);
                         }
                         else {
-                            sourceColor = String(l.source.color);
-                            targetColor = String(l.target.color);
+                            sourceColor = String(l.source.data.color);
+                            targetColor = String(l.target.data.color);
                         }
                     } else {
-                        var sourceColor = String(l.source.linkColors[l.target.id]);
-                        var targetColor = String(l.source.linkColors[l.target.id]);
+                        var sourceColor = String(l.source.data.linkColors[l.target.data.id]);
+                        var targetColor = String(l.source.data.linkColors[l.target.data.id]);
                     }
 
                     if (edgeDirectionMode === "opacity") {
@@ -960,6 +1002,7 @@ class CircularGraph {
                     ];
 
                     // Calculate Gradient Direction
+                    //console.log(this);
                     var start = this.getPointAtLength(0);
                     var end = this.getPointAtLength(this.getTotalLength());
                     var box = this.getBBox();
@@ -994,8 +1037,14 @@ class CircularGraph {
                 });
         }
         // Add Nodes' id to Circular Graph
+        //console.log(this.nodes);
+        //console.log(this.svgAllElements.selectAll(".nodeCircular"));
+        //console.log(this.nodes.children.filter(function (n) {
+        //    return !n.children;
+        //}));
+        
         this.svgAllElements.selectAll(".nodeCircular")
-            .data(this.nodes.filter(function (n) {
+            .data(this.nodes.children.filter(function (n) {
                 return !n.children;
             }))
             .enter()
@@ -1004,21 +1053,24 @@ class CircularGraph {
             .attr("dy", ".31em")
             .attr("transform", function (d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 16) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
             .style("text-anchor", function (d) { return d.x < 180 ? "start" : "end"; })
-            .text(function (d) { return d.key; })
-            .on("mouseover", function (d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.id); })
-            .on("mouseout", function (d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); });
+            .text(function (d) { return d.data.key; })
+            .on("mouseover", function (d) { varMouseOveredCircularLayout(d.data); varMouseOveredSetNodeID(d.data.id); })
+            .on("mouseout", function (d) { varMouseOutedCircularLayout(d.data); varMouseOutedSetNodeID(); });
 
+        //console.log(this.svgAllElements.selectAll(".nodeDotCircular"));
         // Add Nodes' id to Circular Graph
         this.svgAllElements.selectAll(".nodeDotCircular")
-            .data(this.nodes.filter(function (n) { return !n.children; }))
+            .data(this.nodes.children.filter(function (n) {
+                return !n.children;
+            }))
             .enter()
             .append("g") // Appending Element
             .attr("class", "nodeDotCircular")
             .attr("transform", function (d) {
                 return "rotate(" + (d.x - 90) + ")translate(" + (d.y) + ",0)" + (d.x < 180 ? "" : "rotate(180)");
             })
-            .on("mouseover", function (d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.id); })
-            .on("mouseout", function (d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); })
+            .on("mouseover", function (d) { console.log(d);  varMouseOveredCircularLayout(d.data); varMouseOveredSetNodeID(d.data.id); })
+            .on("mouseout", function (d) { varMouseOutedCircularLayout(d.data); varMouseOutedSetNodeID(); })
             .each(function (chartData, i) {
                 var colorAttr = nodeSettings.nodeColorAttribute;
                 var attrArray = attributes.get(colorAttr);
@@ -1045,18 +1097,19 @@ class CircularGraph {
                         var colorMap = d3.scaleLinear().domain([min, max]).range([minColor, maxColor]);
                     }
                     if (attributes.info[colorAttr].numElements === 1) {
-                        var color = chartData[colorAttr].map(function (val) {
+                        var color = chartData.data[colorAttr].map(function (val) {
                             return colorMap(val).replace("0x", "#");
                         });
                     } else {
-                        var color = chartData[colorAttr].map(function (val, i) {
+                        var color = chartData.data[colorAttr].map(function (val, i) {
                             return colorMap(i).replace("0x", "#");
                         });
                     }
+                    console.log('here');
 
                     group.selectAll(".path")
                         .data(function () {
-                            var tmp = chartData[colorAttr].map(function (val) { return val; });
+                            var tmp = chartData.data[colorAttr].map(function (val) { return val; });
                             if (tmp.length === 1 && tmp[0] === 0) {
                                 return pie([1]);
                             } else {
@@ -1077,7 +1130,7 @@ class CircularGraph {
             var bar = this.attributeBars[barIndex];
 
             this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
-                .data(this.nodes.filter(function (n) { return !n.children; }))
+                .data(this.nodes.children.filter(function (n) { return !n.children; }))
                 .enter()
                 .append("rect")
                 .attr("class", "rect" + bar.id + "Circular")

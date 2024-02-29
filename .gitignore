@@ -4,19 +4,8 @@ brain-app-server/bin
 brain-app-server/brain-app/save
 
 brain-app-server/Properties/
-/brain-app-server/brain-app/brain3d.js
-/brain-app-server/brain-app/brain3d.js.map
-/brain-app-server/brain-app/brainapp.js
-/brain-app-server/brain-app/brainapp.js.map
-/brain-app-server/brain-app/brainapp.ts
-/brain-app-server/brain-app/circularGraph.js
-/brain-app-server/brain-app/circularGraph.js.map
-/brain-app-server/brain-app/CommonUtilities.js
-/brain-app-server/brain-app/graph2d.js
-/brain-app-server/brain-app/graph2d.js.map
-/brain-app-server/brain-app/graph3d.js
-/brain-app-server/brain-app/input.js
-/brain-app-server/brain-app/state.js
-/brain-app-server/brain-app/state.js.map
 packages
 brain-app-server/node_modules
+
+/brain-app-server/brain-app/*.js.map
+/brain-app-server/brain-app/*.js

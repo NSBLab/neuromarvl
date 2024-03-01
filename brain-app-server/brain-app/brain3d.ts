@@ -85,6 +85,7 @@ class Brain3DApp implements Application, Loopable {
     svgAllElements;
     svgNodeBundleArray: any[];
     isControllingGraphOnly: boolean = false;
+    haveCreatedCircularGraph: boolean = false;
     svgNeedsUpdate: boolean = false;
     d3Zoom = d3.zoom();
 
@@ -524,11 +525,10 @@ class Brain3DApp implements Application, Loopable {
             .attr("id", "cy");
 
         // SVG Initializing
-        var varSVGZoom = () => { this.svgZoom(); }
+        var varSVGZoom = (event) => { this.svgZoom(event); }
         this.svg = d3.select('#div-graph-' + this.id).append("svg")
             .attr("width", jDiv.width())
-            .attr("height", jDiv.height() - sliderSpace)
-            .call(this.d3Zoom.on("zoom", varSVGZoom));
+            .attr("height", jDiv.height() - sliderSpace);
 
         //console.log(this.svg);
         try {
@@ -536,9 +536,10 @@ class Brain3DApp implements Application, Loopable {
             this.svg
                 .style('position', 'absolute')
                 .style('top', '0')
-                .style("left", "0");
+                .style("left", "0")
+                .call(this.d3Zoom.on("zoom", event => { this.svgZoom(event); })); // svg Group of shapes                ;
 
-            this.svgAllElements = this.svg.append("g"); // svg Group of shapes
+            this.svgAllElements = this.svg.append("g");
 
             // add arrow marker
             this.svgAllElements.append("defs").append("marker")
@@ -630,9 +631,18 @@ class Brain3DApp implements Application, Loopable {
 
         this.input.regMouseDragCallback((dx: number, dy: number, mode: number) => {
             if (this.isControllingGraphOnly) return;
+            var pointer = this.input.localPointerPosition();
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(pointer, this.camera);
 
+            var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
+
+            if (!inBoundingSphere) { return; }
+
+            // check if the mouse is over the model
             // these numbers need to be updated
             // right button: rotation
+            //console.log(mode);
             if (mode == 2) {
                 if (this.autoRotation == false) {
                     var pixelAngleRatio = 50;
@@ -654,8 +664,8 @@ class Brain3DApp implements Application, Loopable {
                     this.mouse.dy = dy;
                 }
             }
-            // middle button: pan
-            else if (mode == 1) {
+            // left button: pan
+            else if (mode == 0) { // and 
                 var pixelDistanceRatio = 1.6; // with: defaultCameraFov = 25; defaultViewWidth = 800;
                 var defaultCameraFov = 25
                 var defaultViewWidth = 800;
@@ -699,7 +709,7 @@ class Brain3DApp implements Application, Loopable {
                     var varMouseOutedCircularLayout = (d) => { this.circularGraph.mouseOutedCircularLayout(d); };
                     this.svgAllElements.selectAll(".nodeCircular")
                         .each(function (d) {
-                            if (varNodeID == d.id) varMouseOutedCircularLayout(d);
+                            if (varNodeID == d.data.id) varMouseOutedCircularLayout(d);
                         });
                 }
                 else if (this.networkType == "2d") {
@@ -1209,17 +1219,17 @@ class Brain3DApp implements Application, Loopable {
         if (type === "2d" && this.canvasGraph) {
             this.canvasGraph.setupOptionMenuUI(); // add options button to the page
             this.svg.attr("visibility", "hidden");
-            $(this.graph2dContainer).show();
+            $(this.graph2dContainer.node()).show();
         } 
         else {
             // hide options button
             $('#button-graph2d-option-menu-' + this.id).hide();
-            $(this.graph2dContainer).hide();
+            $(this.graph2dContainer.node()).hide();
         }
 
         if (type === "none") {
             this.svg.attr("visibility", "hidden");
-            $(this.graph2dContainer).hide();
+            $(this.graph2dContainer.node()).hide();
             this.colaGraph.setVisible(false);
         }
         
@@ -1637,9 +1647,13 @@ class Brain3DApp implements Application, Loopable {
         });
     }
   
-    svgZoom() {
-        if (this.isControllingGraphOnly) {
-            this.svgAllElements.attr("transform", d3.zoomTransform(this.svgAllElements.node()).toString());
+    svgZoom(event) {
+        if (this.isControllingGraphOnly || !this.haveCreatedCircularGraph) {
+            console.log(this.svg.node());
+            //console.log(event.transform.toString());
+            this.svgAllElements.attr("transform", event.transform.toString());
+            this.haveCreatedCircularGraph = true;
+            console.log(this.svgAllElements.node());
         }
     }
    
@@ -1954,11 +1968,12 @@ class Brain3DApp implements Application, Loopable {
 
         // Set up loop
 
+        this.haveCreatedCircularGraph = false;
         // Initialise Graph Objects
         this.circularGraph = new CircularGraph(this.id, this.jDiv, this.dataSet,
             this.svg, this.svgDefs, this.svgAllElements,
             this.d3Zoom, this.commonData, this.saveFileObj);
-
+        //this.haveCreatedCircularGraph = true;
 
         // Set up the graphs
         var edgeMatrix = this.dataSet.adjMatrixFromEdgeCount(maxEdgesShowable); // Don't create more edges than we will ever be showing
@@ -2082,7 +2097,7 @@ class Brain3DApp implements Application, Loopable {
                 }
                 else {
                     this.isControllingGraphOnly = true;
-                    var varSVGZoom = () => { this.svgZoom(); }
+                    var varSVGZoom = (event) => { this.svgZoom(event); }
                     var func = this.d3Zoom.on("zoom", varSVGZoom);
                     this.svg.call(func);
                     

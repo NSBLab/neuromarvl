@@ -53,7 +53,6 @@
     edgesD3V7: function (nodes) {
         var mapNamesToNodes = {};
         var returnArray = [];
-        var fff = [];
 
         // Compute a map from name to node.
         nodes.forEach(function (d) {
@@ -64,20 +63,22 @@
         nodes.forEach(function (d) {
             if (d.data.imports) d.data.imports.forEach(function (i, j) {
 
-                returnArray.push({
-                    source: {
-                        data: mapNamesToNodes[d.data.name].data,
-                        x: mapNamesToNodes[d.data.name].x,
-                        y: mapNamesToNodes[d.data.name].y,
-                        parent: mapNamesToNodes[d.data.name].parent
-                    },
-                    target: {
-                        data: mapNamesToNodes[i].data,
-                        x: mapNamesToNodes[i].x,
-                        y: mapNamesToNodes[i].y,
-                        parent: mapNamesToNodes[i].parent
-                    }
-                });
+                returnArray.push({ source: mapNamesToNodes[d.data.name], target: mapNamesToNodes[i] });
+                
+                //returnArray.push({
+                //    source: {
+                //        data: mapNamesToNodes[d.data.name].data,
+                //        x: mapNamesToNodes[d.data.name].x,
+                //        y: mapNamesToNodes[d.data.name].y,
+                //        parent: mapNamesToNodes[d.data.name].parent
+                //    },
+                //    target: {
+                //        data: mapNamesToNodes[i].data,
+                //        x: mapNamesToNodes[i].x,
+                //        y: mapNamesToNodes[i].y,
+                //        parent: mapNamesToNodes[i].parent
+                //    }
+                //});
             });
         });
         return returnArray;

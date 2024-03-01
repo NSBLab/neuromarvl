@@ -109,8 +109,9 @@ class Graph2D {
             // Use projection of colaGraph to screen space to initialise positions
             let position = (new THREE.Vector3()).setFromMatrixPosition(node.matrixWorld);
             position.project(this.camera);
-            nodeObject["x"] = $.isNumeric(position.x) ? position.x : 0;
-            nodeObject["y"] = $.isNumeric(position.y) ? position.y : 0;
+
+            nodeObject["x"] = (!isNaN(position.x) && isFinite(position.x)) ? position.x : 0;
+            nodeObject["y"] = (!isNaN(position.y) && isFinite(position.y)) ? position.y : 0;
             
             // Grouping
             if (this.groupNodesBy !== "none") {
@@ -276,7 +277,7 @@ class Graph2D {
                 h: container.offsetHeight * 0.5
             }
         }
-        console.log(this.layout);
+        //console.log(this.layout);
         switch (this.layout) {
             case "cose":
                 // This layout gets something very wrong with the boundingBox, possibly ignoring node radii, so we need to compensate
@@ -351,8 +352,8 @@ class Graph2D {
                 break;
         }
         
-        //console.log(container);
-        console.log(elements);
+        console.log(container);
+        console.log(layoutOptions);
         this.cy = cytoscape({
             container: container,
             elements: elements,
@@ -610,7 +611,7 @@ class Graph2D {
     settingOnChange() {
         // Styling changes not affecting layout, triggered by 2d settings
         this.cy.batch(() => {
-            console.log(this.cy.elements("node.child"));
+            //console.log(this.cy.elements("node.child"));
             this.cy.elements("node.child")
                 .data("border", this.scale * this.BASE_BORDER_WIDTH)
                 .data("labelSize", this.scale * this.BASE_LABEL_SIZE)

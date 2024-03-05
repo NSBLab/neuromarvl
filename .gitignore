@@ -9,3 +9,4 @@ brain-app-server/node_modules
 
 /brain-app-server/brain-app/*.js.map
 /brain-app-server/brain-app/*.js
+/brain-app-server/package-lock.json

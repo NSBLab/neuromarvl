@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props')" />
   <Import Project="..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.props" Condition="Exists('..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.props')" />
   <Import Project="..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.props" Condition="Exists('..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.props')" />
-  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.props" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -146,28 +146,6 @@
     <Content Include="brain-app\save_examples\e4e59658-c7c6-4092-b19c-14fbde2dd14b_58.178.236.210.txt" />
     <Content Include="brain-app\state.js.map" />
     <Content Include="examples\graphdata\reverse-winding.py" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.rtl.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.rtl.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.rtl.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.rtl.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.rtl.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.rtl.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.rtl.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.rtl.min.css" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.bundle.js" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.bundle.min.js" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.esm.js" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.esm.min.js" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.js" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.min.js" />
     <Content Include="extern\bootstrap-colorpicker-3.4.0\css\bootstrap-colorpicker.css" />
     <Content Include="extern\bootstrap-colorpicker-3.4.0\css\bootstrap-colorpicker.min.css" />
     <Content Include="extern\bootstrap-colorpicker-3.4.0\js\bootstrap-colorpicker.js" />
@@ -2270,17 +2248,12 @@
     <Content Include="extern\js-yaml-4.1.0.min.js" />
     <Content Include="extern\layout-base-2.0.1.min.js" />
     <Content Include="extern\leap-1.1.1.min.js" />
-    <Content Include="extern\popper.js" />
-    <Content Include="extern\popper.min.js" />
-    <Content Include="extern\powergraph.js.map" />
-    <Content Include="extern\rectangle.js.map" />
     <Content Include="extern\slider\less\slider.less" />
     <Content Include="extern\splashPage\images\CircularGraph.ai" />
     <Content Include="extern\splashPage\SplashPagePlan" />
     <Content Include="extern\ts\descent.js.map" />
     <Content Include="extern\ts\pqueue.js.map" />
     <Content Include="extern\ts\shortestpaths.js.map" />
-    <Content Include="extern\vpsc.js.map" />
     <Content Include="examples\graphdata\BrainLSDecimated0.01.obj" />
     <Content Include="examples\graphdata\BrainMesh_ch2.obj" />
     <Content Include="examples\graphdata\BrainMesh_Ch2withCerebellum.obj" />
@@ -2292,28 +2265,6 @@
     <None Include=".bin\grunt.cmd" />
     <None Include=".bin\node.cmd" />
     <None Include=".bin\npm.cmd" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.rtl.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-grid.rtl.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.rtl.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-reboot.rtl.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.rtl.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap-utilities.rtl.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.rtl.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\css\bootstrap.rtl.min.css.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.bundle.js.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.bundle.min.js.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.esm.js.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.esm.min.js.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.js.map" />
-    <Content Include="extern\bootstrap-5.3.2-dist\js\bootstrap.min.js.map" />
     <Content Include="extern\bootstrap-icons-1.11.2\font\bootstrap-icons.json" />
     <Content Include="extern\bootstrap-icons-1.11.2\font\bootstrap-icons.scss" />
     <Content Include="extern\bootstrap-icons-1.11.2\font\fonts\bootstrap-icons.woff" />
@@ -2369,8 +2320,6 @@
     <Content Include="extern\hljs\styles\xcode.css" />
     <Content Include="extern\hljs\styles\zenburn.css" />
     <Content Include="extern\OBJLoader.js" />
-    <Content Include="extern\powergraph.js" />
-    <Content Include="extern\rectangle.js" />
     <Content Include="extern\slider\css\slider.css" />
     <Content Include="extern\slider\js\bootstrap-slider.js" />
     <Content Include="extern\splashPage\classie.js" />
@@ -2394,11 +2343,9 @@
     <Content Include="extern\splashPage\images\multi-module.png" />
     <Content Include="extern\splashPage\splashPage.css" />
     <Content Include="extern\splashPage\splashPage.js" />
-    <Content Include="extern\TrackballControls.js" />
     <Content Include="extern\ts\descent.js" />
     <Content Include="extern\ts\pqueue.js" />
     <Content Include="extern\ts\shortestpaths.js" />
-    <Content Include="extern\vpsc.js" />
     <Content Include="extern\yaml\js-yaml.js" />
     <Content Include="extern\yaml\js-yaml.min.js" />
     <Content Include="favicon.ico" />
@@ -2454,13 +2401,9 @@
     <TypeScriptCompile Include="brain-app\graph3d.ts" />
     <TypeScriptCompile Include="brain-app\input.ts" />
     <TypeScriptCompile Include="brain-app\state.ts" />
-    <TypeScriptCompile Include="extern\powergraph.ts" />
-    <TypeScriptCompile Include="extern\rbtree.d.ts" />
-    <TypeScriptCompile Include="extern\rectangle.ts" />
     <TypeScriptCompile Include="extern\ts\descent.ts" />
     <TypeScriptCompile Include="extern\ts\pqueue.ts" />
     <TypeScriptCompile Include="extern\ts\shortestpaths.ts" />
-    <TypeScriptCompile Include="extern\vpsc.ts" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -2513,16 +2456,16 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.targets'))" />
     <Error Condition="!Exists('..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.props'))" />
     <Error Condition="!Exists('..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.targets'))" />
     <Error Condition="!Exists('..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.props'))" />
     <Error Condition="!Exists('..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets'))" />
   </Target>
-  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.targets" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.2\build\Microsoft.TypeScript.MSBuild.targets')" />
   <Import Project="..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.targets" Condition="Exists('..\packages\MSBuild.Node.0.5.1\build\MSBuild.Node.targets')" />
   <Import Project="..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.targets" Condition="Exists('..\packages\MSBuild.Grunt.0.5.1\build\MSBuild.Grunt.targets')" />
+  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -1649,11 +1649,8 @@ class Brain3DApp implements Application, Loopable {
   
     svgZoom(event) {
         if (this.isControllingGraphOnly || !this.haveCreatedCircularGraph) {
-            console.log(this.svg.node());
-            //console.log(event.transform.toString());
             this.svgAllElements.attr("transform", event.transform.toString());
             this.haveCreatedCircularGraph = true;
-            console.log(this.svgAllElements.node());
         }
     }
    

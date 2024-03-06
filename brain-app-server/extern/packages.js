@@ -49,40 +49,62 @@
       // For a list of graph nodes, each has a field .name and .imports
       // The .name field is the id of the node and the .imports field is a list of neighbours
       // This returns a list of objects, where each object contains .source and .target names for each edge defined by the .imports in the nodes
+      // Added capabilities to do nested nodes
     // This is the version for the D3 V7 hierarchy data structure
     edgesD3V7: function (nodes) {
         var mapNamesToNodes = {};
         var returnArray = [];
 
         // Compute a map from name to node.
-        nodes.forEach(function (d) {
-            mapNamesToNodes[d.data.name] = d;
+        nodes.eachAfter(function (d) {
+            // only add a node that doesnt have children
+            if (!d.children) {
+                mapNamesToNodes[d.data.name] = d;
+            }
         });
 
         // For each import, construct a link from the source to target node.
-        nodes.forEach(function (d) {
-            if (d.data.imports) d.data.imports.forEach(function (i, j) {
 
-                returnArray.push({ source: mapNamesToNodes[d.data.name], target: mapNamesToNodes[i] });
-                
-                //returnArray.push({
-                //    source: {
-                //        data: mapNamesToNodes[d.data.name].data,
-                //        x: mapNamesToNodes[d.data.name].x,
-                //        y: mapNamesToNodes[d.data.name].y,
-                //        parent: mapNamesToNodes[d.data.name].parent
-                //    },
-                //    target: {
-                //        data: mapNamesToNodes[i].data,
-                //        x: mapNamesToNodes[i].x,
-                //        y: mapNamesToNodes[i].y,
-                //        parent: mapNamesToNodes[i].parent
-                //    }
-                //});
-            });
+        nodes.eachAfter(function (d) {
+            if (!d.children) {
+                if (d.data.imports) d.data.imports.forEach(function (i, j) {
+                    returnArray.push({ source: mapNamesToNodes[d.data.name], target: mapNamesToNodes[i] });
+                })
+
+            }
         });
         return returnArray;
-    }
+    },
 
+      // given a nodes structure (output of d3.cluster), which could be multilevel,
+      // the nodes themselves will be the leaves of the final level of the tree
+      // so, no clustering
+      // root
+      //    node[0]
+      //    node[1]
+      //    node[2]
+      //    node[3]
+      //    ...
+      // with clustering
+      // root
+      //    cluster[0]
+      //         node[0]
+      //         node[1]
+      //         ...
+      //    cluster[1]
+      //         node[2]
+      //         node[3]
+      //         ...
+      //    ...
+      // for either structure, this function returns a list of all the nodes
+      nodesListFromNodesCluster: function (nodesCluster) {
+          let nodesFlat = [];
+          nodesCluster.eachAfter(function (d) {
+              if (!d.children) {
+                  nodesFlat.push(d);
+              }
+          });
+          return nodesFlat;
+    }
   };
 })();

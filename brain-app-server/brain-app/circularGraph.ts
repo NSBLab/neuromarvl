@@ -420,7 +420,7 @@ class CircularGraph {
         this.links.forEach(function (curLink) {
             linksForPlotting.push([curLink.source, curLink.source.parent, curLink.target]);
         })
-        console.log(linksForPlotting);
+        /*console.log(linksForPlotting);*/
 
         // use normal color updating style
         /*var bundledLinks = bundle(links);*/
@@ -867,7 +867,7 @@ class CircularGraph {
             ;
 
         // Tree may have a false root. Remove it.
-        console.log(tree);
+        //console.log(tree);
         if (tree.children.length === 1) tree = tree.children[0];
         
         // so if we have bundled by attribute the tree will have depth 2
@@ -907,15 +907,15 @@ class CircularGraph {
                 n.y -= offset * n.bundleHeight[bundleByAttribute];
             }
         }
-        console.log("this.nodesCluster");
-        console.log(this.nodesCluster);
+        //console.log("this.nodesCluster");
+        //console.log(this.nodesCluster);
 
         //console.log("this.nodesCluster.children");
         //console.log(this.nodesCluster.children);
 
         this.links = packages.edgesD3V7(this.nodesCluster);
-        console.log("this.links");
-        console.log(this.links);
+        //console.log("this.links");
+        //console.log(this.links);
         var varMouseOveredSetNodeID = (id) => { this.mouseOveredSetNodeID(id); }
         var varMouseOutedSetNodeID = () => { this.mouseOutedSetNodeID(); }
 
@@ -938,7 +938,7 @@ class CircularGraph {
         this.links.forEach(function (curLink) {
             linksForPlotting.push([curLink.source, curLink.source.parent, curLink.target]);
         })
-        console.log(linksForPlotting);
+        //console.log(linksForPlotting);
         //console.log(this.svgAllElements);
         //var bundledLinks = bundle(links);
         

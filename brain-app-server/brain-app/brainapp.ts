@@ -739,6 +739,9 @@ class NeuroMarvl {
         $('#' + file).removeClass('status-updated');
         $('#' + file).removeClass('glyphicon-ok-sign');
 
+        console.log(file);
+        console.log(status);
+
         if (status === "changed") {
             $('#' + file).addClass('status-changed');
             $('#' + file).addClass('glyphicon-info-sign');
@@ -1964,7 +1967,8 @@ class NeuroMarvl {
         }
 
         // Check if first line contains labels
-        var firstWords = lines[0].split(' ');
+        var firstWords = lines[0].split(/\s+/);
+        
         if (isNaN(Number(firstWords[0])) || isNaN(Number(firstWords[1])) || isNaN(Number(firstWords[2]))) {
             console.log("In Coordinate File: detect labels in the first line");
             lines.shift(); // remove if the first line is just labels
@@ -1974,8 +1978,9 @@ class NeuroMarvl {
 
         this.referenceDataSet.brainCoords = [Array(len), Array(len), Array(len)];
         this.referenceDataSet.info.nodeCount = len;
+        
         for (var i = 0; i < len; ++i) {
-            var words = lines[i].split(' ');
+            var words = lines[i].split(/\s+/);
             // Translate the coords into Cola's format
             this.referenceDataSet.brainCoords[0][i] = parseFloat(words[0]);
             this.referenceDataSet.brainCoords[1][i] = parseFloat(words[1]);
@@ -2449,15 +2454,16 @@ class NeuroMarvl {
         $('#select-matrix').on('change', () => {
             // Change the button name according to the file name
             let file = (<any>$('#select-matrix').get(0)).files[0];
-            //document.getElementById("button-select-matrix").innerHTML = file.name;
-            document.getElementById("button-select-matrix-filename").innerHTML = file.name;
+            if (file) {
+                //document.getElementById("button-select-matrix").innerHTML = file.name;
+                document.getElementById("button-select-matrix-filename").innerHTML = file.name;
 
-            // update file status to changed
-            this.changeFileStatus("matrix-status", "changed");
+                // update file status to changed
+                this.changeFileStatus("matrix-status", "changed");
 
-            // Parse and upload attribute file
-            this.uploadMatrix();
-
+                // Parse and upload attribute file
+                this.uploadMatrix();
+            }
         });
 
         $('#button-select-attrs').on('click', () => $("#select-attrs")[0].click());
@@ -2465,13 +2471,15 @@ class NeuroMarvl {
         $('#select-attrs').on('change', () => {
             // Change the button name according to the file name
             var file = (<any>$('#select-attrs').get(0)).files[0];
-            //document.getElementById("button-select-attrs").innerHTML = file.name;
-            document.getElementById("button-select-attrs-filename").innerHTML = file.name;
-            // update file status to changed
-            this.changeFileStatus("attrs-status", "changed");
+            if (file) {
+                //document.getElementById("button-select-attrs").innerHTML = file.name;
+                document.getElementById("button-select-attrs-filename").innerHTML = file.name;
+                // update file status to changed
+                this.changeFileStatus("attrs-status", "changed");
 
-            // Parse and upload attribute file
-            this.uploadAttr();
+                // Parse and upload attribute file
+                this.uploadAttr();
+            }
         });
 
         $('#button-select-labels').on("click", () => $("#select-labels")[0].click());
@@ -2480,13 +2488,16 @@ class NeuroMarvl {
             // Change the button name according to the file name
             var file = (<any>$('#select-labels').get(0)).files[0];
             //document.getElementById("button-select-labels").innerHTML = file.name;
-            document.getElementById("button-select-labels-filename").innerHTML = file.name;
+            if (file) {
+                document.getElementById("button-select-labels-filename").innerHTML = file.name;
 
-            // update file status to changed
-            this.changeFileStatus("labels-status", "changed");
+                // update file status to changed
+                this.changeFileStatus("labels-status", "changed");
 
-            // Parse and upload labels
-            this.uploadLabels();
+                // Parse and upload labels
+                this.uploadLabels();
+            }
+            
         });
 
         $('#button-load-settings').button().on("click", () => $("#input-select-load-file")[0].click());

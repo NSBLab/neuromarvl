@@ -352,8 +352,8 @@ class Graph2D {
                 break;
         }
         
-        console.log(container);
-        console.log(layoutOptions);
+        //console.log(container);
+        //console.log(layoutOptions);
         this.cy = cytoscape({
             container: container,
             elements: elements,

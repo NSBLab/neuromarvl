@@ -26443,8 +26443,8 @@ var printLayoutInfo;
       var stylesheetId = '__________cytoscape_stylesheet';
       var className = '__________cytoscape_container';
         var stylesheetAlreadyExists = document.getElementById(stylesheetId) != null;
-        //console.log(ctr);
-        //console.log(ctr.className);
+        console.log(ctr);
+        console.log(ctr.className);
         if (ctr.className.indexOf(className) < 0) {
 
         ctr.className = (ctr.className || '') + ' ' + className;

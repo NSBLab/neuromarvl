@@ -196,6 +196,7 @@ class Brain3DApp implements Application, Loopable {
         };
         var lab = () => {
             this.restart();
+                   
         };
 
         //if (this.commonData.noBranSurface == true) this.surfaceLoaded = true;
@@ -1461,7 +1462,7 @@ class Brain3DApp implements Application, Loopable {
             }
 
             var varType = this.networkType;
-            //console.log(cola);
+            console.log(cola);
             
             // Create the distance matrix that Cola needs
             var distanceMatrix = (new cola.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();
@@ -1932,8 +1933,6 @@ class Brain3DApp implements Application, Loopable {
 
     // Initialise or re-initialise the visualisation.
     restart() {
-        console.log(!this.dataSet);
-        console.log(this.dataSet);
         if (!this.dataSet || !this.dataSet.verify()) {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Current dataset cannot be verified. Cannot create brain view.");
 

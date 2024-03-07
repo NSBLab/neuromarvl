@@ -1933,6 +1933,28 @@ class Brain3DApp implements Application, Loopable {
 
     // Initialise or re-initialise the visualisation.
     restart() {
+        // set up the edge slider
+        $("#edge-count-slider-" + this.id)['bootstrapSlider']("disable");
+
+        if (this.dataSet) {
+            if (this.dataSet.simMatrix.length > 0) {
+                $("#edge-count-slider-" + this.id)['bootstrapSlider']("enable");
+                //if (this.dataSet.sortedSimilarities.length < maxEdgesShowable) {
+                //    $("#edge-count-slider-" + this.id)['bootstrapSlider']("setAttribute", "max", this.dataSet.sortedSimilarities.length);
+                //} else {
+                //    $("#edge-count-slider-" + this.id)['bootstrapSlider']("setAttribute", "max", maxEdgesShowable);
+                //}
+                ////this.edgeCountSliderValue = initialEdgesShown;
+
+                //$('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", 2);
+            } else {
+                $("#edge-count-slider-" + this.id)['bootstrapSlider']("disable");
+            }
+            
+        }
+        
+
+        
         if (!this.dataSet || !this.dataSet.verify()) {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Current dataset cannot be verified. Cannot create brain view.");
 

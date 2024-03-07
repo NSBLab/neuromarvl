@@ -63,9 +63,9 @@
             }
         });
 
-        // For each import, construct a link from the source to target node.
-
+        // For each import (neighbour), construct a link from the source to target node.
         nodes.eachAfter(function (d) {
+            // only consider leaves without children
             if (!d.children) {
                 if (d.data.imports) d.data.imports.forEach(function (i, j) {
                     returnArray.push({ source: mapNamesToNodes[d.data.name], target: mapNamesToNodes[i] });

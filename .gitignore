@@ -10,3 +10,7 @@ brain-app-server/node_modules
 /brain-app-server/brain-app/*.js.map
 /brain-app-server/brain-app/*.js
 /brain-app-server/package-lock.json
+/brain-app-server/brain-app-server.csproj.user
+/brain-app-server/obj/Release/brain-app-server.csproj.FileListAbsolute.txt
+/brain-app-server/obj/Release/brain-app-server.dll
+/brain-app-server/obj/Release/brain-app-server.pdb

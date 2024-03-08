@@ -1496,7 +1496,7 @@ class CircularGraph {
             if ($('#span-circular-layout-bar' + bar.id + '-color-picker').length > 0) {
 
                 // saved in the object for future saving feature
-                //bar.colorPicker = $('#span-circular-layout-bar'+ bar.id +'-color-picker').detach();
+                bar.colorPicker = $('#span-circular-layout-bar'+ bar.id +'-color-picker').detach();
             }
         }
 

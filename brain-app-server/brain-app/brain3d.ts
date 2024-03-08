@@ -1462,7 +1462,6 @@ class Brain3DApp implements Application, Loopable {
             }
 
             var varType = this.networkType;
-            console.log(cola);
             
             // Create the distance matrix that Cola needs
             var distanceMatrix = (new cola.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();

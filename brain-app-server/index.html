@@ -175,8 +175,12 @@
                 <br />
                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Open color selection palette for the brain model surface">Color</label>
                 <p style="margin-bottom: 0;">
-                    <div class="input-group input-group-sm">
-                        <input type="color" class="form-control form-control-color" id="input-surface-color" value="#e3e3e3" title="Choose your color">
+
+                    <div id="input-surface-color" class="input-group colorpicker-component">
+                        <input type="text" value="E3E3E3" class="form-control" />
+                        <span class="input-group-append">
+                            <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                        </span>
                     </div>
                 </p>
                 <br />
@@ -341,7 +345,9 @@ R Amygdala ">Node labels (optional)</label>
                                 <select id="select-node-key" class="form-control input-sm" style="width: 80px; display: inline-block;"></select>
                                 <div id="input-node-color" class="input-group colorpicker-component">
                                     <input type="text" value="ffff00" class="form-control" />
-                                    <span class="input-group-addon"><i></i></span>
+                                    <span class="input-group-append">
+                                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                    </span>
                                 </div>
                             </p>
                         </div>
@@ -349,13 +355,19 @@ R Amygdala ">Node labels (optional)</label>
                         <div id="div-node-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p style="margin-bottom: 0;">
                                 <label class="control-label" style="display: inline-block;">Min</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="color" class="form-control form-control-color" id="input-min-color" value="#ffff00" title="Choose your color">
+                                <div id="input-min-color" class="input-group colorpicker-component">
+                                    <input type="text" value="ffff00" class="form-control" />
+                                    <span class="input-group-append">
+                                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                    </span>
                                 </div>
                             <p style="margin-top: 0;">
                                 <label class="control-label" style="display: inline-block;">Max</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="color" class="form-control form-control-color" id="input-max-color" value="#ff0000" title="Choose your color">
+                                <div id="input-max-color" class="input-group colorpicker-component">
+                                    <input type="text" value="FF0000" class="form-control" />
+                                    <span class="input-group-append">
+                                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                    </span>
                                 </div>
                             </p>
                         </div>
@@ -392,14 +404,20 @@ R Amygdala ">Node labels (optional)</label>
                         <div id="div-edge-gradient-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p style="margin-bottom: 0;">
                                 <label class="control-label" style="display: inline-block;">Start</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="color" class="form-control form-control-color" id="input-edge-start-color" value="#ff0000" title="Choose your color">
+                                <div id="input-edge-start-color" class="input-group colorpicker-component">
+                                    <input type="text" value="FF0000" class="form-control" />
+                                    <span class="input-group-append">
+                                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                    </span>
                                 </div>
                             </p>
                             <p style="margin-top: 0;">
                                 <label class="control-label" style="display: inline-block;">End</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="color" class="form-control form-control-color" id="input-edge-end-color" value="#0000ff" title="Choose your color">
+                                <div id="input-edge-end-color" class="input-group colorpicker-component">
+                                    <input type="text" value="0000FF" class="form-control" />
+                                    <span class="input-group-append">
+                                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                    </span>
                                 </div>
                             </p>
                         </div>
@@ -418,8 +436,11 @@ R Amygdala ">Node labels (optional)</label>
                                 <p><input type="checkbox" id="checkbox-color-transitional-edges" style="width: 12px;"><strong> Customise inter-cluster edges</strong></p>
                                 <p>
                                     <label for="pick-color-intercluster">Color</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="color" class="form-control form-control-color" id="pick-color-intercluster" value="#ee2211" title="Choose your color">
+                                    <div id="input-edge-transitional-color" class="input-group colorpicker-component">
+                                        <input id="pick-color-intercluster" type="text" value="ee2211" class="form-control" />
+                                        <span class="input-group-append">
+                                            <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                        </span>
                                     </div>
                                     <br>
                                 </p>
@@ -445,43 +466,58 @@ R Amygdala ">Node labels (optional)</label>
                                             <strong>From </strong><input id="input-edge-discretized-0-from" type="text" />
                                             <br />
                                             <strong>To </strong><input id="input-edge-discretized-0-to" type="text" />
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-discretized-0-color" value="#2ecc71" title="Choose your color">
-                                            </div>
+                                                                <div id="input-edge-discretized-0-color" class="input-group colorpicker-component">
+                                                                    <input type="text" value="2ecc71" class="form-control" />
+                                                                    <span class="input-group-append">
+                                                                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                                    </span>
+                                                                </div>
                                             <br>
                                         </div>
 
                                         <div id="div-edge-discretized-1">
                                             From:<input id="input-edge-discretized-1-from" type="text" />
                                             To:<input id="input-edge-discretized-1-to" type="text" />
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-discretized-1-color" value="#3498db" title="Choose your color">
-                                            </div>
+                                               <div id="input-edge-discretized-1-color" class="input-group colorpicker-component">
+                                                   <input type="text" value="3498db" class="form-control" />
+                                                   <span class="input-group-append">
+                                                       <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                   </span>
+                                               </div>
                                         </div>
 
                                         <div id="div-edge-discretized-2">
                                             From:<input id="input-edge-discretized-2-from" type="text" />
                                             To:<input id="input-edge-discretized-2-to" type="text" />
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-discretized-2-color" value="#9b59b6" title="Choose your color">
-                                            </div>
+                                               <div id="input-edge-discretized-2-color" class="input-group colorpicker-component">
+                                                   <input type="text" value="9b59b6" class="form-control" />
+                                                   <span class="input-group-append">
+                                                       <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                   </span>
+                                               </div>
                                             <br>
                                         </div>
 
                                         <div id="div-edge-discretized-3">
                                             From:<input id="input-edge-discretized-3-from" type="text" />
                                             To:<input id="input-edge-discretized-3-to" type="text" />
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-discretized-3-color" value="#f1c40f" title="Choose your color">
-                                            </div>
+                                               <div id="input-edge-discretized-3-color" class="input-group colorpicker-component">
+                                                   <input type="text" value="f1c40f" class="form-control" />
+                                                   <span class="input-group-append">
+                                                       <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                   </span>
+                                               </div>
                                         </div>
 
                                         <div id="div-edge-discretized-4">
                                             From:<input id="input-edge-discretized-4-from" type="text" />
                                             To:<input id="input-edge-discretized-4-to" type="text" />
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-discretized-4-color" value="#e74c3c" title="Choose your color">
-                                            </div>
+                                               <div id="input-edge-discretized-4-color" class="input-group colorpicker-component">
+                                                   <input type="text" value="e74c3c" class="form-control" />
+                                                   <span class="input-group-append">
+                                                       <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                   </span>
+                                               </div>
                                             <br>
                                         </div>
 
@@ -489,15 +525,21 @@ R Amygdala ">Node labels (optional)</label>
                                     <div id="div-edge-color-continuous-normal">
                                         <p style="margin-bottom: 0;">
                                             <strong>Minimum</strong>
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-min-color" value="#ffff00" title="Choose your color">
+                                            <div id="input-edge-min-color" class="input-group colorpicker-component">
+                                                <input type="text" value="ffff00" class="form-control" />
+                                                <span class="input-group-append">
+                                                    <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                </span>
                                             </div>
 
                                         </p>
                                         <p style="margin-top: 0;">
                                             <strong>Maximum</strong>
-                                            <div class="input-group input-group-sm">
-                                                <input type="color" class="form-control form-control-color" id="input-edge-max-color" value="#ff0000" title="Choose your color">
+                                            <div id="input-edge-max-color" class="input-group colorpicker-component">
+                                                <input type="text" value="ff0000" class="form-control" />
+                                                <span class="input-group-append">
+                                                    <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                                </span>
                                             </div>
                                             <br>
                                         </p>
@@ -508,8 +550,11 @@ R Amygdala ">Node labels (optional)</label>
                                     <p>
                                         key:
                                         <select id="select-edge-key" style="background-color: #feeebd"></select>
-                                        <div class="input-group input-group-sm">
-                                            <input type="color" class="form-control form-control-color" id="input-edge-color" value="#ffff00" title="Choose your color">
+                                        <div id="input-edge-color" class="input-group colorpicker-component">
+                                            <input type="text" value="ffff00" class="form-control" />
+                                            <span class="input-group-append">
+                                                <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                                            </span>
                                         </div>
                                         <br>
                                     </p>
@@ -547,8 +592,12 @@ R Amygdala ">Node labels (optional)</label>
         </div>
         <div id="div-context-menu-color-picker" style="visibility:hidden;">
             color:
-            <div class="input-group input-group-sm">
-                <input type="color" class="form-control form-control-color" id="input-context-menu-node-color" value="#ffff00" title="Choose your color">
+            <div id="input-context-menu-node-color" class="input-group colorpicker-component"
+                 style="width: 12em; background-color: #feeebd; border: 1px solid grey; ">
+                <input type="text" value="ffff00" class="form-control" />
+                <span class="input-group-append">
+                    <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                </span>
             </div>
         </div>
     </div>

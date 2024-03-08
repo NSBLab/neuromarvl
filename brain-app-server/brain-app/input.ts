@@ -323,7 +323,7 @@ class InputTargetManager {
                 var color = parseInt(record.color);
                 var hex = color.toString(16);
                 console.log("Setting color to " + hex);
-                $(<any>$("#input-context-menu-node-color")).val('#' + hex);
+                (<any>$("#input-context-menu-node-color")).colorpicker("setValue", '#' + hex);
 
                 this.rightClickLabelAppended = true;
             }

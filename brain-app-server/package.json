@@ -8,6 +8,7 @@
     "@svgdotjs/svg.js": "3.2.0",
     "@types/bootstrap": "4.6.6",
     "@types/d3": "7.4.3",
+    "@types/bootstrap-colorpicker":  "2.5.7",
     "@types/jquery": "3.5.29",
     "@types/jqueryui": "1.12.21",
     "@types/three": "0.158.3",

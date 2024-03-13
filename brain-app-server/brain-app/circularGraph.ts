@@ -62,7 +62,7 @@ class CircularGraph {
         this.d3Zoom = d3Zoom;
         this.commonData = commonData;
         this.saveObj = saveObj;
-        
+
         this.circularBundleAttribute = "none";
         this.circularSortAttribute = "none";
         this.circularLabelAttribute = "label";
@@ -285,6 +285,7 @@ class CircularGraph {
 
 
     create() {
+        
         if (!this.colaGraph) {
             console.log("ERROR: colaGraph is NULL");
             return;
@@ -294,7 +295,7 @@ class CircularGraph {
         var attrLabel = $('#select-circular-label-' + this.id).val() as string;
         var attrBundle = $('#select-circular-layout-bundle-' + this.id).val() as string;
         var attrSort = $('#select-circular-layout-sort-' + this.id).val() as string;
-
+        
         this.generateCircularData(attrBundle);
         this.createCircularGraph(attrSort, attrBundle);
         this.circularLayoutLabelOnChange(attrLabel);
@@ -352,6 +353,8 @@ class CircularGraph {
         //------------------------------------------------------------------------------------------------
         // Generate updated data
         var nodeJson = JSON.parse(JSON.stringify(this.svgNodeBundleArray));     // Is this really happening?
+        console.log(nodeJson);
+
         //var bundle = d3.layout.bundle();
         var diameter = 800,
             radius = diameter / 2,
@@ -370,24 +373,25 @@ class CircularGraph {
         let tree = d3.hierarchy(packages.root(nodeJson));
         // Tree may have a false root. Remove it.
         if (tree.children.length === 1) tree = tree.children[0];
-        let groups = tree.children;
+        
         if (attrSort !== "none") {
             if (attrBundle !== "none") {
-                for (var i = 0; i < groups.length; i++) {
-                    groups[i].children.sort(function (a, b) {
-                        return a[attrSort][0] - b[attrSort][0];
+                for (var i = 0; i < tree.children.length; i++) {
+                    
+                    tree.children[i].children.sort(function (a, b) {
+                        return a.data[attrSort][0] - b.data[attrSort][0];
                     });
                 }
             } else {
-                for (var i = 0; i < groups.length; i++) {
-                    groups.sort(function (a, b) {
-                        return a[attrSort][0] - b[attrSort][0];
+                for (var i = 0; i < tree.children.length; i++) {
+                    tree.children[i].children.sort(function (a, b) {
+                        return a.data[attrSort][0] - b.data[attrSort][0];
                     });
                 }
             }
         }
         if (attrBundle !== "none") {
-            groups.sort((a, b) => a.children[0].bundleSort[attrBundle] - b.children[0].bundleSort[attrBundle]);
+            tree.children.sort((a, b) => a.children[0].data.bundleSort[attrBundle] - b.children[0].data.bundleSort[attrBundle]);
         }
 
         this.nodesCluster = cluster(tree);
@@ -780,7 +784,7 @@ class CircularGraph {
     }
 
     createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
-        //console.log(this.svgNodeBundleArray);
+        
         // Based on http://bl.ocks.org/mbostock/1044242
         if (this.svgNodeBundleArray.length == 0)
             return;
@@ -907,15 +911,15 @@ class CircularGraph {
                 n.y -= offset * n.bundleHeight[bundleByAttribute];
             }
         }
-        console.log("this.nodesCluster");
-        console.log(this.nodesCluster);
+        //console.log("this.nodesCluster");
+        //console.log(this.nodesCluster);
 
         //console.log("this.nodesCluster.children");
         //console.log(this.nodesCluster.children);
 
         this.links = packages.edgesD3V7(this.nodesCluster);
-        console.log("this.links");
-        console.log(this.links);
+        //console.log("this.links");
+        //console.log(this.links);
         var varMouseOveredSetNodeID = (id) => { this.mouseOveredSetNodeID(id); }
         var varMouseOutedSetNodeID = () => { this.mouseOutedSetNodeID(); }
 
@@ -938,7 +942,7 @@ class CircularGraph {
         this.links.forEach(function (curLink) {
             linksForPlotting.push([curLink.source, curLink.source.parent, curLink.target]);
         })
-        console.log(linksForPlotting);
+        //console.log(linksForPlotting);
         //console.log(this.svgAllElements);
         //var bundledLinks = bundle(links);
         
@@ -1154,6 +1158,7 @@ class CircularGraph {
         let varCircularLayoutAttributeOnChange = (barID: number, val: string) => { this.circularLayoutAttributeOnChange(barID, val); }
         let varUpdateCircularBarColor = (barID: number, color: string) => { this.updateCircularBarColor(barID, color); }
 
+        
         let id = this.attributeBars.length;
         let bar = {
             id: id,
@@ -1165,6 +1170,8 @@ class CircularGraph {
         this.attributeBars.push(bar);
         this.numBars += 1;
 
+        //console.log(this.nodesList);
+        
         // Add New Bar to Circular Graph
         this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
             .data(this.nodesList)
@@ -1227,8 +1234,10 @@ class CircularGraph {
     updateCircularBarColor(barID: number, color: string) {
         this.circularBarColorChange = true;
 
+        
         // update bar object
         var bar = this.attributeBars[barID];
+
         bar.color = color;
 
         var gScale = 100;
@@ -1244,7 +1253,7 @@ class CircularGraph {
             this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
                 .style("fill", function (d) {
 
-                    delta = gScale * (1 - d["scale_" + attr]);
+                    delta = gScale * (1 - d.data["scale_" + attr]);
                     rgbtext = rgbtext.replace("#", "");
                     delta = Math.floor(delta);
 
@@ -1295,7 +1304,7 @@ class CircularGraph {
                     }).attr("height", function (d) {
                         return height;
                     }).attr("width", function (d) {
-                        var barWidth = 40 * d["scale_" + b.attribute];
+                        var barWidth = 40 * d.data["scale_" + b.attribute];
                         d.data.barWidths[b.id] = barWidth;
                         return barWidth;
                     });
@@ -1409,6 +1418,7 @@ class CircularGraph {
     }
 
     circularLayoutBundleOnChange(attr: string) {
+        
         this.circularBundleAttribute = $('#select-circular-layout-bundle-' + this.id).val() as string;
         this.clear();
         this.create(); // recreate the graph

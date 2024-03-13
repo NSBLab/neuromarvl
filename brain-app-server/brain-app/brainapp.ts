@@ -377,13 +377,15 @@ class NeuroMarvl {
                 },
                 (data, status) => {
                     console.log(`Data fetch from ${p[0]} location got configuration with length ${data.length} and "${status}" status`);
+                    
                     if (status.toLowerCase() == "success") {
                         // Ensure that data is not empty
                         if (!data || !data.length) return;
 
-                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));
+                        this.saveFileObj = new SaveFile(JSON.parse(data));
                         for (var app of this.saveFileObj.saveApps) {
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
+                                
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
 
                                 //to fix the model is not loading after save
@@ -1276,7 +1278,12 @@ class NeuroMarvl {
 
         this.applicationsInstances[viewport].resize(resolution.x, resolution.y);
 
+        console.log(d3.zoomTransform(this.applicationsInstances[viewport].svgAllElements.node()));
+
+
         let prevsvgtransform = this.applicationsInstances[viewport].svgAllElements.attr("transform");
+
+        // change to d3 functions to manipulate the transform
         if (prevsvgtransform != null) {
             let zoom = resolution.x / origWidth;
 

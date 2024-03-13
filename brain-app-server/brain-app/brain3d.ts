@@ -1136,14 +1136,30 @@ class Brain3DApp implements Application, Loopable {
         if (app.showingTopologyNetwork) {
             $(`#select-network-type-${this.id}-${app.networkType}`).addClass("active");
 
-            this.networkTypeOnChange(app.networkType);
+            // set bundling and sorting attributes before data gets created
 
             if (app.networkType == "circular") {
                 $('#select-circular-layout-bundle-' + this.id).val(app.circularBundleAttribute);
                 $('#select-circular-layout-sort-' + this.id).val(app.circularSortAttribute);
                 $('#select-circular-label-' + this.id).val(app.circularLabelAttribute);
                 $('#checkbox-circular-edge-gradient-' + this.id).prop('checked', app.circularEdgeGradient);
+                this.circularGraph.circularBundleAttribute = app.circularBundleAttribute;
+                this.circularGraph.circularSortAttribute = app.circularSortAttribute;
+                this.circularGraph.circularLabelAttribute = app.circularLabelAttribute;
+            } else if (app.networkType == "2d") {
+                $('#select-graph2d-layout-' + this.id).val(app.layout2d);
+                $('#select-graph2d-group-' + this.id).val(app.bundle2d);
+                $("#div-scale-slider-alt-" + this.id)['bootstrapSlider']("setValue", app.scale2d);
 
+                this.canvasGraph.layout = app.layout2d;
+                this.canvasGraph.groupNodesBy = app.bundle2d;
+                this.canvasGraph.scale = app.scale2d;
+            }
+
+            // this creates the data
+            this.networkTypeOnChange(app.networkType);
+
+            if (app.networkType == "circular") {
                 if (app.circularAttributeBars && app.circularAttributeBars.length > 0) {
                     for (var bar in app.circularAttributeBars) {
                         this.circularGraph.addAttributeBar();
@@ -1157,20 +1173,10 @@ class Brain3DApp implements Application, Loopable {
                     }
                 }
 
-                this.circularGraph.circularBundleAttribute = app.circularBundleAttribute;
-                this.circularGraph.circularSortAttribute = app.circularSortAttribute;
-                this.circularGraph.circularLabelAttribute = app.circularLabelAttribute;
                 this.circularGraph.updateAllAttributeBars();
             }
             else if (app.networkType == "2d") {
-                $('#select-graph2d-layout-' + this.id).val(app.layout2d);
-                $('#select-graph2d-group-' + this.id).val(app.bundle2d);
-                $("#div-scale-slider-alt-" + this.id)['bootstrapSlider']("setValue", app.scale2d);
-
-                this.canvasGraph.layout = app.layout2d;
-                this.canvasGraph.groupNodesBy = app.bundle2d;
-                this.canvasGraph.scale = app.scale2d;
-
+                
                 // Don't try to update if it hasn't had the initial layout generation run yet
                 if (this.canvasGraph.nodes.length) {
                     this.canvasGraph.updateGraph();
@@ -1429,7 +1435,6 @@ class Brain3DApp implements Application, Loopable {
 
     showNetwork(switchNetworkType: boolean, callback?) {
         if (!this.brainObject || !this.colaObject || !this.physioGraph || !this.colaGraph || !this.networkType || !this.dataSet.brainCoords.length || !this.dataSet.brainCoords[0].length) return;
-
         CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Generating new graph layout...");
 
         // Change the text of the button to "Topology"
@@ -1438,7 +1443,8 @@ class Brain3DApp implements Application, Loopable {
         if (this.bundlingEdges) this.edgesBundlingOnChange(); // turn off edge bundling
 
         // Wrap long-running changes in a short timeout so we don't block the UI
-        window.setTimeout(() => {
+        // this causes problems tho
+        //window.setTimeout(() => {
             // Leave *showingCola* on permanently after first turn-on
             //this.showingCola = true;
 
@@ -1551,7 +1557,7 @@ class Brain3DApp implements Application, Loopable {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Graph layout done");
 
             if (callback) callback();
-        }, 0)
+        //}, 0)
     }
 
     cross(u: number[], v: number[]) {

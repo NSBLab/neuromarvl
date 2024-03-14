@@ -630,7 +630,6 @@ class Graph3D {
 
 
     selectNode(id: number, ignore3dControl: boolean) {
-
         if (!this.nodeInfo[id].isSelected) {
             this.nodeInfo[id].isSelected = true;
             var x = this.nodeMeshes[id].scale.x;

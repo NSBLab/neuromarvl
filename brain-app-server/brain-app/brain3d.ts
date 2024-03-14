@@ -1437,6 +1437,7 @@ class Brain3DApp implements Application, Loopable {
         if (!this.brainObject || !this.colaObject || !this.physioGraph || !this.colaGraph || !this.networkType || !this.dataSet.brainCoords.length || !this.dataSet.brainCoords[0].length) return;
         CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Generating new graph layout...");
 
+        //console.log(this.circularGraph);
         // Change the text of the button to "Topology"
         this.showingTopologyNetwork = true; 
 
@@ -1520,6 +1521,7 @@ class Brain3DApp implements Application, Loopable {
             // clear svg graphs
             if (this.ignore3dControl) {
                 // clear  circular
+                console.log(this.circularGraph);
                 this.circularGraph.clear();
                 this.ignore3dControl = false;
             }
@@ -1662,6 +1664,7 @@ class Brain3DApp implements Application, Loopable {
 
 
     mouseOveredSetNodeID(id) {
+        //console.trace();
         this.commonData.nodeIDUnderPointer[4] = id;
     }
 
@@ -1958,8 +1961,6 @@ class Brain3DApp implements Application, Loopable {
             
         }
         
-
-        
         if (!this.dataSet || !this.dataSet.verify()) {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Current dataset cannot be verified. Cannot create brain view.");
 
@@ -1992,11 +1993,11 @@ class Brain3DApp implements Application, Loopable {
 
         // Set up loop
 
-        this.haveCreatedCircularGraph = false;
         // Initialise Graph Objects
         this.circularGraph = new CircularGraph(this.id, this.jDiv, this.dataSet,
             this.svg, this.svgDefs, this.svgAllElements,
             this.d3Zoom, this.commonData, this.saveFileObj);
+        
         //this.haveCreatedCircularGraph = true;
 
         // Set up the graphs
@@ -2099,6 +2100,7 @@ class Brain3DApp implements Application, Loopable {
 
         let n = raycaster.intersectObjects(nCola)[0] || raycaster.intersectObjects(nPhysio)[0];
         if (n) {
+            //console.trace();
             this.commonData.nodeIDUnderPointer[this.id] = n.object.userData.id;
             return n.object;
         }
@@ -2148,13 +2150,17 @@ class Brain3DApp implements Application, Loopable {
 
             // Check if pointer is over 3D Model
             var node = this.getNodeUnderPointer(this.input.localPointerPosition());
+            //console.log(node);
             var nodeIDUnderPointer = node ? node.userData.id : -1;
+            //console.log(nodeIDUnderPointer);
             this.getBoundingSphereUnderPointer(this.input.localPointerPosition());
 
-            // Check if pointer is over 2D Model in all view
 
+            // Check if pointer is over 2D Model in all view
+            //console.log(this.commonData.nodeIDUnderPointer);
             for (var i = 0; i < this.commonData.nodeIDUnderPointer.length; i++) {
                 if (this.commonData.nodeIDUnderPointer[i] != -1) {
+                    //console.log("pointer is over 2d model");
                     nodeIDUnderPointer = this.commonData.nodeIDUnderPointer[i];
                     break;
                 }
@@ -2170,14 +2176,23 @@ class Brain3DApp implements Application, Loopable {
                     }
 
                     if (node) {
+                        //console.log("node");
+                        //console.log(node);
                         this.selectedNodeID = node.userData.id;
+                        
                     }
                     else {
+                        //console.log("nodeIDUnderPointer");
+                        //console.log(nodeIDUnderPointer);
                         this.selectedNodeID = nodeIDUnderPointer;
                     }
+                    //console.log(this.commonData.nodeIDUnderPointer);
 
+                    //console.log(this.selectedNodeID);
                     // Select the new node ID
+                    //console.log("this.physioGraph.selectNode(this.selectedNodeID, false);");
                     this.physioGraph.selectNode(this.selectedNodeID, false);
+                    //console.log("this.colaGraph.selectNode(this.selectedNodeID, this.ignore3dControl);");
                     this.colaGraph.selectNode(this.selectedNodeID, this.ignore3dControl);
 
 
@@ -2186,7 +2201,10 @@ class Brain3DApp implements Application, Loopable {
                         var varMouseOveredCircularLayout = (d) => { this.circularGraph.mouseOveredCircularLayout(d); };
                         this.svgAllElements.selectAll(".nodeCircular")
                             .each(function (d) {
-                                if (varNodeID == d.id) varMouseOveredCircularLayout(d);
+                                if (varNodeID == d.data.id) {
+                                    //console.log(d);
+                                    varMouseOveredCircularLayout(d);
+                                }
                             });
                     }
                     else if (this.networkType == "2d") {

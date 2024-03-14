@@ -68,7 +68,7 @@ var DataSet = /** @class */ (function () {
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Attributes are empty. Load a valid attributes file.");
             }
             else {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Attribute and coordinate files do not match! (" + this.attributes.numRecords + " attributes for " + this.brainCoords[0].length + " columns)");
+                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Attribute and coordinate files do not match! (".concat(this.attributes.numRecords, " attributes for ").concat(this.brainCoords[0].length, " columns)"));
             }
             isValid = false;
         }
@@ -77,7 +77,7 @@ var DataSet = /** @class */ (function () {
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Similarity matrix is empty. Load a valid matrix file.");
             }
             else {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Similarity matrix and coordinates files do not match! (lengths " + this.brainCoords[0].length + " and " + this.simMatrix.length + ")");
+                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Similarity matrix and coordinates files do not match! (lengths ".concat(this.brainCoords[0].length, " and ").concat(this.simMatrix.length, ")"));
             }
             isValid = false;
         }
@@ -240,8 +240,8 @@ var SaveFile = /** @class */ (function () {
         // Use the hardcoded example data iff the minimal required source files aren't specified.
         this.useExampleData = function () { return !_this.serverFileNameCoord || !_this.serverFileNameMatrix || !_this.serverFileNameAttr; };
         this.edgeSettings = (sourceObject && sourceObject.edgeSettings) || {
-            colorBy: "none",
-            size: 1,
+            colorBy: "none", // node (default), none or weight 
+            size: 1, // default
             thicknessByWeight: false,
             directionMode: "none",
             directionStartColor: "#FF0000",

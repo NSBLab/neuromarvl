@@ -233,7 +233,7 @@ var NeuroMarvl = /** @class */ (function () {
                     filename: p[1],
                     source: source_1
                 }, function (data, status) {
-                    console.log("Data fetch from " + p[0] + " location got configuration with length " + data.length + " and \"" + status + "\" status");
+                    console.log("Data fetch from ".concat(p[0], " location got configuration with length ").concat(data.length, " and \"").concat(status, "\" status"));
                     if (status.toLowerCase() == "success") {
                         // Ensure that data is not empty
                         if (!data || !data.length)
@@ -1081,7 +1081,7 @@ var NeuroMarvl = /** @class */ (function () {
             image.setAttribute('height', canvas.height);
             image.removeAttribute('xmlns');
             // 2D canvas
-            var canvas2d = $("#div-graph-" + id + " div.graph2dContainer canvas[data-id='layer2-node']").get(0);
+            var canvas2d = $("#div-graph-".concat(id, " div.graph2dContainer canvas[data-id='layer2-node']")).get(0);
             if (canvas2d && (canvas2d.getAttribute("visibility") !== "hidden") && _this.applicationsInstances[0].canvasGraph.cy) {
                 var image2d = document.createElement("image");
                 var cy = _this.applicationsInstances[0].canvasGraph.cy;

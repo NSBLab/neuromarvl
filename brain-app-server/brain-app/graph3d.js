@@ -1,5 +1,3 @@
-/// <reference path="CommonUtilities.ts"/>
-
 var RENDER_ORDER_EDGE = 1.1;
 var Graph3D = /** @class */ (function () {
     function Graph3D(parentObject, adjMatrix, nodeColorings, weightMatrix, labels, commonData, saveObj) {
@@ -39,7 +37,7 @@ var Graph3D = /** @class */ (function () {
             //TODO: Originally using spheres, but can switch to sprites for pie chart representations
             var nodeObject = this.nodeMeshes[i] = new THREE.Mesh(this._sphereGeometry, new THREE.MeshLambertMaterial({
                 color: this.nodeCurrentColor[i],
-                transparent: true,
+                transparent: true, // Not actually transparent, but need this or three.js will render it before the brain surface
                 depthWrite: false,
                 depthTest: false
             }));
@@ -524,8 +522,7 @@ var Graph3D = /** @class */ (function () {
         if (!colorArray)
             return;
         if (colorArray.length != this.nodeMeshes.length) {
-            //throw will hold the process
-            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match");            
+            alert("ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match");
             return;
             //throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
         }

@@ -337,9 +337,9 @@ var Brain3DApp = /** @class */ (function () {
             .append($("<div id='div-graph-controls'></div>").css({ position: "absolute", bottom: 0 })
             // Controls for the bottom of the graph area
             .append('<p>Showing <label id="count-' + this.id + '">0</label> edges (<label id=percentile-' + this.id + '>0</label>th percentile)</p>')
-            .append($("<input id=\"edge-count-slider-" + this.id + "\" type=\"text\" />"))
+            .append($("<input id=\"edge-count-slider-".concat(this.id, "\" type=\"text\" />")))
             // Select Network Type button group
-            .append($("<div id=\"select-network-type-" + this.id + "\" class=\"btn-group\" data-toggle=\"buttons\">\n                    <label id=\"select-network-type-" + this.id + "-3D\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"3D topological projection based on the cola method, as provided by WebCola\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-" + this.id + "\" value=\"3d\" autocomplete=\"off\">3D\n                    </label>\n                    <label id=\"select-network-type-" + this.id + "-2D\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"2D topological projection generated according to one of several different algorithms. See Options for details.\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-" + this.id + "\" value=\"2d\" autocomplete=\"off\">2D\n                    </label>\n                    <label id=\"select-network-type-" + this.id + "-circular\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Circular layout with additional attribute visualisation. See Options for details.\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-" + this.id + "\" value=\"circular\" autocomplete=\"off\">Circular\n                    </label>\n                    <label id=\"select-network-type-" + this.id + "-none\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Remove the secondary view\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-" + this.id + "\" value=\"none\" autocomplete=\"off\">None\n                    </label>\n                </div>").css({ 'margin-left': '5px', 'position': 'relative', 'z-index': 1000 })));
+            .append($("<div id=\"select-network-type-".concat(this.id, "\" class=\"btn-group\" data-toggle=\"buttons\">\n                    <label id=\"select-network-type-").concat(this.id, "-3D\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"3D topological projection based on the cola method, as provided by WebCola\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"3d\" autocomplete=\"off\">3D\n                    </label>\n                    <label id=\"select-network-type-").concat(this.id, "-2D\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"2D topological projection generated according to one of several different algorithms. See Options for details.\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"2d\" autocomplete=\"off\">2D\n                    </label>\n                    <label id=\"select-network-type-").concat(this.id, "-circular\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Circular layout with additional attribute visualisation. See Options for details.\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"circular\" autocomplete=\"off\">Circular\n                    </label>\n                    <label id=\"select-network-type-").concat(this.id, "-none\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Remove the secondary view\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"none\" autocomplete=\"off\">None\n                    </label>\n                </div>")).css({ 'margin-left': '5px', 'position': 'relative', 'z-index': 1000 })));
         $("#edge-count-slider-" + this.id)['bootstrapSlider']({
             min: 1,
             max: maxEdgesShowable,
@@ -366,7 +366,7 @@ var Brain3DApp = /** @class */ (function () {
         };
         $checkboxTips.change(onToggleTips);
         onToggleTips();
-        $("input[name=select-network-type-" + this.id + "]:radio").change(function (event) { return varNetworkTypeOnChange(event.target["value"]); });
+        $("input[name=select-network-type-".concat(this.id, "]:radio")).change(function (event) { return varNetworkTypeOnChange(event.target["value"]); });
         // Graph canvas setup
         this.graph2dContainer = d3.select('#div-graph-' + this.id)
             .append("div")
@@ -899,7 +899,7 @@ var Brain3DApp = /** @class */ (function () {
     };
     Brain3DApp.prototype.initShowNetwork = function (app) {
         if (app.showingTopologyNetwork) {
-            $("#select-network-type-" + this.id + "-" + app.networkType).addClass("active");
+            $("#select-network-type-".concat(this.id, "-").concat(app.networkType)).addClass("active");
             this.networkTypeOnChange(app.networkType);
             if (app.networkType == "circular") {
                 $('#select-circular-layout-bundle-' + this.id).val(app.circularBundleAttribute);
@@ -937,7 +937,7 @@ var Brain3DApp = /** @class */ (function () {
             }
         }
         else {
-            $("#select-network-type-" + this.id + "-none").addClass("active");
+            $("#select-network-type-".concat(this.id, "-none")).addClass("active");
         }
     };
     Brain3DApp.prototype.closeBrainAppOnClick = function () {

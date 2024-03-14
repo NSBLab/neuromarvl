@@ -103,7 +103,7 @@ var Graph2D = /** @class */ (function () {
                     // "node"
                     //TODO: use gradient to color edges - this needs a change to cytoscape.js
                     var colorVector = (new THREE.Vector4()).lerpVectors(edge.uniforms.startColor.value, edge.uniforms.endColor.value, 0.5);
-                    linkObject["color"] = "rgb(" + colorVector.x * 255 + ", " + colorVector.y * 255 + ", " + colorVector.z * 255 + ")";
+                    linkObject["color"] = "rgb(".concat(colorVector.x * 255, ", ").concat(colorVector.y * 255, ", ").concat(colorVector.z * 255, ")");
                 }
                 linkObject["width"] = edge.shape.scale.x;
                 for (var j = 0; j < this.nodes.length; j++) {
@@ -460,15 +460,15 @@ var Graph2D = /** @class */ (function () {
             _this.cy.elements(".hover").removeClass("hover");
             _this.cy.elements(".hover-neighbour").removeClass("hover-neighbour");
             _this.cy.elements("node.chosen").removeClass("chosen");
-            _this.cy.elements("node[sourceId=" + _this.commonData.nodeIDUnderPointer[0] + "]")
+            _this.cy.elements("node[sourceId=".concat(_this.commonData.nodeIDUnderPointer[0], "]"))
                 .addClass("hover")
                 .neighborhood()
                 .addClass("hover-neighbour");
-            _this.cy.elements("node[sourceId=" + _this.commonData.nodeIDUnderPointer[4] + "]")
+            _this.cy.elements("node[sourceId=".concat(_this.commonData.nodeIDUnderPointer[4], "]"))
                 .addClass("hover")
                 .neighborhood()
                 .addClass("hover-neighbour");
-            _this.cy.elements("node[sourceId=" + _this.commonData.selectedNode + "]").addClass("chosen");
+            _this.cy.elements("node[sourceId=".concat(_this.commonData.selectedNode, "]")).addClass("chosen");
             // Edge color setting changes
             if ((_this.graph3d.colorMode === "weight") || (_this.graph3d.colorMode === "none")) {
                 _this.cy.elements("edge").each(function (i, e) {
@@ -482,7 +482,7 @@ var Graph2D = /** @class */ (function () {
                     var colorVectorSource = _this.graph3d.edgeList[e.data("edgeListIndex")].uniforms.startColor.value;
                     var colorVectorTarget = _this.graph3d.edgeList[e.data("edgeListIndex")].uniforms.endColor.value;
                     var colorVector = (new THREE.Vector4()).lerpVectors(colorVectorSource, colorVectorTarget, 0.5);
-                    e.data("color", "rgb(" + colorVector.x * 255 + ", " + colorVector.y * 255 + ", " + colorVector.z * 255 + ")");
+                    e.data("color", "rgb(".concat(colorVector.x * 255, ", ").concat(colorVector.y * 255, ", ").concat(colorVector.z * 255, ")"));
                 });
             }
             // Node size/color changes - TODO: color
@@ -575,14 +575,14 @@ var Graph2D = /** @class */ (function () {
             _this.settingOnChange();
         };
         var varGroupNodesOnChange = function (groupBy) {
-            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Updating grouping for " + _this.layout + " layout...");
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Updating grouping for ".concat(_this.layout, " layout..."));
             _this.groupNodesBy = groupBy;
             _this.saveObj.saveApps[_this.id].bundle2d = groupBy;
             _this.updateGraph();
         };
         var varMenuButtonOnClick = function () { _this.menuButtonOnClick(); };
         var changeLayout = function (layout) {
-            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Updating " + _this.layout + " layout...");
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Updating ".concat(_this.layout, " layout..."));
             _this.layout = layout;
             _this.saveObj.saveApps[_this.id].layout2d = layout;
             _this.updateGraph();

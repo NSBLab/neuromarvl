@@ -1,5 +1,4 @@
-﻿
-class CircularGraph {
+﻿class CircularGraph {
     id: number;
     jDiv;
     dataSet: DataSet;
@@ -1055,7 +1054,11 @@ class CircularGraph {
             .append("text") // Appending Element
             .attr("class", "nodeCircular")
             .attr("dy", ".31em")
-            .attr("transform", function (d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 16) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
+            .attr("transform", function (d) {
+                return "rotate(" + (d.x - 90) + ")"
+                    + "translate(" + (d.y + 16) + ", 0)"
+                    + (d.x < 180 ? "" : "rotate(180)");
+            })
             .style("text-anchor", function (d) { return d.x < 180 ? "start" : "end"; })
             .text(function (d) { return d.data.label; })
             .on("mouseover", function (event, d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.data.id); })
@@ -1069,7 +1072,10 @@ class CircularGraph {
             .append("g") // Appending Element
             .attr("class", "nodeDotCircular")
             .attr("transform", function (d) {
-                return "rotate(" + (d.x - 90) + ")translate(" + (d.y) + ",0)" + (d.x < 180 ? "" : "rotate(180)");
+                return "rotate(" + (d.x - 90) + ")"
+                    + "translate(" + (d.y) + ", 0)"
+                    + (d.x < 180 ? "" : "rotate(180)");
+                
             })
             .on("mouseover", function (event, d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.data.id); })
             .on("mouseout", function (event, d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); })
@@ -1286,9 +1292,9 @@ class CircularGraph {
                 this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                 // Change bar location
                     .attr("transform", function (d) {
-                        return "rotate(" + (d.x - 90) + ")" +
-                            "translate(" + (d.y + 4) + ",  " + ((height * count) - BAR_MAX_HEIGHT / 2) + ")" + (d.x < 180 ? "" : "");
-                        // Change bar height
+                        return "rotate(" + (d.x - 90) + ")"
+                            + "translate(" + (d.y + 4) + ",  " + ((height * count) - BAR_MAX_HEIGHT / 2) + ")";
+
                     }).attr("height", function (d) {
                         return height;
                     }).attr("width", function (d) {
@@ -1313,7 +1319,9 @@ class CircularGraph {
                         maxSize = d.data.barWidths[widthSize];
                     }
                 }
-                return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 16 + maxSize) + ",0)" + (d.x < 180 ? "" : "rotate(180)");
+                return "rotate(" + (d.x - 90) + ")"
+                    + "translate(" + (d.y + 16 + maxSize) + ", 0)"
+                    + (d.x < 180 ? "" : "rotate(180)");
             });
     }
 
@@ -1347,9 +1355,9 @@ class CircularGraph {
                     this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                     // Change bar location
                         .attr("transform", function (d) {
-                            return "rotate(" + (d.x - 90) + ")" +
-                                "translate(" + (d.y + 4) + ",  " + ((height * count) - BAR_MAX_HEIGHT / 2) + ")" + (d.x < 180 ? "" : "");
-                            // Change bar height
+
+                            return "rotate(" + (d.x - 90) + ")"
+                                + "translate(" + (d.y + 4) + ",  " + ((height * count) - BAR_MAX_HEIGHT / 2) + ")";
                         }).attr("height", function (d) {
                             return height;
                         });
@@ -1390,7 +1398,14 @@ class CircularGraph {
                     }
                 }
 
-                return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 16 + maxSize) + ",0)" + (d.x < 180 ? "" : "rotate(180)");
+                //let t = packages.d3Transform()
+                //    .rotate(d.x - 90)
+                //    .translate(d.y + 16 + maxSize, 0)
+                //    .rotate(d.x < 180 ? 0 : 180);
+
+                return "rotate(" + (d.x - 90) + ")"
+                    + "translate(" + (d.y + 16 + maxSize) + ", 0)"
+                    + (d.x < 180 ? "" : "rotate(180)");
             });
 
     }

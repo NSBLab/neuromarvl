@@ -340,7 +340,8 @@ class SaveFile {
         };
 
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
-            opacity: 0.5
+            opacity: 0.5,
+            color: "#E3E3E3"
         };
 
         this.displaySettings = (sourceObject && sourceObject.displaySettings) || {

@@ -720,7 +720,6 @@
             // Declare variables 
             nodeObject["imports"] = [];
             nodeObject["linkColors"] = [];
-            console.log("bardWidths");
             nodeObject["barWidths"] = []; // used to calculate the position of the label for each bar
             this.svgNodeBundleArray.push(nodeObject);
         }
@@ -773,7 +772,7 @@
     }
 
     createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
-        console.log("createCircularGraph");
+        //console.log("createCircularGraph");
 
         // Based on http://bl.ocks.org/mbostock/1044242
         if (this.svgNodeBundleArray.length == 0)
@@ -1182,28 +1181,26 @@
             }));
         $('#div-circular-bar' + bar.id + '-' + this.id)
             .append($(`
-                <div id="input-circular-layout-bar${bar.id}-color" class="${this.circularCSSClass} input-group colorpicker-component" style="width: 12em" >
-                    <input type="text" value="#bdc3c7" class="form-control"/>
-                    <span class="input-group-append">
-                        <span class="input-group-text colorpicker-input-addon"><i></i></span>
-                    </span>
+                <div class="${this.circularCSSClass} input-group" style="width: 12em" >
+                    <input type="color" id="input-circular-layout-bar${bar.id}-color" value="#bdc3c7" class="form-control"/>
                 </div>
                 `)
         );
-        let $pickerDiv = (<any>$(`#input-circular-layout-bar${bar.id}-color`));
+        let $pickerInput = (<any>$(`#input-circular-layout-bar${bar.id}-color`));
         let customClass = `custom-picker-${bar.id}-${this.id}`;
-        $pickerDiv.colorpicker({
-            format: "hex",
-            customClass: customClass
-        });
-        $pickerDiv.on("change", e => { varUpdateCircularBarColor(bar.id, <any>e.color.toHexString());
-        });
-        $pickerDiv.on("showPicker", e => {
-            // May need to adjust if it overflows the window
-            let $pickerPalette = $("." + customClass);
-            $pickerPalette.removeClass("clip-to-bottom");
-            if ($pickerPalette.outerHeight() + $pickerPalette.offset().top > window.innerHeight) $pickerPalette.addClass("clip-to-bottom");
-        });
+        //$pickerDiv.colorpicker({
+        //    format: "hex",
+        //    customClass: customClass
+        //});
+        $pickerInput.on("input change", e => { varUpdateCircularBarColor(bar.id, (<any>$(e.target)).val()); });
+        
+        //});
+        //$pickerDiv.on("showPicker", e => {
+        //    // May need to adjust if it overflows the window
+        //    let $pickerPalette = $("." + customClass);
+        //    $pickerPalette.removeClass("clip-to-bottom");
+        //    if ($pickerPalette.outerHeight() + $pickerPalette.offset().top > window.innerHeight) $pickerPalette.addClass("clip-to-bottom");
+        //});
 
         $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).empty();
 
@@ -1233,10 +1230,10 @@
         var txt: string;
         var rgbtext;
         var delta;
-        let $pickerDiv = (<any>$(`#input-circular-layout-bar${barID}-color`));
+        let $pickerInput = (<any>$(`#input-circular-layout-bar${barID}-color`));
 
         // set the color picker div's value to the bar's color
-        $pickerDiv.colorpicker("setValue", bar.color);
+        $pickerInput.val(bar.color);
         
         if (bar.isGradientOn) {
             var attr = (<any>$('#select-circular-layout-attribute-' + bar.id + '-' + this.id)).val();
@@ -1291,11 +1288,8 @@
                     }).attr("height", function (d) {
                         return height;
                     }).attr("width", function (d) {
-                        console.log(d.data.barWidths.join(", "));
-                        console.log(d);
                         var barWidth = 40 * d.data["scale_" + bar.attribute];
                         d.data.barWidths[bar.id] = barWidth;
-                        console.log(d.data.barWidths.join(", "));
                         return barWidth;
                     });
 

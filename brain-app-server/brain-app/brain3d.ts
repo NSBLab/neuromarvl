@@ -42,7 +42,7 @@ class Brain3DApp implements Application, Loopable {
     deleted: boolean = false;
 
     // THREE variables
-    camera: THREE.OrthographicCamera;
+    camera;
     scene;
     renderer;
     cursor = new THREE.Vector2();
@@ -130,7 +130,7 @@ class Brain3DApp implements Application, Loopable {
     }
 
     // Constants
-    nearClip = 1;
+    nearClip = 0;
     farClip = 2000;
     //modeLerpLength: number = 0.6;
     modeLerpLength: number = 0.0;       //TODO: Effectively kills the animation. Remove it properly (or fix if easy to do)
@@ -670,14 +670,34 @@ class Brain3DApp implements Application, Loopable {
                 var defaultCameraFov = 25
                 var defaultViewWidth = 800;
 
+                //console.log(this.currentViewWidth);
+                //console.log({
+                //    dx: dx,
+                //    dy: dy
+                //});
                 // move brain model
                 //pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
-                pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
-                this.brainContainer.position.set(this.brainContainer.position.x + dx / pixelDistanceRatio, this.brainContainer.position.y - dy / pixelDistanceRatio, this.brainContainer.position.z);
-                this.colaObject.position.set(this.colaObject.position.x + dx / pixelDistanceRatio, this.colaObject.position.y - dy / pixelDistanceRatio, this.colaObject.position.z);
+                //pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
+                //console.log(this.renderer);
+                //console.log(this);
+                let SZ = new THREE.Vector2();
+                this.renderer.getSize(SZ);
+
+                // the height and width of each pixel in world space
+                let pixelHeight = (this.camera.top - this.camera.bottom) / SZ.height;
+                var pixelWidth = (this.camera.right - this.camera.left) / SZ.width;
+
+                //console.log({
+                //    cameraWidth: cameraWidth,
+                //    cameraHeight: cameraHeight
+                //});
+                // why is this causing the brain to rotate?
+                this.brainContainer.position.set(this.brainContainer.position.x + dx * pixelWidth, this.brainContainer.position.y - dy * pixelHeight, this.brainContainer.position.z);
+                this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
 
                 var prevQuaternion = this.brainContainer.quaternion.clone();
-                this.brainContainer.lookAt(this.camera.position);
+                // this causes the brain to rotate, so I have commented it out
+                //this.brainContainer.lookAt(this.camera.position);
             }
         });
 
@@ -763,7 +783,7 @@ class Brain3DApp implements Application, Loopable {
             this.camera.updateProjectionMatrix();
             
             this.brainContainer.position.set(-this.graphOffset, 0, 0);
-            this.brainContainer.lookAt(this.camera.position);
+            //this.brainContainer.lookAt(this.camera.position);
             this.brainObject.rotation.set(0, 0, 0);
             
             this.colaObject.position.set(this.graphOffset, 0, 0);
@@ -781,7 +801,12 @@ class Brain3DApp implements Application, Loopable {
             pointerNDC.unproject(this.camera);
             pointerNDC.sub(this.camera.position);
 
-            this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(delta < 0 ? ZOOM_FACTOR : -ZOOM_FACTOR));
+            // the perspective version wont work with the orthographic
+            //this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(delta < 0 ? ZOOM_FACTOR : -ZOOM_FACTOR));
+            var curZoom = this.camera.zoom;
+            this.camera.zoom = curZoom + Math.sign(delta) * 0.1;
+            this.camera.updateProjectionMatrix();
+
         });
 
         this.input.regGetRotationCallback(() => {
@@ -1886,7 +1911,7 @@ class Brain3DApp implements Application, Loopable {
         this.needUpdate = true;
     }
 
-    /* Called when the size of the view port is changed*/
+    /* Called when the size of the view port is changed */
     resize(width: number, height: number) {
         console.log("resize()");
         console.log({
@@ -1894,6 +1919,7 @@ class Brain3DApp implements Application, Loopable {
             height: height
         });
         // Resize the renderer
+        // this is the canvas
         this.renderer.setSize(width, height - sliderSpace);
         this.currentViewWidth = width;
 
@@ -1901,33 +1927,41 @@ class Brain3DApp implements Application, Loopable {
             .attr("width", width)
             .attr("height", height - sliderSpace);
 
+        //console.log(this.camera.position);
         // Calculate the aspect ratio
-        var aspect = width / (height - sliderSpace);
-        this.camera.aspect = aspect;
+        //var aspect = width / (height - sliderSpace);
+        //this.camera.aspect = aspect;
 
-        // Calculate the FOVs
-        var verticalFov = Math.atan(height / window.outerHeight); // Scale the vertical fov with the vertical height of the window (up to 45 degrees)
-        var horizontalFov = verticalFov * aspect;
+        //// Calculate the FOVs
+        //var verticalFov = Math.atan(height / window.outerHeight); // Scale the vertical fov with the vertical height of the window (up to 45 degrees)
+        //var horizontalFov = verticalFov * aspect;
 
-        this.defaultFov = verticalFov * 180 / Math.PI;
-        console.log(this.defaultFov * this.fovZoomRatio);
-        console.log({
-            defaultFov: this.defaultFov,
-            fovZoomRatio: this.fovZoomRatio
-        });
-        this.camera.fov = this.defaultFov * this.fovZoomRatio;
+        //this.defaultFov = verticalFov * 180 / Math.PI;
+        //console.log(this.defaultFov * this.fovZoomRatio);
+        //console.log({
+        //    defaultFov: this.defaultFov,
+        //    fovZoomRatio: this.fovZoomRatio
+        //});
+        //this.camera.fov = this.defaultFov * this.fovZoomRatio;
+        //this.camera.updateProjectionMatrix();
+
+        //// Work out how far away the camera needs to be
+        //var distanceByH = (widthInCamera / 2) / Math.tan(horizontalFov / 2);
+        //var distanceByV = (heightInCamera / 2) / Math.tan(verticalFov / 2);
+        //console.log({
+        //    distanceByH: distanceByH,
+        //    distanceByV: distanceByV
+        //});
+        //console.log(this.camera.position.clone());
+        // Select the maximum distance of the two
+        //this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
+        this.camera.position.set(0, 0, 100);
+        this.camera.top = (height - sliderSpace) / 2 / 3;
+        this.camera.bottom = -(height - sliderSpace) / 2 / 3;
+        this.camera.left = -width / 2 / 3;
+        this.camera.right = width / 2 / 3;
         this.camera.updateProjectionMatrix();
 
-        // Work out how far away the camera needs to be
-        var distanceByH = (widthInCamera / 2) / Math.tan(horizontalFov / 2);
-        var distanceByV = (heightInCamera / 2) / Math.tan(verticalFov / 2);
-        console.log({
-            distanceByH: distanceByH,
-            distanceByV: distanceByV
-        });
-        console.log(this.camera.position.clone());
-        // Select the maximum distance of the two
-        this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
         this.originalCameraPosition = this.camera.position.clone();
         console.log(this.camera.position.clone());
         console.log(this.camera);

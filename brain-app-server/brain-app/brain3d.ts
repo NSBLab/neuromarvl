@@ -42,7 +42,7 @@ class Brain3DApp implements Application, Loopable {
     deleted: boolean = false;
 
     // THREE variables
-    camera;
+    camera: THREE.OrthographicCamera;
     scene;
     renderer;
     cursor = new THREE.Vector2();
@@ -165,9 +165,10 @@ class Brain3DApp implements Application, Loopable {
         // Setting up viewport
         this.setupInput();
         this.setupUserInteraction(this.jDiv);
-
+        //console.log(this.brainModelOrigin);
         // Set up camera
-        this.camera = new THREE.PerspectiveCamera(45, 1, this.nearClip, this.farClip);
+        //this.camera = new THREE.PerspectiveCamera(45, 1, this.nearClip, this.farClip);
+        this.camera = new THREE.OrthographicCamera(-500, 500, 500, -500, this.nearClip, this.farClip);
         this.resize(this.jDiv.width(), this.jDiv.height());
 
         // Set up scene
@@ -642,7 +643,6 @@ class Brain3DApp implements Application, Loopable {
             // check if the mouse is over the model
             // these numbers need to be updated
             // right button: rotation
-            //console.log(mode);
             if (mode == 2) {
                 if (this.autoRotation == false) {
                     var pixelAngleRatio = 50;
@@ -671,7 +671,7 @@ class Brain3DApp implements Application, Loopable {
                 var defaultViewWidth = 800;
 
                 // move brain model
-                pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
+                //pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
                 pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
                 this.brainContainer.position.set(this.brainContainer.position.x + dx / pixelDistanceRatio, this.brainContainer.position.y - dy / pixelDistanceRatio, this.brainContainer.position.z);
                 this.colaObject.position.set(this.colaObject.position.x + dx / pixelDistanceRatio, this.colaObject.position.y - dy / pixelDistanceRatio, this.colaObject.position.z);
@@ -759,7 +759,7 @@ class Brain3DApp implements Application, Loopable {
             if (this.isControllingGraphOnly) return;
 
             this.fovZoomRatio = 1;
-            this.camera.fov = this.defaultFov;
+            //this.camera.fov = this.defaultFov;
             this.camera.updateProjectionMatrix();
             
             this.brainContainer.position.set(-this.graphOffset, 0, 0);
@@ -781,11 +781,7 @@ class Brain3DApp implements Application, Loopable {
             pointerNDC.unproject(this.camera);
             pointerNDC.sub(this.camera.position);
 
-            if (delta < 0) {
-                this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(ZOOM_FACTOR));
-            } else {
-                this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(-ZOOM_FACTOR));
-            }
+            this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(delta < 0 ? ZOOM_FACTOR : -ZOOM_FACTOR));
         });
 
         this.input.regGetRotationCallback(() => {

@@ -64,6 +64,7 @@ class Graph3D {
                     depthTest: false
                 })
             );
+
             nodeObject.renderOrder = RENDER_ORDER_EDGE; // Draw at the same level as edges
             
             var label = (!!labels && labels[i]) || "";
@@ -216,6 +217,7 @@ class Graph3D {
             y = colaCoords[1][i];
             z = colaCoords[2][i];
             this.nodeMeshes[i].position.set(x, y, z);
+            //console.log(this.nodeMeshes[i]);
             this.nodeInfo[i]["label"].position.set(x + 5, y + 5, z);
         }
     }

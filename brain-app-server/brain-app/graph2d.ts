@@ -38,7 +38,7 @@ class Graph2D {
         private commonData: CommonData,
         private saveObj: SaveFile,
         private graph3d: Graph3D,
-        private camera: THREE.Camera,
+        private camera: THREE.PerspectiveCamera,
         complexity: number
     ) {
         this.nodes = [];
@@ -53,7 +53,8 @@ class Graph2D {
     updateGraph() {
         // Use this.dataSet to build the elements for the cytoscape graph.
         // Include default values that are input to style fuctions.
-        
+
+        console.log("updateGraph()");
         this.nodes = [];
         this.links = [];
 
@@ -92,7 +93,7 @@ class Graph2D {
             }
         }
 
-
+        //console.log(this.camera);
         for (let i = 0; i < children.length; i++) {
             let node = children[i];
             let d = node.userData;
@@ -105,11 +106,32 @@ class Graph2D {
             nodeObject["radius"] = node.scale.x;
             nodeObject["colors"] = d.colors;
             nodeObject["highlighted"] = d.highlighted;
+            //console.log(nodeObject["color"]);
+            //if (i == 0) {
+            //    console.log("node");
+            //    console.log(node);
+            //}
 
+            // make sure world matrices are updated
+            node.updateWorldMatrix();
+            //console.log(node);
             // Use projection of colaGraph to screen space to initialise positions
             let position = (new THREE.Vector3()).setFromMatrixPosition(node.matrixWorld);
-            position.project(this.camera);
 
+            //let position = new THREE.Vector3(node.position.x, node.position.y, node.position.z);
+            //position = this.camera.getWorldPosition(position);
+            //if (i == 0) {
+            //    console.log("position");
+            //    console.log({ x: position.x, y: position.y, z: position.z });
+            //    console.log("node.matrixWorld");
+            //    console.log(node.matrixWorld);
+            //}
+
+            position.project(this.camera);
+            //if (i == 0) {
+            //    console.log("position");
+            //    console.log({ x: position.x, y: position.y, z: position.z });
+            //}
             nodeObject["x"] = (!isNaN(position.x) && isFinite(position.x)) ? position.x : 0;
             nodeObject["y"] = (!isNaN(position.y) && isFinite(position.y)) ? position.y : 0;
             
@@ -129,7 +151,7 @@ class Graph2D {
 
             this.nodes.push(nodeObject);
         }
-
+        
         // Add Edges to graph
         for (var i = 0; i < this.graph3d.edgeList.length; i++) {
             var edge = this.graph3d.edgeList[i];
@@ -265,7 +287,11 @@ class Graph2D {
         
 
         let elements = nodes.concat(<any>edges).concat(<any>compounds);
-
+        //elements.forEach(function (curElement) {
+        //    console.log(curElement.data.id);
+        //    console.log(curElement.data.parent);
+        //    console.log(curElement.position);
+        //});
         // Default layout is simple and fast
         let layoutOptions = <any>{
             name: this.layout,
@@ -352,8 +378,9 @@ class Graph2D {
                 break;
         }
         
-        console.log(container);
-        console.log(layoutOptions);
+        //console.log(container);
+        //console.log(layoutOptions);
+        //console.log(elements);
         this.cy = cytoscape({
             container: container,
             elements: elements,
@@ -463,7 +490,7 @@ class Graph2D {
             wheelSensitivity: 0.2,
             layout: layoutOptions
         });
-
+        //console.log('after cytoscape');
         let commonData = this.commonData;
         let cy = this.cy;
         cy.on("mousemove", "node.cluster", function (e) {

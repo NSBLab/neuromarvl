@@ -773,7 +773,7 @@ class Brain3DApp implements Application, Loopable {
         /* Interact with mouse wheel will zoom in and out the 3D Model */
         this.input.regMouseWheelCallback((delta: number) => {
             const ZOOM_FACTOR = 10;
-
+            //console.log("regMouseWheelCallback");
             if (this.isControllingGraphOnly) return; // 2D Flat Version of the network
             var pointer = this.input.localPointerPosition();
             var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
@@ -1210,6 +1210,9 @@ class Brain3DApp implements Application, Loopable {
 
     /* This function is linked with html codes and called when the new option is selected */
     networkTypeOnChange(type: string) {
+        console.log("networkTypeOnChange");
+        console.log(type);
+
         this.networkType = type;
 
         if (type === "circular" && this.circularGraph) {
@@ -1434,15 +1437,18 @@ class Brain3DApp implements Application, Loopable {
     }
 
     showNetwork(switchNetworkType: boolean, callback?) {
+        console.log("showNetwork");
+        console.log(switchNetworkType);
+        console.log(this);
         if (!this.brainObject || !this.colaObject || !this.physioGraph || !this.colaGraph || !this.networkType || !this.dataSet.brainCoords.length || !this.dataSet.brainCoords[0].length) return;
         CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Generating new graph layout...");
-
+        console.log("showNetwork");
         //console.log(this.circularGraph);
         // Change the text of the button to "Topology"
         this.showingTopologyNetwork = true; 
-
+        console.log("showNetwork");
         if (this.bundlingEdges) this.edgesBundlingOnChange(); // turn off edge bundling
-
+        console.log("showNetwork");
         // Wrap long-running changes in a short timeout so we don't block the UI
         // this causes problems tho
         //window.setTimeout(() => {
@@ -1469,20 +1475,21 @@ class Brain3DApp implements Application, Loopable {
             }
 
             var varType = this.networkType;
-            
+            console.log("showNetwork");
             // Create the distance matrix that Cola needs
             var distanceMatrix = (new cola.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();
             var D = cola.Descent.createSquareMatrix(this.dataSet.info.nodeCount, (i, j) => {
                 return distanceMatrix[i][j] * this.colaLinkDistance;
             });
-
+            console.log("showNetwork");
             var clonedPhysioCoords = this.dataSet.brainCoords.map(function (dim) {
                 return dim.map(function (element) {
                     return element;
                 });
             });
+            console.log("showNetwork");
             this.descent = new cola.Descent(clonedPhysioCoords, D); // Create the solver
-
+            console.log("showNetwork");
             var originColaCoords: number[][];
             if (switchNetworkType) {
                 if (this.colaCoords) {
@@ -1498,11 +1505,12 @@ class Brain3DApp implements Application, Loopable {
             }
 
             this.colaCoords = this.descent.x; // Hold a reference to the solver's coordinates
+            console.log("showNetwork");
             // Relieve some of the initial stress
             for (let i = 0; i < 10; ++i) {
                 this.descent.reduceStress();
             }
-            
+            console.log("showNetwork");
             // Offset unconnected nodes
             let i = this.colaGraph.nodeMeshes.length;
             while (i--) {
@@ -1517,14 +1525,16 @@ class Brain3DApp implements Application, Loopable {
                     this.colaCoords[1][i] += (this.graphOffset * 0.4);
                 }
             }
-
+            console.log("showNetwork");
             // clear svg graphs
             if (this.ignore3dControl) {
                 // clear  circular
-                console.log(this.circularGraph);
+                //console.log(this.circularGraph);
                 this.circularGraph.clear();
                 this.ignore3dControl = false;
             }
+        console.log("showNetwork");
+        console.log(this.networkType);
 
             //-------------------------------------------------------------------------------------------------------------
             // animation
@@ -1546,8 +1556,11 @@ class Brain3DApp implements Application, Loopable {
             } else if (this.networkType == '2d') {
                 // Also not animated
                 this.ignore3dControl = true;
+                console.log("aijfoaijfd");
                 this.canvasGraph.updateGraph();
+                console.log("aijfoaijfd");
                 this.colaGraph.setVisible(false);
+                console.log("aijfoaijfd");
             } else if (this.networkType == '3d') {
                 // Set up a coroutine to do the animation
                 var origin = new THREE.Vector3(this.brainContainer.position.x, this.brainContainer.position.y, this.brainContainer.position.z);
@@ -1557,7 +1570,7 @@ class Brain3DApp implements Application, Loopable {
             }
 
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Graph layout done");
-
+            console.log("showNetwork end");
             if (callback) callback();
         //}, 0)
     }
@@ -1572,8 +1585,7 @@ class Brain3DApp implements Application, Loopable {
         var v2 = v[1];
         var v3 = v[2];
 
-        var cross = [u2 * v3 - u3 * v2, u3 * v1 - u1 * v3, u1 * v2 - u2 * v1];
-        return cross;
+        return [u2 * v3 - u3 * v2, u3 * v1 - u1 * v3, u1 * v2 - u2 * v1];
     }
 
     angle(u: number[], v: number[]) {
@@ -1880,6 +1892,11 @@ class Brain3DApp implements Application, Loopable {
 
     /* Called when the size of the view port is changed*/
     resize(width: number, height: number) {
+        console.log("resize()");
+        console.log({
+            width: width,
+            height: height
+        });
         // Resize the renderer
         this.renderer.setSize(width, height - sliderSpace);
         this.currentViewWidth = width;
@@ -1897,17 +1914,27 @@ class Brain3DApp implements Application, Loopable {
         var horizontalFov = verticalFov * aspect;
 
         this.defaultFov = verticalFov * 180 / Math.PI;
-
+        console.log(this.defaultFov * this.fovZoomRatio);
+        console.log({
+            defaultFov: this.defaultFov,
+            fovZoomRatio: this.fovZoomRatio
+        });
         this.camera.fov = this.defaultFov * this.fovZoomRatio;
         this.camera.updateProjectionMatrix();
 
         // Work out how far away the camera needs to be
         var distanceByH = (widthInCamera / 2) / Math.tan(horizontalFov / 2);
         var distanceByV = (heightInCamera / 2) / Math.tan(verticalFov / 2);
-
+        console.log({
+            distanceByH: distanceByH,
+            distanceByV: distanceByV
+        });
+        console.log(this.camera.position.clone());
         // Select the maximum distance of the two
         this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
         this.originalCameraPosition = this.camera.position.clone();
+        console.log(this.camera.position.clone());
+        console.log(this.camera);
     }
 
     setDataSet(dataSet: DataSet) {

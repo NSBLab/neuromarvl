@@ -663,6 +663,7 @@ class NeuroMarvl {
     }
 
     loadExampleData = func => {
+        console.log("loadExampleData()");
         var status = {
             coordLoaded: false,
             matrixLoaded: false,
@@ -1265,9 +1266,8 @@ class NeuroMarvl {
         let origHeight = canvas.height;
 
         this.applicationsInstances[viewport].resize(resolution.x, resolution.y);
-
-        console.log(d3.zoomTransform(this.applicationsInstances[viewport].svgAllElements.node()));
-
+        console.log(canvas);
+        //console.log(d3.zoomTransform(this.applicationsInstances[viewport].svgAllElements.node()));
 
         let prevsvgtransform = this.applicationsInstances[viewport].svgAllElements.attr("transform");
 
@@ -1285,7 +1285,10 @@ class NeuroMarvl {
             str = str.split(',');
             tx = parseFloat(str[0]) * zoom;
             ty = parseFloat(str[1]) * zoom;
-
+            console.log({
+                tx: tx,
+                ty: ty
+            })
 
             if (prevsvgtransform.indexOf('scale') > 0) {
                 let str = prevsvgtransform.split('scale(')[1];
@@ -1308,6 +1311,7 @@ class NeuroMarvl {
                 this.downloadSVGImage(newSource, filename);
             }
 
+            
             requestAnimationFrame(() => {
                 this.applicationsInstances[viewport].resize(
                     this.applicationsInstances[viewport].jDiv.width(),
@@ -2533,6 +2537,9 @@ class NeuroMarvl {
                 x: parseInt(strresolution[0]),
                 y: parseInt(strresolution[1])
             }
+
+            console.log(strresolution);
+
             appref.exportSVG(parseInt(<string>viewport), type, resolution, filename);
         }
 

@@ -659,6 +659,15 @@ class Brain3DApp implements Application, Loopable {
                     quatY.setFromAxisAngle(axisY, dy / pixelAngleRatio); // axis must be normalised, angle in radians
                     this.brainObject.quaternion.multiplyQuaternions(quatY, this.brainObject.quaternion);
                     this.colaObject.quaternion.multiplyQuaternions(quatY, this.colaObject.quaternion);
+
+                    // can I get a bounding box for the objects?
+                    var brainBBox = new THREE.Box3().setFromObject(this.brainObject);
+                    //var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
+                    console.log({
+                        min: brainBBox.min.z,
+                        max: brainBBox.max.z
+                    });
+                    console.log(this.camera.position.z);
                 }
                 else {
                     this.mouse.dx = dx;
@@ -1103,7 +1112,14 @@ class Brain3DApp implements Application, Loopable {
         //clonedObject.renderOrder = RENDER_ORDER_BRAIN;
         this.brainSurface = clonedObject;
         this.brainObject.add(this.brainSurface);
+
+        var brainBBox = new THREE.Box3().setFromObject(this.brainObject);
         
+        this.camera.position.set(0, 0, brainBBox.max.z + (brainBBox.max.z - brainBBox.min.z) / 2);
+        console.log(brainBBox.max.z + (brainBBox.max.z - brainBBox.min.z) / 2);
+
+        this.camera.updateProjectionMatrix();
+
         this.brainSurfaceBoundingSphere = boundingSphereObject;
         this.brainObject.add(this.brainSurfaceBoundingSphere);
         this.surfaceLoaded = true;
@@ -1521,18 +1537,18 @@ class Brain3DApp implements Application, Loopable {
     }
 
     showNetwork(switchNetworkType: boolean, callback?) {
-        console.log("showNetwork");
-        console.log(switchNetworkType);
-        console.log(this);
+        //console.log("showNetwork");
+        //console.log(switchNetworkType);
+        //console.log(this);
         if (!this.brainObject || !this.colaObject || !this.physioGraph || !this.colaGraph || !this.networkType || !this.dataSet.brainCoords.length || !this.dataSet.brainCoords[0].length) return;
         CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Generating new graph layout...");
-        console.log("showNetwork");
+        //console.log("showNetwork");
         //console.log(this.circularGraph);
         // Change the text of the button to "Topology"
         this.showingTopologyNetwork = true; 
-        console.log("showNetwork");
+        //console.log("showNetwork");
         if (this.bundlingEdges) this.edgesBundlingOnChange(); // turn off edge bundling
-        console.log("showNetwork");
+        //console.log("showNetwork");
         // Wrap long-running changes in a short timeout so we don't block the UI
         // this causes problems tho
         //window.setTimeout(() => {
@@ -1559,21 +1575,21 @@ class Brain3DApp implements Application, Loopable {
             }
 
             var varType = this.networkType;
-            console.log("showNetwork");
+            //console.log("showNetwork");
             // Create the distance matrix that Cola needs
             var distanceMatrix = (new cola.Calculator(this.dataSet.info.nodeCount, edges, getSourceIndex, getTargetIndex, e => 1)).DistanceMatrix();
             var D = cola.Descent.createSquareMatrix(this.dataSet.info.nodeCount, (i, j) => {
                 return distanceMatrix[i][j] * this.colaLinkDistance;
             });
-            console.log("showNetwork");
+            //console.log("showNetwork");
             var clonedPhysioCoords = this.dataSet.brainCoords.map(function (dim) {
                 return dim.map(function (element) {
                     return element;
                 });
             });
-            console.log("showNetwork");
+            //console.log("showNetwork");
             this.descent = new cola.Descent(clonedPhysioCoords, D); // Create the solver
-            console.log("showNetwork");
+            //console.log("showNetwork");
             var originColaCoords: number[][];
             if (switchNetworkType) {
                 if (this.colaCoords) {
@@ -1589,12 +1605,12 @@ class Brain3DApp implements Application, Loopable {
             }
 
             this.colaCoords = this.descent.x; // Hold a reference to the solver's coordinates
-            console.log("showNetwork");
+            //console.log("showNetwork");
             // Relieve some of the initial stress
             for (let i = 0; i < 10; ++i) {
                 this.descent.reduceStress();
             }
-            console.log("showNetwork");
+            //console.log("showNetwork");
             // Offset unconnected nodes
             let i = this.colaGraph.nodeMeshes.length;
             while (i--) {
@@ -1609,7 +1625,7 @@ class Brain3DApp implements Application, Loopable {
                     this.colaCoords[1][i] += (this.graphOffset * 0.4);
                 }
             }
-            console.log("showNetwork");
+            //console.log("showNetwork");
             // clear svg graphs
             if (this.ignore3dControl) {
                 // clear  circular
@@ -1617,8 +1633,8 @@ class Brain3DApp implements Application, Loopable {
                 this.circularGraph.clear();
                 this.ignore3dControl = false;
             }
-        console.log("showNetwork");
-        console.log(this.networkType);
+        //console.log("showNetwork");
+        //console.log(this.networkType);
 
             //-------------------------------------------------------------------------------------------------------------
             // animation
@@ -1654,7 +1670,7 @@ class Brain3DApp implements Application, Loopable {
             }
 
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Graph layout done");
-            console.log("showNetwork end");
+            //console.log("showNetwork end");
             if (callback) callback();
         //}, 0)
     }
@@ -2018,7 +2034,16 @@ class Brain3DApp implements Application, Loopable {
         //console.log(this.camera.position.clone());
         // Select the maximum distance of the two
         //this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
-        this.camera.position.set(0, 0, 100);
+
+        // set the
+        
+        if (this.brainObject) {
+            var brainBBox = new THREE.Box3().setFromObject(this.brainObject);
+            this.camera.position.set(0, 0, brainBBox.max.z + 50);
+        } else {
+            this.camera.position.set(0, 0, 200);
+        }
+        
         this.camera.top = (height - sliderSpace) / 2 / 3;
         this.camera.bottom = -(height - sliderSpace) / 2 / 3;
         this.camera.left = -width / 2 / 3;
@@ -2033,8 +2058,8 @@ class Brain3DApp implements Application, Loopable {
             right: this.camera.right
         }
         this.originalCameraPosition = this.camera.position.clone();
-        console.log(this.camera.position.clone());
-        console.log(this.camera);
+        //console.log(this.camera.position.clone());
+        //console.log(this.camera);
     }
 
     setDataSet(dataSet: DataSet) {

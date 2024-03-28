@@ -360,11 +360,11 @@ class InputTargetManager {
 
         document.addEventListener(mousewheelevt, (event) => {
             var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);
+
             if (viewID == this.activeTarget) {
                 var it = this.inputTargets[this.activeTarget];
                 //console.log((<WheelEvent>event));
 
-                
                 if (it) {
                     //console.log(event.wheelDelta);
                     var callback = it.mouseWheelCallback;

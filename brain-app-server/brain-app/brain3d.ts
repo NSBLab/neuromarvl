@@ -185,7 +185,7 @@ class Brain3DApp implements Application, Loopable {
         this.brainContainer = new THREE.Object3D();
         this.brainContainer.add(this.brainObject);
         this.brainContainer.position.set(-this.graphOffset, 0, 0);
-        this.brainContainer.lookAt(this.camera.position);
+        //this.brainContainer.lookAt(this.camera.position);
         this.scene.add(this.brainContainer);
 
         this.colaObject = new THREE.Object3D();

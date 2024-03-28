@@ -104,6 +104,7 @@ class Brain3DApp implements Application, Loopable {
     //CAMERA
     CAMERA_ZOOM_SPEED = 15;
     originalCameraPosition: THREE.Vector3;
+    originalCameraBox;
 
     defaultFov: number;
     fovZoomRatio = 1;
@@ -778,8 +779,13 @@ class Brain3DApp implements Application, Loopable {
         this.input.regMouseDoubleClickCallback(() => {
             if (this.isControllingGraphOnly) return;
 
-            this.fovZoomRatio = 1;
+            //this.fovZoomRatio = 1;
             //this.camera.fov = this.defaultFov;
+            this.camera.left = this.originalCameraBox.left;
+            this.camera.right = this.originalCameraBox.right;
+            this.camera.top = this.originalCameraBox.top;
+            this.camera.bottom = this.originalCameraBox.bottom;
+
             this.camera.updateProjectionMatrix();
             
             this.brainContainer.position.set(-this.graphOffset, 0, 0);
@@ -792,19 +798,76 @@ class Brain3DApp implements Application, Loopable {
 
         /* Interact with mouse wheel will zoom in and out the 3D Model */
         this.input.regMouseWheelCallback((delta: number) => {
-            const ZOOM_FACTOR = 10;
-            //console.log("regMouseWheelCallback");
+            const ZOOM_FACTOR = 50;
+            console.log("regMouseWheelCallback");
             if (this.isControllingGraphOnly) return; // 2D Flat Version of the network
             var pointer = this.input.localPointerPosition();
-            var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
+            //var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
 
-            pointerNDC.unproject(this.camera);
-            pointerNDC.sub(this.camera.position);
+            // the box for the pointer is
+            // [left edge, right edge]: [-1, 1]
+            // [bottom edge, top edge]: [-1, 1]
+
+            // I'm not zooming if the pointer is outside the fov
+            
+            if (Math.abs(pointer.x) > 1 || Math.abs(pointer.y) > 1) {
+                return;
+            }
+
+            // point coordinates in normalized coordinates, from top-left [0, 0], bottom-right [1, 1]
+            let pointerFrac = {
+                x: (pointer.x + 1) / 2,
+                y: (1 - pointer.y) / 2
+            };
+
+            console.log({
+                left: this.camera.left,
+                right: this.camera.right,
+                top: this.camera.top,
+                bottom: this.camera.bottom
+            });
+
+            //console.log(pointer);
+            //console.log(pointerFrac);
+
+            // expand or contract the box around the pointer location
+
+            //let cameraAspect = (this.originalCameraBox.right - this.originalCameraBox.left) / (this.originalCameraBox.top - this.originalCameraBox.bottom);
+            //console.log(this.originalCameraBox);
+
+            // change the left proportionally to the location of the pointer in the screen
+            // if the pointer is closer to the left then we zoom less on the left, more on the right
+            //this.camera.left -= pointerFrac.x * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
+            //this.camera.right += (1 - pointerFrac.x) * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
+            //this.camera.top += pointerFrac.y * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
+            //this.camera.bottom -= (1 - pointerFrac.y) * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
+            // delta > 0 = zoom out, delta < 0 = zoom in
+
+            // need to find a cap for this, i.e. maximum zoom in and zoom out
+            let XDelta = Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
+            let YDelta = Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR;
+            
+            // do not allow the box to "invert"
+            if ((this.camera.left - XDelta) > (this.camera.right + XDelta)
+                || (this.camera.bottom - YDelta) > (this.camera.top + YDelta)) {
+                return;
+            }
+
+            this.camera.left -= XDelta;
+            this.camera.right += XDelta;
+            this.camera.top += YDelta;
+            this.camera.bottom -= YDelta;
+
+            
+            //console.log("aspect : " + cameraAspect);
+            //console.log("aspect after resize: " + (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom));
+            //pointerNDC.unproject(this.camera);
+            //pointerNDC.sub(this.camera.position);
 
             // the perspective version wont work with the orthographic
             //this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(delta < 0 ? ZOOM_FACTOR : -ZOOM_FACTOR));
-            var curZoom = this.camera.zoom;
-            this.camera.zoom = curZoom + Math.sign(delta) * 0.1;
+            //var curZoom = this.camera.zoom;
+            //this.camera.zoom = curZoom + Math.sign(delta) * 0.1;
             this.camera.updateProjectionMatrix();
 
         });
@@ -1960,8 +2023,15 @@ class Brain3DApp implements Application, Loopable {
         this.camera.bottom = -(height - sliderSpace) / 2 / 3;
         this.camera.left = -width / 2 / 3;
         this.camera.right = width / 2 / 3;
-        this.camera.updateProjectionMatrix();
 
+
+        this.camera.updateProjectionMatrix();
+        this.originalCameraBox = {
+            top: this.camera.top,
+            bottom: this.camera.bottom,
+            left: this.camera.left,
+            right: this.camera.right
+        }
         this.originalCameraPosition = this.camera.position.clone();
         console.log(this.camera.position.clone());
         console.log(this.camera);

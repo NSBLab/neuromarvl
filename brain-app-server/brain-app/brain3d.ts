@@ -136,7 +136,7 @@ class Brain3DApp implements Application, Loopable {
     //modeLerpLength: number = 0.6;
     modeLerpLength: number = 0.0;       //TODO: Effectively kills the animation. Remove it properly (or fix if easy to do)
     rotationSpeed: number = 1.2;
-    graphOffset: number = 120;
+    brain3DModelDefaultXPosition: number;
     colaLinkDistance = 15;
 
     /*
@@ -169,9 +169,26 @@ class Brain3DApp implements Application, Loopable {
         //console.log(this.brainModelOrigin);
         // Set up camera
         //this.camera = new THREE.PerspectiveCamera(45, 1, this.nearClip, this.farClip);
-        this.camera = new THREE.OrthographicCamera(-500, 500, 500, -500, this.nearClip, this.farClip);
-        this.resize(this.jDiv.width(), this.jDiv.height());
+        //THREE.OrthographicCamera(left: Number, right: Number, top: Number, bottom: Number, near: Number, far: Number)
+        this.camera = new THREE.OrthographicCamera(
+            -this.jDiv.width() / 4, // left
+            this.jDiv.width() / 4, // right
+            this.jDiv.height() / 4, // top
+            -this.jDiv.height() / 4, // bottom
+            this.nearClip,
+            this.farClip);
 
+        //console.log({
+        //    top: this.camera.top,
+        //    bottom: this.camera.bottom,
+        //    right: this.camera.right,
+        //    left: this.camera.left
+        //});
+
+        // recompute the graph offset so that it puts the objects at 1/4 from the left
+        this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
+        //console.log(this.brain3DModelDefaultXPosition);
+        
         // Set up scene
         var ambient = new THREE.AmbientLight(0x1f1f1f);
         var directionalLight = new THREE.DirectionalLight(0xffeedd);
@@ -184,13 +201,15 @@ class Brain3DApp implements Application, Loopable {
         this.brainObject = new THREE.Object3D();
         this.brainContainer = new THREE.Object3D();
         this.brainContainer.add(this.brainObject);
-        this.brainContainer.position.set(-this.graphOffset, 0, 0);
+        this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
         //this.brainContainer.lookAt(this.camera.position);
         this.scene.add(this.brainContainer);
 
         this.colaObject = new THREE.Object3D();
-        this.colaObject.position.set(-this.graphOffset, 0, 0);
+        this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
         this.scene.add(this.colaObject);
+
+        this.resize(this.jDiv.width(), this.jDiv.height(), false);
 
         // Register the data callbacks
         var coords = () => {
@@ -198,7 +217,6 @@ class Brain3DApp implements Application, Loopable {
         };
         var lab = () => {
             this.restart();
-                   
         };
 
         //if (this.commonData.noBranSurface == true) this.surfaceLoaded = true;
@@ -797,18 +815,18 @@ class Brain3DApp implements Application, Loopable {
 
             this.camera.updateProjectionMatrix();
             
-            this.brainContainer.position.set(-this.graphOffset, 0, 0);
+            this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
             //this.brainContainer.lookAt(this.camera.position);
             this.brainObject.rotation.set(0, 0, 0);
             
-            this.colaObject.position.set(this.graphOffset, 0, 0);
+            this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
             this.colaObject.rotation.set(0, 0, 0);
         });
 
         /* Interact with mouse wheel will zoom in and out the 3D Model */
         this.input.regMouseWheelCallback((delta: number) => {
             const ZOOM_FACTOR = 50;
-            console.log("regMouseWheelCallback");
+            //console.log("regMouseWheelCallback");
             if (this.isControllingGraphOnly) return; // 2D Flat Version of the network
             var pointer = this.input.localPointerPosition();
             //var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
@@ -829,12 +847,12 @@ class Brain3DApp implements Application, Loopable {
                 y: (1 - pointer.y) / 2
             };
 
-            console.log({
-                left: this.camera.left,
-                right: this.camera.right,
-                top: this.camera.top,
-                bottom: this.camera.bottom
-            });
+            //console.log({
+            //    left: this.camera.left,
+            //    right: this.camera.right,
+            //    top: this.camera.top,
+            //    bottom: this.camera.bottom
+            //});
 
             //console.log(pointer);
             //console.log(pointerFrac);
@@ -846,28 +864,60 @@ class Brain3DApp implements Application, Loopable {
 
             // change the left proportionally to the location of the pointer in the screen
             // if the pointer is closer to the left then we zoom less on the left, more on the right
-            //this.camera.left -= pointerFrac.x * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
+
+            let leftDelta = -(pointerFrac.x * Math.sign(delta) * (this.camera.right - this.camera.left) / ZOOM_FACTOR);
+            let rightDelta = (1 - pointerFrac.x) * Math.sign(delta) * (this.camera.right - this.camera.left) / ZOOM_FACTOR;
+            let topDelta = pointerFrac.y * Math.sign(delta) * (this.camera.top - this.camera.bottom) / ZOOM_FACTOR;
+            let bottomDelta = -((1 - pointerFrac.y) * Math.sign(delta) * (this.camera.top - this.camera.bottom) / ZOOM_FACTOR);
+
+            if ((this.camera.left + leftDelta > this.camera.right + rightDelta)
+                || (this.camera.bottom + bottomDelta > this.camera.top + topDelta)) {
+                return;
+            }
+
+            //console.log({
+            //    top: this.camera.top,
+            //    bottom: this.camera.bottom,
+            //    right: this.camera.right,
+            //    left: this.camera.left
+            //});
+            
+            this.camera.left += leftDelta;
+            this.camera.right += rightDelta;
+            this.camera.top += topDelta;
+            this.camera.bottom += bottomDelta;
+            //this.camera.left -= pointerFrac.x * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
             //this.camera.right += (1 - pointerFrac.x) * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
             //this.camera.top += pointerFrac.y * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
             //this.camera.bottom -= (1 - pointerFrac.y) * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
             // delta > 0 = zoom out, delta < 0 = zoom in
 
+            // this zooms in and out from the centre, not the pointer
             // need to find a cap for this, i.e. maximum zoom in and zoom out
-            let XDelta = Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
-            let YDelta = Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR;
+            //let XDelta = Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
+            //let YDelta = Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR;
             
             // do not allow the box to "invert"
-            if ((this.camera.left - XDelta) > (this.camera.right + XDelta)
-                || (this.camera.bottom - YDelta) > (this.camera.top + YDelta)) {
-                return;
-            }
-
-            this.camera.left -= XDelta;
-            this.camera.right += XDelta;
-            this.camera.top += YDelta;
-            this.camera.bottom -= YDelta;
+            //if ((this.camera.left - XDelta) > (this.camera.right + XDelta)
+            //    || (this.camera.bottom - YDelta) > (this.camera.top + YDelta)) {
+            //    return;
+            //}
 
             
+            //console.log({
+            //    top: this.camera.top,
+            //    bottom: this.camera.bottom,
+            //    right: this.camera.right,
+            //    left: this.camera.left
+            //});
+
+            //this.camera.left -= XDelta;
+            //this.camera.right += XDelta;
+            //this.camera.top += YDelta;
+            //this.camera.bottom -= YDelta;
+
+            
+
             //console.log("aspect : " + cameraAspect);
             //console.log("aspect after resize: " + (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom));
             //pointerNDC.unproject(this.camera);
@@ -1116,7 +1166,7 @@ class Brain3DApp implements Application, Loopable {
         var brainBBox = new THREE.Box3().setFromObject(this.brainObject);
         
         this.camera.position.set(0, 0, brainBBox.max.z + (brainBBox.max.z - brainBBox.min.z) / 2);
-        console.log(brainBBox.max.z + (brainBBox.max.z - brainBBox.min.z) / 2);
+        //console.log(brainBBox.max.z + (brainBBox.max.z - brainBBox.min.z) / 2);
 
         this.camera.updateProjectionMatrix();
 
@@ -1618,11 +1668,11 @@ class Brain3DApp implements Application, Loopable {
                 if (!mesh.userData.hasVisibleEdges) {
                     this.colaCoords[0][i] *= 0.6;
                     this.colaCoords[1][i] *= 0.6;
-                    this.colaCoords[1][i] -= (this.graphOffset * 0.7);
+                    this.colaCoords[1][i] += (this.brain3DModelDefaultXPosition * 0.7);
                     this.colaCoords[2][i] *= 0.6;
                 }
                 else {
-                    this.colaCoords[1][i] += (this.graphOffset * 0.4);
+                    this.colaCoords[1][i] -= (this.brain3DModelDefaultXPosition * 0.4);
                 }
             }
             //console.log("showNetwork");
@@ -1664,7 +1714,7 @@ class Brain3DApp implements Application, Loopable {
             } else if (this.networkType == '3d') {
                 // Set up a coroutine to do the animation
                 var origin = new THREE.Vector3(this.brainContainer.position.x, this.brainContainer.position.y, this.brainContainer.position.z);
-                var target = new THREE.Vector3(this.brainContainer.position.x + 2 * this.graphOffset, this.brainContainer.position.y, this.brainContainer.position.z);
+                var target = new THREE.Vector3(this.brainContainer.position.x + 2 * this.brain3DModelDefaultXPosition, this.brainContainer.position.y, this.brainContainer.position.z);
 
                 this.colaObjectAnimation(origin, target, originColaCoords, this.colaCoords, switchNetworkType, true);
             }
@@ -1991,16 +2041,30 @@ class Brain3DApp implements Application, Loopable {
     }
 
     /* Called when the size of the view port is changed */
-    resize(width: number, height: number) {
+    /* If zooming is false, set the borders of the camera by the viewport and set originalCameraBox */
+    /* If zooming is true, set the borders of the camera to zoom on the existing borders */
+    resize(width: number, height: number, zooming: boolean) {
         console.log("resize()");
+        console.trace();
         console.log({
             width: width,
-            height: height
+            height: height,
+            zooming: zooming
+        });
+
+        var rendererSize = new THREE.Vector2();
+        this.renderer.getSize(rendererSize);
+        var oldHeight = rendererSize.height;
+        var oldWidth = rendererSize.width;
+
+        console.log({
+            oldWidth: oldWidth,
+            oldHeight: oldHeight
         });
         // Resize the renderer
         // this is the canvas
         this.renderer.setSize(width, height - sliderSpace);
-        this.currentViewWidth = width;
+        //this.currentViewWidth = width;
 
         this.svg
             .attr("width", width)
@@ -2034,30 +2098,93 @@ class Brain3DApp implements Application, Loopable {
         //console.log(this.camera.position.clone());
         // Select the maximum distance of the two
         //this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
-
-        // set the
-        
-        if (this.brainObject) {
-            var brainBBox = new THREE.Box3().setFromObject(this.brainObject);
-            this.camera.position.set(0, 0, brainBBox.max.z + 50);
-        } else {
-            this.camera.position.set(0, 0, 200);
-        }
-        
-        this.camera.top = (height - sliderSpace) / 2 / 3;
-        this.camera.bottom = -(height - sliderSpace) / 2 / 3;
-        this.camera.left = -width / 2 / 3;
-        this.camera.right = width / 2 / 3;
-
-
-        this.camera.updateProjectionMatrix();
-        this.originalCameraBox = {
+        console.log({
             top: this.camera.top,
             bottom: this.camera.bottom,
-            left: this.camera.left,
-            right: this.camera.right
+            right: this.camera.right,
+            left: this.camera.left
+        });
+
+        // get the proportions of the objects in the viewport
+
+
+        var brainContainerPosition = new THREE.Vector3();
+        var brainViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+
+        if (this.brainContainer) {
+            this.brainContainer.getWorldPosition(brainContainerPosition);
+            console.log(brainContainerPosition);
+            brainViewportProp = {
+                xFrac: (brainContainerPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+                yFrac: (brainContainerPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+            };
+            console.log(brainViewportProp);
         }
-        this.originalCameraPosition = this.camera.position.clone();
+        
+        if (zooming) {
+            // maintain original aspect ratio
+            // work out zoom factor by the ratio of the new width / old width
+            
+            let cameraCentre = {
+                x: (this.camera.left + this.camera.right) / 2,
+                y: (this.camera.bottom + this.camera.top) / 2,
+            };
+            
+            //console.log(cameraCentre);
+            // zoom the left side
+            // make the distance from the centre = existing distance / zoomFactor
+            this.camera.left = cameraCentre.x - (cameraCentre.x - this.camera.left) / (width / oldWidth);
+            this.camera.right = cameraCentre.x + (this.camera.right - cameraCentre.x) / (width / oldWidth);
+
+            // preserve the aspect ratio 
+            this.camera.bottom = cameraCentre.y - (cameraCentre.y - this.camera.bottom) / ((height - sliderSpace) / oldHeight);
+            this.camera.top = cameraCentre.y + (this.camera.top - cameraCentre.y) / ((height - sliderSpace) / oldHeight);
+        } else {
+            if (this.brainContainer) {
+                var brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
+                this.camera.position.set(0, 0, brainBBox.max.z + 50);
+            } else {
+                this.camera.position.set(0, 0, 200);
+            }
+
+            // I need to move the 
+            this.camera.right = width / 2 / 4;
+            this.camera.top = (height - sliderSpace) / 2 / 4;
+            this.camera.bottom = -(height - sliderSpace) / 2 / 4;
+            this.camera.left = -width / 2 / 4;
+            
+            this.originalCameraBox = {
+                top: this.camera.top,
+                bottom: this.camera.bottom,
+                left: this.camera.left,
+                right: this.camera.right
+            };
+            this.originalCameraPosition = this.camera.position.clone();
+        }
+        if (this.brainContainer) {
+            console.log('setting brain object position');
+            this.brainContainer.position.set(
+                this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                0);
+            console.log({
+                x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                z: 0
+            });
+        }
+        this.camera.updateProjectionMatrix();
+
+        console.log(this.camera.position);
+        console.log({
+            top: this.camera.top,
+            bottom: this.camera.bottom,
+            right: this.camera.right,
+            left: this.camera.left
+        });
         //console.log(this.camera.position.clone());
         //console.log(this.camera);
     }

@@ -35,7 +35,7 @@ interface Application {
     brainSurfaceMode;
 
     setDataSet(dataSet: DataSet);
-    resize(width: number, height: number);
+    resize(width: number, height: number, zooming: boolean);
     applyFilter(filteredIDs: number[]);
     showNetwork(switchNetwork);
 
@@ -1265,8 +1265,8 @@ class NeuroMarvl {
         let origWidth = canvas.width;
         let origHeight = canvas.height;
 
-        this.applicationsInstances[viewport].resize(resolution.x, resolution.y);
-        console.log(canvas);
+        this.applicationsInstances[viewport].resize(resolution.x, resolution.y, true);
+        //console.log(canvas);
         //console.log(d3.zoomTransform(this.applicationsInstances[viewport].svgAllElements.node()));
 
         let prevsvgtransform = this.applicationsInstances[viewport].svgAllElements.attr("transform");
@@ -1315,7 +1315,8 @@ class NeuroMarvl {
             requestAnimationFrame(() => {
                 this.applicationsInstances[viewport].resize(
                     this.applicationsInstances[viewport].jDiv.width(),
-                    this.applicationsInstances[viewport].jDiv.height());
+                    this.applicationsInstances[viewport].jDiv.height(),
+                    true);
                 if (prevsvgtransform != null)
                     this.applicationsInstances[viewport].svgAllElements.attr("transform", prevsvgtransform);
 
@@ -1934,10 +1935,10 @@ class NeuroMarvl {
         $(BR_VIEW).css({ width: rw, height: bh });
 
         // Make callbacks to the application windows
-        if (this.applicationsInstances[0]) this.applicationsInstances[0].resize(lw, th);
-        if (this.applicationsInstances[1]) this.applicationsInstances[1].resize(rw, th);
-        if (this.applicationsInstances[2]) this.applicationsInstances[2].resize(lw, bh);
-        if (this.applicationsInstances[3]) this.applicationsInstances[3].resize(rw, bh);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].resize(lw, th, false);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].resize(rw, th, false);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].resize(lw, bh, false);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].resize(rw, bh, false);
     }
 
     // Load the physiological coordinates of each node in the brain

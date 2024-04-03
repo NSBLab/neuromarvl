@@ -38,7 +38,7 @@ class Graph2D {
         private commonData: CommonData,
         private saveObj: SaveFile,
         private graph3d: Graph3D,
-        private camera: THREE.PerspectiveCamera,
+        private camera: THREE.OrthographicCamera,
         complexity: number
     ) {
         this.nodes = [];
@@ -55,6 +55,7 @@ class Graph2D {
         // Include default values that are input to style fuctions.
 
         console.log("updateGraph()");
+        console.log(this);
         this.nodes = [];
         this.links = [];
 
@@ -536,8 +537,46 @@ class Graph2D {
                 y: container.offsetHeight * 0.2
             });
         }
-        cy.zoom(cy.zoom() * 0.7);
+        //cy.zoom(cy.zoom() * 0.7);
 
+        var cyBBox = cy.elements().renderedBoundingBox();
+
+        // resize the chart so that the height is 0.5 of the viewport
+        cy.zoom(cy.zoom() * ((container.offsetHeight * 0.75) / cyBBox.h));
+
+        // place the chart so that it is half way between the 3d graph and the right edge
+        // and vertically centered
+        cyBBox = cy.elements().renderedBoundingBox();
+
+        // this is this.brainContainer: this.graph3d.parentObject.parent
+        var brainContainerPosition = new THREE.Vector3();
+        var brainViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+
+        this.graph3d.parentObject.parent.getWorldPosition(brainContainerPosition);
+        brainViewportProp = {
+            xFrac: (brainContainerPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+            yFrac: (brainContainerPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+        };
+        //console.log(brainViewportProp);
+
+        var panVector = {
+            x: ((container.offsetWidth * brainViewportProp.xFrac) + container.offsetWidth) / 2 - (cyBBox.x1 + cyBBox.x2) / 2,
+            y: container.offsetHeight / 2 - (cyBBox.y1 + cyBBox.y2) / 2
+        };
+        //console.log(panVector);
+        cy.panBy(panVector);
+        
+        //x1, x2, y1, y2, w, and h 
+
+        // { x1: 1101.2078685572594, left
+    //        x2: 2138.290215964015, right
+    //        y1: -13.988902975801466, top
+    //        y2: 1126.3110970241983, bottom
+    //        w: 1037.0823474067554,
+    //        h: 1140.2999999999997
     }
 
     updateInteractive() {

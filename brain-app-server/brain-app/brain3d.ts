@@ -185,6 +185,13 @@ class Brain3DApp implements Application, Loopable {
         //    left: this.camera.left
         //});
 
+        this.originalCameraBox = {
+            left: this.camera.left,
+            right: this.camera.right,
+            top: this.camera.top,
+            bottom: this.camera.bottom
+        };
+
         // recompute the graph offset so that it puts the objects at 1/4 from the left
         this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
         //console.log(this.brain3DModelDefaultXPosition);
@@ -685,7 +692,7 @@ class Brain3DApp implements Application, Loopable {
                         min: brainBBox.min.z,
                         max: brainBBox.max.z
                     });
-                    console.log(this.camera.position.z);
+                    //console.log(this.camera.position.z);
                 }
                 else {
                     this.mouse.dx = dx;
@@ -1360,8 +1367,8 @@ class Brain3DApp implements Application, Loopable {
 
     /* This function is linked with html codes and called when the new option is selected */
     networkTypeOnChange(type: string) {
-        console.log("networkTypeOnChange");
-        console.log(type);
+        //console.log("networkTypeOnChange");
+        //console.log(type);
 
         this.networkType = type;
 
@@ -1668,11 +1675,11 @@ class Brain3DApp implements Application, Loopable {
                 if (!mesh.userData.hasVisibleEdges) {
                     this.colaCoords[0][i] *= 0.6;
                     this.colaCoords[1][i] *= 0.6;
-                    this.colaCoords[1][i] += (this.brain3DModelDefaultXPosition * 0.7);
+                    this.colaCoords[1][i] += ((this.camera.right - this.camera.left) / 7 * 0.7);
                     this.colaCoords[2][i] *= 0.6;
                 }
                 else {
-                    this.colaCoords[1][i] -= (this.brain3DModelDefaultXPosition * 0.4);
+                    this.colaCoords[1][i] -= ((this.camera.right - this.camera.left) / 7 * 0.4);
                 }
             }
             //console.log("showNetwork");
@@ -1706,21 +1713,23 @@ class Brain3DApp implements Application, Loopable {
             } else if (this.networkType == '2d') {
                 // Also not animated
                 this.ignore3dControl = true;
-                console.log("aijfoaijfd");
                 this.canvasGraph.updateGraph();
-                console.log("aijfoaijfd");
                 this.colaGraph.setVisible(false);
-                console.log("aijfoaijfd");
+                
             } else if (this.networkType == '3d') {
                 // Set up a coroutine to do the animation
                 var origin = new THREE.Vector3(this.brainContainer.position.x, this.brainContainer.position.y, this.brainContainer.position.z);
-                var target = new THREE.Vector3(this.brainContainer.position.x + 2 * this.brain3DModelDefaultXPosition, this.brainContainer.position.y, this.brainContainer.position.z);
-
+                var target = new THREE.Vector3((this.camera.right + this.brainContainer.position.x) / 2, this.brainContainer.position.y, this.brainContainer.position.z);
+                //console.log({
+                //    x: (this.camera.right + this.brainContainer.position.x) / 2,
+                //    y: this.brainContainer.position.y,
+                //    z: this.brainContainer.position.z
+                //});
                 this.colaObjectAnimation(origin, target, originColaCoords, this.colaCoords, switchNetworkType, true);
             }
 
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Graph layout done");
-            //console.log("showNetwork end");
+            console.log("showNetwork end");
             if (callback) callback();
         //}, 0)
     }
@@ -1770,6 +1779,7 @@ class Brain3DApp implements Application, Loopable {
             children[i].material.opacity = 1;
         }
 
+
         this.transitionInProgress = true;
         //$('#button-show-network-' + this.id).prop('disabled', true);    
         $('#graph-view-slider-' + this.id).prop('disabled', true); 
@@ -1783,8 +1793,10 @@ class Brain3DApp implements Application, Loopable {
         setCoroutine({ currentTime: 0, endTime: this.modeLerpLength }, (o, deltaTime) => {
             o.currentTime += deltaTime;
 
+
             if (o.currentTime >= o.endTime) { // The animation has finished
                 this.colaObject.position.copy(colaObjectTarget);
+
                 this.colaGraph.setNodePositions(nodeCoordTarget);
 
                 if (transitionFinish) {
@@ -1805,7 +1817,7 @@ class Brain3DApp implements Application, Loopable {
                 var percentDone = o.currentTime / o.endTime;
                 this.needUpdate = true;
                 this.colaGraph.setNodePositionsLerp(nodeCoordOrigin, nodeCoordTarget, percentDone);
-
+                
                 if (switchNetworkType == false) {
                     var pos = colaObjectOrigin.clone().add(colaObjectTarget.clone().sub(colaObjectOrigin).multiplyScalar(percentDone));
                     this.colaObject.position.set(pos.x, pos.y, pos.z);
@@ -2044,23 +2056,23 @@ class Brain3DApp implements Application, Loopable {
     /* If zooming is false, set the borders of the camera by the viewport and set originalCameraBox */
     /* If zooming is true, set the borders of the camera to zoom on the existing borders */
     resize(width: number, height: number, zooming: boolean) {
-        console.log("resize()");
-        console.trace();
-        console.log({
-            width: width,
-            height: height,
-            zooming: zooming
-        });
+        //console.log("resize()");
+        //console.trace();
+        //console.log({
+        //    width: width,
+        //    height: height,
+        //    zooming: zooming
+        //});
 
         var rendererSize = new THREE.Vector2();
         this.renderer.getSize(rendererSize);
         var oldHeight = rendererSize.height;
         var oldWidth = rendererSize.width;
 
-        console.log({
-            oldWidth: oldWidth,
-            oldHeight: oldHeight
-        });
+        //console.log({
+        //    oldWidth: oldWidth,
+        //    oldHeight: oldHeight
+        //});
         // Resize the renderer
         // this is the canvas
         this.renderer.setSize(width, height - sliderSpace);
@@ -2098,32 +2110,43 @@ class Brain3DApp implements Application, Loopable {
         //console.log(this.camera.position.clone());
         // Select the maximum distance of the two
         //this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
-        console.log({
-            top: this.camera.top,
-            bottom: this.camera.bottom,
-            right: this.camera.right,
-            left: this.camera.left
-        });
+        //console.log({
+        //    top: this.camera.top,
+        //    bottom: this.camera.bottom,
+        //    right: this.camera.right,
+        //    left: this.camera.left
+        //});
 
         // get the proportions of the objects in the viewport
 
-
+        
         var brainContainerPosition = new THREE.Vector3();
         var brainViewportProp = {
             xFrac: 0,
             yFrac: 0
         };
 
+        var colaObjectPosition = new THREE.Vector3();
+        var colaObjectViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+
         if (this.brainContainer) {
             this.brainContainer.getWorldPosition(brainContainerPosition);
-            console.log(brainContainerPosition);
             brainViewportProp = {
                 xFrac: (brainContainerPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
                 yFrac: (brainContainerPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
             };
-            console.log(brainViewportProp);
         }
-        
+
+        if (this.colaObject) {
+            this.colaObject.getWorldPosition(colaObjectPosition);
+            colaObjectViewportProp = {
+                xFrac: (colaObjectPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+                yFrac: (colaObjectPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+            }
+        }
         if (zooming) {
             // maintain original aspect ratio
             // work out zoom factor by the ratio of the new width / old width
@@ -2156,35 +2179,43 @@ class Brain3DApp implements Application, Loopable {
             this.camera.bottom = -(height - sliderSpace) / 2 / 4;
             this.camera.left = -width / 2 / 4;
             
-            this.originalCameraBox = {
-                top: this.camera.top,
-                bottom: this.camera.bottom,
-                left: this.camera.left,
-                right: this.camera.right
-            };
+            //this.originalCameraBox = {
+            //    top: this.camera.top,
+            //    bottom: this.camera.bottom,
+            //    left: this.camera.left,
+            //    right: this.camera.right
+            //};
             this.originalCameraPosition = this.camera.position.clone();
         }
         if (this.brainContainer) {
-            console.log('setting brain object position');
             this.brainContainer.position.set(
                 this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
                 this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
                 0);
-            console.log({
-                x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
-                y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
-                z: 0
-            });
+        }
+        if (this.colaObject) {
+            var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
+            //console.log(colaBBox);
+            this.colaObject.position.set(
+                this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac,
+                this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac,
+                0);
+            //console.log("set colaObject position to");
+            //console.log({
+            //    x: this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac,
+            //    y: this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac,
+            //    z: 0
+            //});
         }
         this.camera.updateProjectionMatrix();
 
-        console.log(this.camera.position);
-        console.log({
-            top: this.camera.top,
-            bottom: this.camera.bottom,
-            right: this.camera.right,
-            left: this.camera.left
-        });
+        //console.log(this.camera.position);
+        //console.log({
+        //    top: this.camera.top,
+        //    bottom: this.camera.bottom,
+        //    right: this.camera.right,
+        //    left: this.camera.left
+        //});
         //console.log(this.camera.position.clone());
         //console.log(this.camera);
     }

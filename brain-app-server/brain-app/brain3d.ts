@@ -1017,9 +1017,9 @@ class Brain3DApp implements Application, Loopable {
         var boundingSphereObject = new THREE.Object3D();
 
         let surfaceMaterial = new THREE.MeshLambertMaterial({
-            color: 0xcccccc,
+            color: $('#input-surface-color').val() as string,
             transparent: true,
-            opacity: 0.5,
+            opacity: $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').getValue(),
             //depthWrite: true,
             //depthTest: false,
             //side: THREE.FrontSide

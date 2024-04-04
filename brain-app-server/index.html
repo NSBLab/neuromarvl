@@ -203,14 +203,23 @@
             </div>
             <div id="tab-2" class="tab-pane fade">
                 <br />
-                <div class="btn-group btn-group-justified" data-toggle="btns">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li id="tab2-1" role="presentation" class="nav-item">
+                        <button class="nav-link active" data-toggle="tab" data-target="#div-set-data-tab" data-placement="bottom" title="Set data source files for node position, connectivity, attributes and labels" type="button" role="tab" aria-controls="surface-tab-pane" aria-selected="true">Dataset</button>
+                    </li>
+                    <li id="tab2-2" role="presentation" class="nav-item">
+                        <button class="nav-link" data-toggle="tab" data-target="#div-batching-tab" data-placement="bottom" title="Create and download batch images files using multiple source data files" type="button" role="tab" aria-controls="surface-tab-pane" aria-selected="true">Batching</button>
+                    </li>
+
+                </ul>
+                <!--<div class="btn-group btn-group-justified" data-toggle="btns">
                     <a class="btn btn-sm btn-primary active" href="#div-set-data-tab" data-toggle="tab">
                         <span data-toggle="tooltip" data-placement="bottom" title="Set data source files for node position, connectivity, attributes and labels">Dataset</span>
                     </a>
                     <a class="btn btn-sm btn-primary" href="#div-batching-tab" data-toggle="tab">
                         <span data-toggle="tooltip" data-placement="bottom" title="Create and download batch images files using multiple source data files">Batching</span>
                     </a>
-                </div>
+                </div>-->
                 <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
 
                     <div id="div-set-data-tab" class="tab-pane active">

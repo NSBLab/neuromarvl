@@ -690,10 +690,10 @@ class Brain3DApp implements Application, Loopable {
                     // can I get a bounding box for the objects?
                     var brainBBox = new THREE.Box3().setFromObject(this.brainObject);
                     //var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
-                    console.log({
-                        min: brainBBox.min.z,
-                        max: brainBBox.max.z
-                    });
+                    //console.log({
+                    //    min: brainBBox.min.z,
+                    //    max: brainBBox.max.z
+                    //});
                     //console.log(this.camera.position.z);
                 }
                 else {
@@ -1069,7 +1069,6 @@ class Brain3DApp implements Application, Loopable {
                 // Medial View
             } else if (mode === 1) {
                 // Clone the mesh - we can't share it between different canvases without cloning it
-
                 model.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
                         /*
@@ -1104,21 +1103,53 @@ class Brain3DApp implements Application, Loopable {
                         */
                         // Need to edit geometries to "slice" them in half
                         // Each face is represented by a group 9 values (3 vertices * 3 dimensions). Move to other side if any face touches the right side (i.e. x > 0).
+
+
                         var attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position")
-                        var leftPositions = Array.prototype.slice.call(attribute.array);
+                        var oldPositions = Array.prototype.slice.call(attribute.array);
+
+                        var leftPositions = [];
                         var rightPositions = [];
+
                         const FACE_CHUNK = 9;
                         const VERT_CHUNK = 3;
-                        let i = leftPositions.length - VERT_CHUNK;      // Start from last x position
-                        while (i -= VERT_CHUNK) {
-                            if (leftPositions[i] > 0) {
-                                // Move whole face to other geometry
-                                var faceStart = Math.floor(i / FACE_CHUNK) * FACE_CHUNK;
-                                rightPositions.push(...leftPositions.splice(faceStart, FACE_CHUNK));
-                                i = faceStart;
+
+                        // oldPositions array is organised like this
+                        // |        face 0      |         face 1       | ...
+                        // |vert 0| vert 1|vert 2|vert 0| vert 1|vert 2| ...
+                        // | x,y,z| x,y,z |x,y,z | x,y,z| x,y,z |x,y,z | ...
+
+                        // go through the faces, if any of the x positions in a face is > 0 then put that face in the right hemi
+                        // otherwise put it in the left hemi
+
+                        for (var faceIDX = 0; faceIDX < oldPositions.length; faceIDX += FACE_CHUNK) {
+                            if (oldPositions[faceIDX] > 0 || oldPositions[faceIDX + 3] > 0 || oldPositions[faceIDX + 6] > 0) {
+                                rightPositions.push(
+                                    oldPositions[faceIDX],
+                                    oldPositions[faceIDX + 1],
+                                    oldPositions[faceIDX + 2],
+                                    oldPositions[faceIDX + 3],
+                                    oldPositions[faceIDX + 4],
+                                    oldPositions[faceIDX + 5],
+                                    oldPositions[faceIDX + 6],
+                                    oldPositions[faceIDX + 7],
+                                    oldPositions[faceIDX + 8]
+                                );
+                            } else {
+                                leftPositions.push(
+                                    oldPositions[faceIDX],
+                                    oldPositions[faceIDX + 1],
+                                    oldPositions[faceIDX + 2],
+                                    oldPositions[faceIDX + 3],
+                                    oldPositions[faceIDX + 4],
+                                    oldPositions[faceIDX + 5],
+                                    oldPositions[faceIDX + 6],
+                                    oldPositions[faceIDX + 7],
+                                    oldPositions[faceIDX + 8]
+                                );
                             }
                         }
-
+                        
                         var leftGeometry = new THREE.BufferGeometry;
                         leftGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(leftPositions), VERT_CHUNK));
                         leftGeometry.computeVertexNormals();

@@ -484,7 +484,6 @@ class NeuroMarvl {
 
     batchProcess = (i, numberOfFiles, attributes, matrices, filename = null, filetype = "svg", resolution = { x: 1920, y: 1080 }) => {
         document.getElementById("alertModalMessage").innerHTML = "Started load of " + numberOfFiles + " file pairs...";
-
         let gotAttributes = false;
         let gotMatrix = false;
         let onLoaded = (i, numberOfFiles, attributes, matrices) => {
@@ -518,17 +517,20 @@ class NeuroMarvl {
 
 
             }
-
             // refresh the visualisation with current settings and new data
             if (this.applicationsInstances[0].networkType != undefined) {
                 this.applicationsInstances[0].showNetwork(false, () => {
                     this.setNodeSizeOrColor();
                     this.setEdgeColor();
+                    this.setEdgeSize();
                     this.applicationsInstances[0].update(0);
 
                     fnExportFunctionAndContinue();
                 });
             } else {
+                this.setNodeSizeOrColor();
+                this.setEdgeColor();
+                this.setEdgeSize();
                 this.applicationsInstances[0].update(0);
                 fnExportFunctionAndContinue();
             }
@@ -772,7 +774,7 @@ class NeuroMarvl {
 
         let sourceLocation = (source === "example") ? "save_examples" : "save";
 
-        console.log(status);
+        //console.log(status);
         var callback = () => {
             if (status.coordLoaded && status.matrixLoaded && status.attrLoaded && status.labelLoaded) {
                 this.commonData.notifyCoords();
@@ -1896,7 +1898,6 @@ class NeuroMarvl {
 
     setEdgeSize = () => {
         var edgeSize = $("#div-edge-size-slider")['bootstrapSlider']().data('bootstrapSlider').getValue();
-
         this.saveFileObj.edgeSettings.size = edgeSize;
 
         for (var curAppInstance of this.applicationsInstances)

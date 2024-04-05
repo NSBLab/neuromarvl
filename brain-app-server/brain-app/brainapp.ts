@@ -749,12 +749,12 @@ class NeuroMarvl {
         if (status === "changed") {
             $('#' + file).addClass('status-changed');
             $('#' + file).addClass('glyphicon-info-sign');
-            document.getElementById(file).title = "File is not uploaded";
+            //document.getElementById(file).title = "File is not uploaded";
 
         } else {
             $('#' + file).addClass('status-updated');
             $('#' + file).addClass('glyphicon-ok-sign');
-            document.getElementById(file).title = "Uploaded Successfully";
+            //document.getElementById(file).title = "Uploaded Successfully";
 
         }
         $('#' + file).tooltip('update');

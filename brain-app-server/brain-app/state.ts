@@ -338,9 +338,9 @@ class SaveFile {
             nodeColorContinuousMin: '',
             nodeColorContinuousMax: ''
         };
-
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
-            opacity: 0.5
+            opacity: 0.5,
+            color: "#000000"
         };
 
         this.displaySettings = (sourceObject && sourceObject.displaySettings) || {

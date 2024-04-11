@@ -381,16 +381,16 @@ class NeuroMarvl {
                 },
                 (data, status) => {
                     console.log(`Data fetch from ${p[0]} location got configuration with length ${data.length} and "${status}" status`);
-                    
+
                     if (status.toLowerCase() == "success") {
                         // Ensure that data is not empty
                         if (!data || !data.length) return;
-
+                        
                         this.saveFileObj = new SaveFile(JSON.parse(data));
+                        
                         for (var app of this.saveFileObj.saveApps) {
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
 
-                                console.log("this.createBrainView()");
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
 
                                 //to fix the model is not loading after save
@@ -415,7 +415,7 @@ class NeuroMarvl {
     recordDisplaySettings() {
         // surfaceSettings.color                        
         var col = this.saveFileObj.surfaceSettings.color;
-        $("#input-surface-color :input").val(col);
+        $("#input-surface-color").val(col);
 
         //set Display Mode
         $('#display_settings_mode').val(this.saveFileObj.displaySettings.mode);
@@ -1200,6 +1200,7 @@ class NeuroMarvl {
             // If not present, fall back to old YAML style
             try {
                 let jsonsettings = JSON.parse(<string>reader.result);
+
                 this.saveFileObj = new SaveFile(jsonsettings);
             } catch (exception) {
                 this.saveFileObj = new SaveFile({});
@@ -2003,6 +2004,10 @@ class NeuroMarvl {
             $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').setValue(this.saveFileObj.surfaceSettings.opacity);
             this.setSurfaceOpacity();
         }
+        if (this.saveFileObj.surfaceSettings.color) {
+            (<any>$("#input-surface-color")).val(this.saveFileObj.surfaceSettings.color);
+            this.setBrainSurfaceColor((<any>$("#input-surface-color")).val());
+        }
     }
 
     /**
@@ -2406,7 +2411,6 @@ class NeuroMarvl {
     */
 
     initListeners = () => {
-
         $(document).on("keyup", (e => {
             if (e.code == 'Escape') this.toggleSplashPage();   // esc
         }));
@@ -2825,12 +2829,13 @@ class NeuroMarvl {
         }, false);
 
         //set colour after initialise from file----------------------------------------------
-        var color = (<any>$("#input-surface-color :input")).val();
-        this.saveFileObj.surfaceSettings.color = color;
+        // I dont know why this is here, it should be in initSurfaceSettings
+        //var color = (<any>$("#input-surface-color :input")).val();
+        //console.trace();
+        //console.log("here " + color);
+        //this.saveFileObj.surfaceSettings.color = color;
 
-        this.validApplicationIDX.forEach(function (i) {
-            if (this.applicationsInstances[i]) this.applicationsInstances[i].setSurfaceColor(color);
-        }, this);
+        
         //-----------------------------------------------------------------------------------
     }
 

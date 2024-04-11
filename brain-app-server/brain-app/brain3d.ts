@@ -309,8 +309,9 @@ class Brain3DApp implements Application, Loopable {
         let valueArray = a.get(colorAttribute);
 
         // D3 can scale colours, but needs to use color strings
-        let minString = "#" + minColor.toString(16);
-        let maxString = "#" + maxColor.toString(16);
+        // remove any leading # characters and then append
+        let minString = "#" + minColor.toString(16).replace(/^#+/gm, '');
+        let maxString = "#" + maxColor.toString(16).replace(/^#+/gm, '');
         //console.log(minString);
         //console.log(maxString);
         // Continuous has each value mapped with equal proportion
@@ -320,17 +321,9 @@ class Brain3DApp implements Application, Loopable {
             .domain([a.getMin(i), a.getMax(i)])
             .range([minString, maxString])
             ;
-        //console.log(valueArray);
-        //console.log(colorMap(valueArray[0]));
-        //let T = valueArray.map(aArray => aArray.map(value => ({
-        //    color: parseInt(d3.color(colorMap(value)).formatHex(), 16),
-        //    portion: singlePortion
-        //})));
-        //console.log(T);
-        //console.log([a.getMin(i), a.getMax(i)]);
-        //console.log(singlePortion);
 
         // the colorMap function now returns rgb(R, G, B) strings, so convert to hex
+        
         return valueArray.map(aArray => aArray.map(value => ({
             color: parseInt(d3.color(colorMap(value)).formatHex().substring(1), 16),
             portion: singlePortion
@@ -2334,6 +2327,7 @@ class Brain3DApp implements Application, Loopable {
 
         // Set up the node colourings
         let nSettings = this.saveFileObj.nodeSettings;
+        //console.log(nSettings);
         let colorAttribute = nSettings.nodeColorAttribute;
         let nodeColors;
         if (!this.dataSet.attributes.info[colorAttribute]) {

@@ -146,10 +146,6 @@
     <Content Include="brain-app\save_examples\e4e59658-c7c6-4092-b19c-14fbde2dd14b_58.178.236.210.txt" />
     <Content Include="brain-app\state.js.map" />
     <Content Include="examples\graphdata\reverse-winding.py" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\css\bootstrap-colorpicker.css" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\css\bootstrap-colorpicker.min.css" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\js\bootstrap-colorpicker.js" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\js\bootstrap-colorpicker.min.js" />
     <Content Include="extern\bootstrap-icons-1.11.2\0-circle-fill.svg" />
     <Content Include="extern\bootstrap-icons-1.11.2\0-circle.svg" />
     <Content Include="extern\bootstrap-icons-1.11.2\0-square-fill.svg" />
@@ -2271,10 +2267,6 @@
     <Content Include="extern\bootstrap-icons-1.11.2\font\fonts\bootstrap-icons.woff2" />
     <Content Include="package.json" />
     <Content Include="extern\cola-3.3.8.min.js.map" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\css\bootstrap-colorpicker.css.map" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\css\bootstrap-colorpicker.min.css.map" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\js\bootstrap-colorpicker.js.map" />
-    <Content Include="extern\bootstrap-colorpicker-3.4.0\js\bootstrap-colorpicker.min.js.map" />
     <Content Include="extern\jquery-ui-1.13.2.custom\package.json" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\brainapp.pubxml" />

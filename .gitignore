@@ -14,3 +14,4 @@ brain-app-server/node_modules
 /brain-app-server/obj/Release/brain-app-server.csproj.FileListAbsolute.txt
 /brain-app-server/obj/Release/brain-app-server.dll
 /brain-app-server/obj/Release/brain-app-server.pdb
+/brain-app-server/obj/Release/DesignTimeResolveAssemblyReferencesInput.cache

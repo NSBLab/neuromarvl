@@ -321,8 +321,8 @@ class InputTargetManager {
 
                 // the last attribute is color
                 var color = parseInt(record.color);
-                var hex = color.toString(16);
-                console.log("Setting color to " + hex);
+                var hex = color.toString(16).replace(/^#+/gm, '');
+                //console.log("Setting color to " + hex);
                 (<any>$("#input-context-menu-node-color")).val('#' + hex);
 
                 this.rightClickLabelAppended = true;

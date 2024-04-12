@@ -1055,7 +1055,11 @@ class CircularGraph {
             .append("text") // Appending Element
             .attr("class", "nodeCircular")
             .attr("dy", ".31em")
-            .attr("transform", function (d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 16) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
+            .attr("transform", function (d) {
+                return "rotate(" + (d.x - 90) + ")"
+                    + "translate(" + (d.y + 16) + ", 0)"
+                    + (d.x < 180 ? "" : "rotate(180)");
+            })
             .style("text-anchor", function (d) { return d.x < 180 ? "start" : "end"; })
             .text(function (d) { return d.data.label; })
             .on("mouseover", function (event, d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.data.id); })
@@ -1069,7 +1073,10 @@ class CircularGraph {
             .append("g") // Appending Element
             .attr("class", "nodeDotCircular")
             .attr("transform", function (d) {
-                return "rotate(" + (d.x - 90) + ")translate(" + (d.y) + ",0)" + (d.x < 180 ? "" : "rotate(180)");
+                return "rotate(" + (d.x - 90) + ")"
+                    + "translate(" + (d.y) + ", 0)"
+                    + (d.x < 180 ? "" : "rotate(180)");
+                
             })
             .on("mouseover", function (event, d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.data.id); })
             .on("mouseout", function (event, d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); })

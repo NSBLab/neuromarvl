@@ -2633,6 +2633,10 @@ class NeuroMarvl {
         $("#checkbox-color-transitional-edges").on("change", () => {
             let useTransitionColor = $('#checkbox-color-transitional-edges').is(":checked");
             this.setUseTransitionColor(useTransitionColor);
+            // refresh the 2D graph
+            this.validApplicationIDX.forEach(function (i) {
+                if (this.applicationsInstances[i]) this.applicationsInstances[i].circularGraph.update();
+            }, this);
         });
 
         $('#select-attribute').on('change', this.setupAttributeNodeControls);

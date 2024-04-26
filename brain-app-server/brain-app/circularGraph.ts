@@ -318,6 +318,7 @@
         this.svgNodeBundleArray.forEach(function (node) {
             node.color = this.colaGraph.nodeMeshes[node.id].material.color.getHexString();
         }, this);
+
         
         // update edges data
         if (this.circularEdgeColorMode !== "node") {
@@ -436,18 +437,19 @@
                 var sourceOpacity = 1, targetOpacity = 1;
 
                 if (edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode != "node") {
-                    return l.color = l.source.data.linkColors[l.target.id];
-                } else if (l.source.color === l.target.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
+                    return l.color = l.source.data.linkColors[l.target.data.id];
+                } else if (l.source.data.color === l.target.data.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
                     return l.color = "#" + l.source.data.color;
                 }
-
+                
                 if (edgeDirectionMode === "gradient") {
                     var sourceColor = (String)(edgeSettings.directionStartColor);
                     var targetColor = (String)(edgeSettings.directionEndColor);
                 } else if (edgeColorMode === "node") {
                     var sourceColor: string;
                     var targetColor: string;
-                    if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.color !== l.target.color)) {
+                    // intercluster edges, use transition colour if set
+                    if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.data.color !== l.target.data.color)) {
                         sourceColor = String(edgeColorConfig.edgeTransitionColor);
                         targetColor = String(edgeColorConfig.edgeTransitionColor);
                     }
@@ -772,7 +774,7 @@
     }
 
     createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
-        //console.log("createCircularGraph");
+        //console.log("createCircularGraph()");
 
         // Based on http://bl.ocks.org/mbostock/1044242
         if (this.svgNodeBundleArray.length == 0)
@@ -970,7 +972,8 @@
                     } else if (edgeColorMode === "node") {
                         var sourceColor: string;
                         var targetColor: string;
-                        if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.data.color !== l[1].data.color)) {
+                        // intercluster edges, use transition colour if set
+                        if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.data.color !== l.target.data.color)) {
                             sourceColor = String(edgeColorConfig.edgeTransitionColor);
                             targetColor = String(edgeColorConfig.edgeTransitionColor);
                         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -20,6 +21,8 @@ namespace brain_app_server.brain_app
                         
             string path;
             filename += ("_" + type + ".txt");
+            Directory.CreateDirectory(Server.MapPath("save"));
+
             path = Server.MapPath("save") + "\\" + filename;
 
             try

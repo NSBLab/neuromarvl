@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -15,6 +16,7 @@ namespace brain_app_server.brain_app
             string guid = Guid.NewGuid().ToString();
             if ((ip != null) && (!ip.Contains("::"))) guid += ("_" + ip);
 
+            Directory.CreateDirectory(Server.MapPath("save"));
             string saveString = Request.Form["save"];
             string path = Server.MapPath("save") + "\\" + guid +".txt";
 

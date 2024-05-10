@@ -10,9 +10,11 @@ namespace brain_app_server.brain_app
         {
             string filename = Request.Form["filename"] + ".txt";
             string savePath = Server.MapPath("save");
+
             string examplePath = Server.MapPath("save_examples");
             string json = "";
 
+            Directory.CreateDirectory(savePath);
             try
             {
                 if (Request.Form["source"] == "example")

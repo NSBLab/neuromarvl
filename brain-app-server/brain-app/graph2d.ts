@@ -54,8 +54,6 @@ class Graph2D {
         // Use this.dataSet to build the elements for the cytoscape graph.
         // Include default values that are input to style fuctions.
 
-        console.log("updateGraph()");
-        console.log(this);
         this.nodes = [];
         this.links = [];
 

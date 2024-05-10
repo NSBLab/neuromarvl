@@ -1474,7 +1474,7 @@ class Brain3DApp implements Application, Loopable {
     edgeCountSliderOnChange(numEdges) {
         this.edgeCountSliderValue = numEdges;
         if (!this.dataSet.sortedSimilarities) return;
-
+        
         let max = this.dataSet.sortedSimilarities.length;
         if (numEdges > max) numEdges = max;
         let $count = $('#count-' + this.id).get(0);
@@ -1755,7 +1755,6 @@ class Brain3DApp implements Application, Loopable {
             }
 
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.INFO, "Graph layout done");
-            console.log("showNetwork end");
             if (callback) callback();
         //}, 0)
     }

@@ -1762,14 +1762,19 @@ class Brain3DApp implements Application, Loopable {
     cross(u: number[], v: number[]) {
         if (!u || !v) return;
 
-        var u1 = u[0];
-        var u2 = u[1];
-        var u3 = u[2];
-        var v1 = v[0];
-        var v2 = v[1];
-        var v3 = v[2];
+        //var u1 = u[0];
+        //var u2 = u[1];
+        //var u3 = u[2];
+        //var v1 = v[0];
+        //var v2 = v[1];
+        //var v3 = v[2];
 
-        return [u2 * v3 - u3 * v2, u3 * v1 - u1 * v3, u1 * v2 - u2 * v1];
+        //return [u2 * v3 - u3 * v2, u3 * v1 - u1 * v3, u1 * v2 - u2 * v1];
+        return [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0]
+        ];
     }
 
     angle(u: number[], v: number[]) {

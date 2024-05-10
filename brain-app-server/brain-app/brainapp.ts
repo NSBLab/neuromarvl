@@ -2272,21 +2272,24 @@ class NeuroMarvl {
                 simMatrix.push(line.split(/\s+/).map(parseFloat));
             }
         });
-        // Normalise values to range 0...1, files can have very different value ranges
-        let max = simMatrix[0][0];
-        let min = simMatrix[0][0];
-        let i = simMatrix.length;
-        while (i--) {
-            let j = simMatrix[i].length;
-            while (j--) {
-                let weight = simMatrix[i][j];
-                max = Math.max(max, weight);
-                min = Math.min(min, weight);
-            }
-        }
 
-        let scale = d3.scaleLinear().domain([min, max]).range([0, 1]);
-        simMatrix = simMatrix.map(row => row.map(scale));
+        // we don't want to do this
+        // *******
+        // Normalise values to range 0...1, files can have very different value ranges
+        //let max = simMatrix[0][0];
+        //let min = simMatrix[0][0];
+        //let i = simMatrix.length;
+        //while (i--) {
+        //    let j = simMatrix[i].length;
+        //    while (j--) {
+        //        let weight = simMatrix[i][j];
+        //        max = Math.max(max, weight);
+        //        min = Math.min(min, weight);
+        //    }
+        //}
+
+        //let scale = d3.scaleLinear().domain([min, max]).range([0, 1]);
+        //simMatrix = simMatrix.map(row => row.map(scale));
 
         dataSet.setSimMatrix(simMatrix);
     }

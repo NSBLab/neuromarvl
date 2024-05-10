@@ -159,16 +159,15 @@ class DataSet {
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
 
                 var isSameSide = (this.brainCoords[0][i] * this.brainCoords[0][j] > 0);
-                var val = this.simMatrix[i][j];
-                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+                
+                if (this.simMatrix[i][j] >= threshold && this.simMatrix[i][j] != 0 && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[i][j] = 1;
                 }
                 else {
                     adjMatrix[i][j] = 0;
                 }
 
-                val = this.simMatrix[j][i];
-                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+                if (this.simMatrix[j][i] >= threshold && this.simMatrix[j][i] != 0 && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[j][i] = 1;
                 }
                 else {
@@ -180,8 +179,11 @@ class DataSet {
     }
     // Create a matrix where a 1 in (i, j) means the edge between node i and node j is selected
     adjMatrixFromEdgeCount(count: number) {
+        console.log("adjMatrixFromEdgeCount(" + count + ")");
         var max = this.info.nodeCount * (this.info.nodeCount - 1) / 2;
         if (count > max) count = max;
+
+        // get the threshold from the sorted similarities
         if (count > this.sortedSimilarities.length) count = this.sortedSimilarities.length;
         var threshold = this.sortedSimilarities[count - 1];
         var adjMatrix: number[][] = Array<Array<number>>(this.info.nodeCount);
@@ -189,26 +191,17 @@ class DataSet {
         for (var i = 0; i < this.info.nodeCount; ++i) {
             adjMatrix[i] = new Array<number>(this.info.nodeCount);
         }
-
+        console.log(this.info.nodeCount);
         for (var i = 0; i < this.info.nodeCount - 1; ++i) {
-
+            var t = [];
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
-                var val = this.simMatrix[i][j];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
-                    adjMatrix[i][j] = 1;
-                }
-                else {
-                    adjMatrix[i][j] = 0;
-                }
-
-                val = this.simMatrix[j][i];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
-                    adjMatrix[j][i] = 1;
-                }
-                else {
-                    adjMatrix[j][i] = 0;
-                }
+                t.push(this.simMatrix[i][j])
+                //%console.log(this.simMatrix[i][j]);
+                adjMatrix[i][j] = ((this.simMatrix[i][j] >= threshold && this.simMatrix[i][j] != 0) ? 1 : 0);
+                adjMatrix[j][i] = ((this.simMatrix[j][i] >= threshold && this.simMatrix[j][i] != 0) ? 1 : 0);
+                //console.log(adjMatrix[i][j]);
             }
+            console.log(t);
         }
         return adjMatrix;
     }
@@ -239,14 +232,17 @@ class DataSet {
 
             for (var j = i + 1; j < this.simMatrix[i].length; ++j) {
                 var value = (this.simMatrix[i][j] > this.simMatrix[j][i]) ? this.simMatrix[i][j] : this.simMatrix[j][i];
-                this.sortedSimilarities.push(value);
+                if (value != 0) {
+                    this.sortedSimilarities.push(value);
+                }
+                
             }
         }
-        this.sortedSimilarities.sort(function (a, b) { return b - a; });
+        this.sortedSimilarities.sort(function (a, b) { return Math.abs(b) - Math.abs(a); });
 
         // remove edges with weight === 0
-        var index = this.sortedSimilarities.indexOf(0);
-        this.sortedSimilarities.splice(index, this.sortedSimilarities.length - index);
+        //var index = this.sortedSimilarities.indexOf(0);
+        //this.sortedSimilarities.splice(index, this.sortedSimilarities.length - index);
 
         //---------------------------------------------------------------------------------------------------------
         // Inspect Dataset (for now only inspect edge weights values)
@@ -258,7 +254,7 @@ class DataSet {
         } else {
             this.info.edgeWeight.type = "continuous";
         }
-
+        
         // Notify all registered 
         this.notifySim();
     }

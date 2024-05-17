@@ -185,7 +185,7 @@ class DataSet {
 
         // get the threshold from the sorted similarities
         if (count > this.sortedSimilarities.length) count = this.sortedSimilarities.length;
-        var threshold = this.sortedSimilarities[count - 1];
+        var threshold = Math.abs(this.sortedSimilarities[count - 1]);
         var adjMatrix: number[][] = Array<Array<number>>(this.info.nodeCount);
 
         for (var i = 0; i < this.info.nodeCount; ++i) {
@@ -197,11 +197,10 @@ class DataSet {
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
                 t.push(this.simMatrix[i][j])
                 //%console.log(this.simMatrix[i][j]);
-                adjMatrix[i][j] = ((this.simMatrix[i][j] >= threshold && this.simMatrix[i][j] != 0) ? 1 : 0);
-                adjMatrix[j][i] = ((this.simMatrix[j][i] >= threshold && this.simMatrix[j][i] != 0) ? 1 : 0);
+                adjMatrix[i][j] = ((Math.abs(this.simMatrix[i][j]) >= threshold && this.simMatrix[i][j] != 0) ? 1 : 0);
+                adjMatrix[j][i] = ((Math.abs(this.simMatrix[j][i]) >= threshold && this.simMatrix[j][i] != 0) ? 1 : 0);
                 //console.log(adjMatrix[i][j]);
             }
-            console.log(t);
         }
         return adjMatrix;
     }
@@ -388,7 +387,7 @@ class SaveFile {
                 yamlObj["Edge Settings"]["Weight"]["Number of Category"] = this.edgeSettings.weight.discretizedSetting.numCategory;
                 yamlObj["Edge Settings"]["Weight"]["Domain List"] = this.edgeSettings.weight.discretizedSetting.domainArray;
                 yamlObj["Edge Settings"]["Weight"]["Color List"] = this.edgeSettings.weight.discretizedSetting.colorArray;
-            } else if (this.edgeSettings.weight.type === "continuous-normal") {
+            } else if (this.edgeSettings.weight.type === "continuous-minmax") {
                 yamlObj["Edge Settings"]["Weight"]["Max Value Color"] = this.edgeSettings.weight.continuousSetting.maxColor;
                 yamlObj["Edge Settings"]["Weight"]["Min Value Color"] = this.edgeSettings.weight.continuousSetting.minColor;
             }
@@ -432,7 +431,7 @@ class SaveFile {
                 this.edgeSettings.weight.discretizedSetting.numCategory = yamlObj["edge settings"]["weight"]["number of category"];
                 this.edgeSettings.weight.discretizedSetting.domainArray = yamlObj["edge settings"]["weight"]["domain list"];
                 this.edgeSettings.weight.discretizedSetting.colorArray = yamlObj["edge settings"]["weight"]["color list"];
-            } else if (this.edgeSettings.weight.type === "continuous-normal") {
+            } else if (this.edgeSettings.weight.type === "continuous-minmax") {
                 this.edgeSettings.weight.continuousSetting.maxColor = yamlObj["edge settings"]["weight"]["max value color"];
                 this.edgeSettings.weight.continuousSetting.minColor = yamlObj["edge settings"]["weight"]["min value color"];
             }

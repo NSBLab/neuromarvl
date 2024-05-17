@@ -16,8 +16,11 @@ class Graph3D {
     // Edges
     edgeColorConfig;
     edgeDirectionMode: string; // none, opacity, arrow, and animation
-    edgeMinColor: string;
-    edgeMaxColor: string;
+    edgeMinMaxMinColor: string;
+    edgeMinMaxMaxColor: string;
+    edgeCorrelationMinusOneColor: string;
+    edgeCorrelationZeroColor: string;
+    edgeCorrelationPlusOneColor: string;
     edgeMaxWeight: number = Number.MIN_VALUE;
     edgeMinWeight: number = Number.MAX_VALUE;
     edgeMatrix: any[][];
@@ -425,15 +428,33 @@ class Graph3D {
     setEdgeColorConfig(colorMode: string, config?) {
         this.colorMode = colorMode;
         this.edgeColorConfig = config;
-
+        console.log("setEdgeColorConfig()");
         if (colorMode === "weight") {
-            if (config.type === "continuous-normal") {
-                this.edgeMinColor = config.minColor;
-                this.edgeMaxColor = config.maxColor;
+            if (config.type === "continuous-minmax") {
+                this.edgeMinMaxMinColor = config.minColor;
+                this.edgeMinMaxMaxColor = config.maxColor;
 
                 var func = d3.scaleLinear()
                     .domain([this.edgeMinWeight, this.edgeMaxWeight])
                     .range([config.minColor, config.maxColor]);
+
+                for (var i = 0; i < this.edgeList.length; i++) {
+                    var edge = this.edgeList[i];
+                    edge.colorMode = colorMode;
+                    edge.colorMapFunction = func;
+                    edge.isColorChanged = true;
+                }
+
+            } else if (config.type === "continuous-signedcorrelation") {
+                this.edgeCorrelationMinusOneColor = config.minusonecolor;
+                this.edgeCorrelationZeroColor = config.zerocolor;
+                this.edgeCorrelationPlusOneColor = config.plusonecolor;
+
+                //console.log([config.minusonecolor, config.zerocolor, config.plusonecolor]);
+
+                var func = d3.scaleLinear()
+                    .domain([-1, 0, 1])
+                    .range([config.minusonecolor, config.zerocolor, config.plusonecolor]);
 
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
@@ -1022,13 +1043,14 @@ class Edge {
         /* update color of the edge */
         if (this.isColorChanged) {
             if (this.colorMode === "weight") {
+                console.log(this.weight);
                 this.color = this.colorMapFunction(this.weight);
+                console.log(this.color);
             } else {
                 this.color = "#cfcfcf";
             }
 
             this.updateColor();
         }
-
     }
 }

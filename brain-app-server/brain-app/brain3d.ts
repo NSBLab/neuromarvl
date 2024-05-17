@@ -2053,6 +2053,7 @@ class Brain3DApp implements Application, Loopable {
     }
 
     setEdgeColorByWeight(config) {
+        console.log("setEdgeColorByWeight()");
         var colorMode = "weight";
         this.edgeColorOnChange(colorMode, config);
         this.needUpdate = true;

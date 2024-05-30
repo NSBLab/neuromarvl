@@ -1,6 +1,9 @@
 ﻿
 const RENDER_ORDER_EDGE = 1.1;
 
+
+
+
 class Graph3D {
     parentObject;
     rootObject;
@@ -30,6 +33,7 @@ class Graph3D {
     bundlingEdgeList: any[] = [];
     visible: boolean = true;
 
+    edgeWeightColorsObject: EdgeWeightColors;
 
     filteredNodeIDs: number[] = [];
 
@@ -38,12 +42,13 @@ class Graph3D {
 
     allLabels: boolean = false;
     
-    constructor(parentObject, adjMatrix: any[][], nodeColorings: { color: number, portion: number }[][], weightMatrix: any[][], labels: string[], commonData, saveObj) {
+    constructor(parentObject, adjMatrix: any[][], nodeColorings: { color: number, portion: number }[][], weightMatrix: any[][], labels: string[], commonData, saveObj, edgeWeightColorsObject) {
         this.parentObject = parentObject;
         this.rootObject = new THREE.Object3D();
         this.commonData = commonData;
         this.saveObj = saveObj;
         this.edgeDirectionMode = "none";
+        this.edgeWeightColorsObject = edgeWeightColorsObject;
         parentObject.add(this.rootObject);
 
         // Create all the node meshes
@@ -122,6 +127,7 @@ class Graph3D {
         if (len > 0) adjMatrix[len - 1][len - 1] = null;
 
         this.edgeMatrix = adjMatrix;
+        
     }
 
     
@@ -428,72 +434,150 @@ class Graph3D {
     setEdgeColorConfig(colorMode: string, config?) {
         this.colorMode = colorMode;
         this.edgeColorConfig = config;
-        console.log("setEdgeColorConfig()");
+        //console.log("setEdgeColorConfig()");
         if (colorMode === "weight") {
             if (config.type === "continuous-minmax") {
+                $('#div-checkbox-edge-color-is-discrete').hide();
                 this.edgeMinMaxMinColor = config.minColor;
                 this.edgeMinMaxMaxColor = config.maxColor;
 
-                var func = d3.scaleLinear()
-                    .domain([this.edgeMinWeight, this.edgeMaxWeight])
-                    .range([config.minColor, config.maxColor]);
+                this.edgeWeightColorsObject.reset(
+                    CommonUtilities.linspace(this.edgeMinWeight, this.edgeMaxWeight, 256),
+                    [this.edgeMinWeight, this.edgeMaxWeight],
+                    [config.minColor, config.maxColor],
+                    false,
+                    false
+                );
+
+                //var func = d3.scaleLinear()
+                //    .domain([this.edgeMinWeight, this.edgeMaxWeight])
+                //    .range([config.minColor, config.maxColor]);
 
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
                     edge.colorMode = colorMode;
-                    edge.colorMapFunction = func;
+                    edge.colorMapFunction = this.edgeWeightColorsObject.d3CMAPfunc;
                     edge.isColorChanged = true;
                 }
 
             } else if (config.type === "continuous-signedcorrelation") {
+                $('#div-checkbox-edge-color-is-discrete').show();
                 this.edgeCorrelationMinusOneColor = config.minusonecolor;
                 this.edgeCorrelationZeroColor = config.zerocolor;
                 this.edgeCorrelationPlusOneColor = config.plusonecolor;
 
-                //console.log([config.minusonecolor, config.zerocolor, config.plusonecolor]);
-
-                var func = d3.scaleLinear()
-                    .domain([-1, 0, 1])
-                    .range([config.minusonecolor, config.zerocolor, config.plusonecolor]);
-
-                for (var i = 0; i < this.edgeList.length; i++) {
-                    var edge = this.edgeList[i];
-                    edge.colorMode = colorMode;
-                    edge.colorMapFunction = func;
-                    edge.isColorChanged = true;
-                }
-
-            } else if (config.type === "discrete") {
-                var func = d3.scaleOrdinal()
-                    .domain(config.valueArray)
-                    .range(config.colorArray);
+                this.edgeWeightColorsObject.reset(
+                    CommonUtilities.linspace(-1, 1, 256),
+                    [-1, 0, 1],
+                    [config.minusonecolor, config.zerocolor, config.plusonecolor],
+                    false,
+                    false
+                );
 
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
                     edge.colorMode = colorMode;
-                    edge.colorMapFunction = func;
+                    edge.colorMapFunction = this.edgeWeightColorsObject.d3CMAPfunc;
                     edge.isColorChanged = true;
                 }
-            } else if (config.type === "continuous-discretized") {
-                var colorArray = config.colorArray.slice(0);
-                var domainArray = config.domainArray.slice(0);
-                colorArray.unshift("#000000");
-                colorArray.push("#000000");
-                domainArray[domainArray.length - 1] += 0.00000001
+            } else if (config.type === "continuous-signedp") {
+                $('#div-checkbox-edge-color-is-discrete').hide();
+                //this.edgeCorrelationMinusOneColor = config.minusonecolor;
+                //this.edgeCorrelationZeroColor = config.zerocolor;
+                //this.edgeCorrelationPlusOneColor = config.plusonecolor;
 
-                var func = d3.scale.threshold()
-                    .domain(domainArray)
-                    .range(colorArray);
+                let negSig = CommonUtilities.linspace(-1, -0.95, 120);
+                let negTrend = CommonUtilities.linspace(-0.94, -0.9, 10);
+                let posTrend = CommonUtilities.linspace(0.9, 0.94, 10);
+                let posSig = CommonUtilities.linspace(0.95, 1, 120);
 
+                this.edgeWeightColorsObject.reset(
+                    negSig.concat(negTrend, [0], posTrend, posSig),
+                    [-1, -0.95, -0.90, 0, 0.90, 0.95, 1],
+                    [
+                        '#FF00FF', // purple
+                        '#00FFFF', // blue-green
+                        '#cfcfcf', // grey
+                        '#cfcfcf', // grey
+                        '#cfcfcf', // grey
+                        '#FF3300', // red
+                        '#FFFF77', // yellow
+                    ],
+                    false,
+                    false
+                );
 
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
                     edge.colorMode = colorMode;
-                    edge.colorMapFunction = func;
+                    edge.colorMapFunction = this.edgeWeightColorsObject.d3CMAPfunc;
                     edge.isColorChanged = true;
                 }
+                
+            } else if (config.type === "continuous-custom") {
 
+                $('#div-checkbox-edge-color-is-discrete').show();
+                // set the cmap, tick locations and colours via the config, use defaults if not found
+                let realTickX;
+                let realTickColors;
+                let realCMAPX;
+
+                if (config['tickx'].length == 0) {
+                    realCMAPX = CommonUtilities.linspace(this.edgeMinWeight, this.edgeMaxWeight, 256);
+                    realTickX = [this.edgeMinWeight, this.edgeMaxWeight];
+                    realTickColors = ['#000000', '#FF00FF'];
+                } else {
+                    realCMAPX = CommonUtilities.linspace(config.tickx[0], config.tickx[config.tickx.length - 1], 256);
+                    realTickX = config.tickx;
+                    realTickColors = config.tickcolors;
+                }
+
+                this.edgeWeightColorsObject.reset(
+                    realCMAPX,
+                    realTickX,
+                    realTickColors,
+                    false,
+                    true
+                );
+
+                for (var i = 0; i < this.edgeList.length; i++) {
+                    var edge = this.edgeList[i];
+                    edge.colorMode = colorMode;
+                    edge.colorMapFunction = this.edgeWeightColorsObject.d3CMAPfunc;
+                    edge.isColorChanged = true;
+                }
             }
+            //else if (config.type === "discrete") {
+            //    var func = d3.scaleOrdinal()
+            //        .domain(config.valueArray)
+            //        .range(config.colorArray);
+
+            //    for (var i = 0; i < this.edgeList.length; i++) {
+            //        var edge = this.edgeList[i];
+            //        edge.colorMode = colorMode;
+            //        //edge.colorMapFunction = func;
+            //        edge.isColorChanged = true;
+            //    }
+            //}
+            //else if (config.type === "continuous-discretized") {
+            //    var colorArray = config.colorArray.slice(0);
+            //    var domainArray = config.domainArray.slice(0);
+            //    colorArray.unshift("#000000");
+            //    colorArray.push("#000000");
+            //    domainArray[domainArray.length - 1] += 0.00000001
+
+            //    var func = d3.scale.threshold()
+            //        .domain(domainArray)
+            //        .range(colorArray);
+
+
+            //    for (var i = 0; i < this.edgeList.length; i++) {
+            //        var edge = this.edgeList[i];
+            //        edge.colorMode = colorMode;
+            //        edge.colorMapFunction = func;
+            //        edge.isColorChanged = true;
+            //    }
+            //}
         } else if (colorMode === "node") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 var edge = this.edgeList[i];
@@ -1039,17 +1123,16 @@ class Edge {
         axis.normalize();
         
         this.shape.quaternion.setFromAxisAngle(axis, angle);
-
+        
         /* update color of the edge */
         if (this.isColorChanged) {
             if (this.colorMode === "weight") {
-                console.log(this.weight);
+                //console.log(this.weight);
                 this.color = this.colorMapFunction(this.weight);
-                console.log(this.color);
             } else {
                 this.color = "#cfcfcf";
             }
-
+            //console.trace();
             this.updateColor();
         }
     }

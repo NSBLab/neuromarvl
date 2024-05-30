@@ -744,12 +744,19 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				}
 			}
 
-			var availableHandleModifiers = ['round', 'triangle', 'custom'];
+			var availableHandleModifiers = ['round', 'triangle', 'line', 'custom'];
 			var isValidHandleType = availableHandleModifiers.indexOf(this.options.handle) !== -1;
 			if (isValidHandleType) {
-				this._addClass(this.handle1, this.options.handle);
-				this._addClass(this.handle2, this.options.handle);
+				if (this.options.select_handle) {
+					this._addClass(this.handle1, this.options.select_handle);
+					this._addClass(this.handle2, this.options.select_handle);
 
+				} else {
+					this._addClass(this.handle1, this.options.handle);
+					this._addClass(this.handle2, this.options.handle);
+
+				}
+				
 				for (i = 0; i < this.ticks.length; i++) {
 					this._addClass(this.ticks[i], this.options.handle);
 				}
@@ -872,6 +879,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				tooltip_split: false,
 				lock_to_ticks: false,
 				handle: 'round',
+				select_handle: undefined,
 				reversed: false,
 				rtl: 'auto',
 				enabled: true,
@@ -1008,6 +1016,10 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				this.handle1.removeAttribute("tabindex");
 				this.handle2.removeAttribute("tabindex");
 				this._addClass(this.sliderElem, 'slider-disabled');
+				if (this.options.select_handle == 'line') {
+					this.handle1.style.background = 'transparent none';
+					this.handle1.style.display = 'none';
+				}
 				this._trigger('slideDisabled');
 
 				return this;
@@ -1017,6 +1029,10 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 				this._state.enabled = true;
 				this.handle1.setAttribute("tabindex", 0);
 				this.handle2.setAttribute("tabindex", 0);
+				if (this.options.select_handle == 'line') {
+					this.handle1.style.background = 'transparent none';
+					this.handle1.style.display = 'block';
+				}
 				this._removeClass(this.sliderElem, 'slider-disabled');
 				this._trigger('slideEnabled');
 

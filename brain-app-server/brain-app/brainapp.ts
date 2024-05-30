@@ -122,423 +122,6 @@ class PointerImageImpl {
     }
 }
 
-class ContinuousColormap {
-
-    // HTML elements
-    // the slider element 
-    private sliderElement: HTMLInputElement;
-    // the colormap canvas
-    private canvasElement: HTMLCanvasElement;
-    private canvasCTX: CanvasRenderingContext2D;
-    // the "is colormap discrete" checkbox
-    private colormapDiscreteCheckbox: HTMLInputElement;
-
-    // convenience variable to make syntax easier to deal with
-    private bootstrapSliderData;
-
-    // all cmap x values
-    private cmapX: number[];
-    // tick locations
-    private tickX: number[];
-    // tick strings
-    //private tickStrings: string[]; // dont need to store these because we generate them
-    // tick colours
-    private tickColors: string[];
-
-    // when we recreate the slider, this will be the previous value
-    private valueBeforeRecreate: number;
-
-    // function that map tickX -> tickColors
-    private d3CMAPfunc;
-
-    // whether the slider is enabled or not, will be disabled for fixed colormaps, i.e. p-values, correlation values
-    private sliderEnabled: boolean;
-
-    // is the slider sliding, used to determine whether we need to fire the color picker
-    private sliderSliding: boolean = false;
-
-    private defaultTickColor: string = "#7c7c7c";
-
-    private reHex: RegExp = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
-    private reRGB: RegExp = /^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$/;
-
-    private _this;
-    /*
-     * sets private variables and makes a fake initial slider
-     */
-    constructor(sliderElement, canvasElement, colormapDiscreteCheckbox) {
-        this.sliderElement = sliderElement;
-        this.canvasElement = canvasElement;
-        this.canvasCTX = this.canvasElement.getContext("2d");
-        this.colormapDiscreteCheckbox = colormapDiscreteCheckbox;
-        this.sliderEnabled = false;
-        // this is null on creation because we don't need to preserve the dummy value
-        this.valueBeforeRecreate = null;
-
-        this.tickX = [0, 1];
-        this.tickColors = ['#000000', '#FFFFFF'];
-
-        // initialize the slider with dummy values, we need to do this because it will be reinitialized later
-        $(this.sliderElement)['bootstrapSlider']({
-            range: false,
-            step: 0.01,
-            ticks: [0, 1],
-            ticks_colors: this.tickColors,
-            precision: 2,
-            selection: 'none',
-            enabled: this.sliderEnabled,
-            value: 0.5
-        })
-        this.bootstrapSliderData = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider');
-        //console.log($(this.sliderElement).slider('getValue'));
-        console.log(this.bootstrapSliderData.getValue());
-        console.log(this.bootstrapSliderData.getAttribute('ticks'));
-        console.log(this.bootstrapSliderData.getAttribute('ticks_colors'));
-    }
-
-    /*
-     *
-     * cmapX: all the X values
-     * tickX: all the tick values
-     * tickColors: the colours associated with each tick
-     * isDiscrete: do we have a discrete colormap
-     * isEnabled: is the slider enabled
-     */
-    public reset(cmapX, tickX, tickColors, isDiscrete, isEnabled) {
-
-        if (cmapX.length < 2) {
-            console.log("cmapX.length < 2");
-            return;
-        }
-
-        if (tickX.length < 2) {
-            console.log("tickX.length < 2");
-            return;
-        }
-
-        // check if the cmapX values are increasing
-        for (let i = 1; i < cmapX.length; i++) {
-            if (cmapX[i] < cmapX[i - 1]) {
-                console.log("cmapX[i] < cmapX[i - 1]");
-                return;
-            }
-        }
-
-        for (let i = 1; i < tickX.length; i++) {
-            if (tickX[i] < tickX[i - 1]) {
-                console.log("tickX[i] < tickX[i - 1]");
-                return;
-            }
-        }
-
-        // check if the lengths of the tickX and tickColors are the same
-        if (tickX.length != tickColors.length) {
-            console.log("tickX.length != tickColors.length")
-            return;
-        }
-
-        // make sure all the tick colours are hex formatted
-        for (let i = 1; i < tickColors.length; i++) {
-            let matchHex = this.reHex.exec(tickColors[i]);
-            if (matchHex === null) {
-                console.log("matchHex === null");
-                return;
-            }
-        }
-
-        $(this.colormapDiscreteCheckbox).prop('checked', isDiscrete);
-        this.sliderEnabled = isEnabled;
-
-        this.cmapX = cmapX.slice();
-        this.tickX = tickX.slice();
-        this.tickColors = tickColors.slice();
-        this.create();
-        // this can be dodgy
-        //if (cmapX[0] != tickX[0] || cmapX[cmapX.length - 1] != tickX[tickX.length - 1]) {
-        //    return;
-        //}
-
-    }
-
-    /*
-     * recreates the slider with current options
-     */
-    private create() {
-
-        $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider').destroy();
-
-        var _this = this;
-        let initValue;
-        if (this.valueBeforeRecreate === null) {
-            initValue = (this.cmapX[0] + this.cmapX[this.cmapX.length - 1]) / 2;
-        } else {
-            initValue = this.valueBeforeRecreate;
-        }
-
-        var self = this;
-
-        function onSliderTickColorChange(e) {
-            //console.log('here');
-            //console.log(e);
-            //console.log(this);
-            //console.log($(this).val());
-            let tickIDX = $(this).attr('colorpickeridx');
-            
-            //let curTicks = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider').getAttribute('ticks');
-            //let curTicksColors = $(this.sliderElement).slider('getAttribute', 'ticks_colors');
-
-            self.tickColors[tickIDX] = $(this).val();
-
-            // change the color of the tick
-            (<any>$(self.bootstrapSliderData.getElement()))
-                .find('.slider-tick-container')
-                .find('div[tickindex="' + tickIDX + '"]')
-                .css({ 'background': $(this).val() });
-
-            // change the colormap function
-            self.d3CMAPfunc
-                .range(self.tickColors);
-
-            // update the colormap
-            self.updateColormap();
-        }    
-
-        $(this.sliderElement)['bootstrapSlider']({
-            range: false,
-            step: 0.01,
-            ticks: this.tickX,
-            ticks_labels: this.tickX.map(function (elem) { return _this.tickLabelFormatter(elem); }),
-            ticks_positions: this.getTickPositions(),
-            ticks_colors: this.tickColors,
-            ticks_colorchange_func: onSliderTickColorChange,
-            selection: 'none',
-            enabled: this.sliderEnabled,
-            value: initValue
-        });
-
-        if ($(this.colormapDiscreteCheckbox).is(':checked')) {
-            this.d3CMAPfunc = d3.scaleThreshold()
-                .domain(this.tickX)
-                .range(this.tickColors);
-        } else {
-            this.d3CMAPfunc = d3.scaleLinear()
-                .domain(this.tickX)
-                .range(this.tickColors)
-                .unknown(this.defaultTickColor)
-                .clamp(true);
-        }
-
-        this.bootstrapSliderData = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider');
-
-        // add event listeners on the slider
-        $(this.sliderElement)['bootstrapSlider']().on('change slide', function (e) { _this.onSlide() });
-        $(this.sliderElement)['bootstrapSlider']().on('slideStop', function (e) { _this.onSlideStop(e); });
-
-
-        // update the colormap
-        this.updateColormap();
-
-    }
-
-
-    /*
-     * get the percentage (left-to-right) for a set of values in order to set the tick_positions property of bootstrapSlider
-     */
-    private getTickPositions() {
-        var tickPositions = [];
-        var _this = this;
-        this.tickX.forEach(function (curTick) {
-            var curCol = 0;
-            if (curTick <= _this.cmapX[0]) {
-                curCol = 0;
-            } else if (curTick >= _this.cmapX[_this.cmapX.length - 1]) {
-                curCol = _this.cmapX.length - 1;
-            } else {
-                _this.cmapX.some(function (curXX, curIDX) {
-                    if (curXX >= curTick) {
-                        // the value is in between xx[curIDX - 1] and xx[curIDX]
-                        // find the proportion of where it is between those two
-                        let xFrac = (curTick - _this.cmapX[curIDX - 1]) / (_this.cmapX[curIDX] - _this.cmapX[curIDX - 1]);
-
-                        curCol = curIDX - 1 + xFrac;
-                        return true;
-                    }
-                    return false;
-                });
-            }
-            tickPositions.push(curCol / _this.cmapX.length * 100);
-        });
-        //console.log(tickPositions);
-        return tickPositions;
-    }
-
-    private onSlide() {
-        this.sliderSliding = true;
-    }
-
-
-    private onSlideStop(e) {
-        var _this = this;
-        //console.log('slideStop()');
-
-        if (!this.sliderSliding) {
-            //console.log(e);
-
-            let curValue = this.bootstrapSliderData.getValue();
-            let curTicks = this.tickX.slice();
-            let curTicksColors = this.tickColors.slice();
-
-            if (curTicks.includes(curValue)) {
-
-                let curTickIDX = curTicks.indexOf(curValue);
-                if (e.originalEvent.button == 1) {
-                    // wheel, select colour
-                    let sliderTickColorPicker = $(this.bootstrapSliderData.getElement())
-                        .find('.slider-tick-container')
-                        .find('input[colorpickeridx="' + curTickIDX + '"]');
-                    $(sliderTickColorPicker).trigger('click');
-                } else if (e.originalEvent.button == 0) {
-                    // left-click, delete
-
-                    // don't delete the extreme ticks
-                    if (curTickIDX != 0 && curTickIDX != _this.tickX.length - 1) {
-                        curTicks.splice(curTickIDX, 1);
-                        curTicksColors.splice(curTickIDX, 1);
-                        this.tickX = curTicks;
-                        this.tickColors = curTicksColors;
-                        this.valueBeforeRecreate = curValue;
-                        this.create();
-                    }
-                    
-                }
-            } else {
-
-                // insert the new location into the ticks
-                var idxToInsert = -1;
-                curTicks.some(function (curTickValue, curTickIDX) {
-                    if (curTickValue > curValue) {
-                        idxToInsert = curTickIDX;
-                        return true;
-                    }
-                    return false;
-                })
-                curTicks.splice(idxToInsert, 0, curValue);
-                curTicksColors.splice(idxToInsert, 0, this.defaultTickColor)
-
-                this.tickX = curTicks;
-                this.tickColors = curTicksColors;
-                this.valueBeforeRecreate = curValue;
-                this.create();
-            }
-        } else {
-            this.sliderSliding = false;
-        }
-
-    }
-
-    private tickLabelFormatter(v) {
-        return v.toPrecision(2);
-    }
-
-    private updateColormap() {
-        var _this = this;
-        var canvasWidth = this.canvasElement.width;
-        var canvasHeight = this.canvasElement.height;
-        //console.log(canvasWidth);
-        //console.log(canvasHeight);
-
-        // the bounding box of the colormap inside the canvas
-        var colormapBox = {
-            top: 0,
-            bottom: canvasHeight - 20,
-            left: 10,
-            right: canvasWidth - 10
-        };
-        let colormapWidth = colormapBox.right - colormapBox.left + 1;
-
-        // so we are given
-        // the X values that we want to sample the domain
-        // we need to uniformly resample these values according to the width of the required colormap
-        //console.log(colormapWidth);
-        //console.log(xx);
-        // cell coordinates we need to resample xx at
-        let cmapXResampleX = CommonUtilities.linspace(0, this.cmapX.length - 1, colormapWidth);
-        //console.log(xxResampleX);
-        let resampledCmapX = [];
-
-        cmapXResampleX.forEach(function (curCmapXResampleX) {
-            var XI = Math.floor(curCmapXResampleX);
-            var xFrac = curCmapXResampleX - XI;
-
-            if (XI == _this.cmapX.length - 1) {
-                XI = XI - 1;
-                xFrac = 1;
-            }
-            resampledCmapX.push((1 - xFrac) * _this.cmapX[XI] + xFrac * _this.cmapX[XI + 1]);
-        })
-        //console.log(resampledXX);
-
-        // clear the canvas
-        this.canvasCTX.rect(0, 0, canvasWidth, canvasHeight);
-        this.canvasCTX.fillStyle = "white";
-        this.canvasCTX.fill();
-
-        var A = this.canvasCTX.createImageData(colormapWidth, colormapBox.bottom - colormapBox.top + 1);
-
-        resampledCmapX.forEach(function (xxVal, curCol) {
-            let curColor = _this.d3CMAPfunc(xxVal);
-
-            let matchRGB = _this.reRGB.exec(curColor);
-            let matchHex = _this.reHex.exec(curColor);
-            var curRed = 0;
-            var curGreen = 0;
-            var curBlue = 0;
-
-            if (matchRGB !== null) {
-                // red channel
-                curRed = parseInt(matchRGB[1]);
-                curGreen = parseInt(matchRGB[2]);
-                curBlue = parseInt(matchRGB[3]);
-            } else if (matchHex !== null) {
-                curRed = parseInt(matchHex[1], 16);
-                curGreen = parseInt(matchHex[2], 16);
-                curBlue = parseInt(matchHex[3], 16);
-            }
-            for (var curRow = 0; curRow < colormapWidth; curRow++) {
-                // base index for the current pixel is (curRow * canvasWidth + curColumn) * 4
-                A.data[(curRow * colormapWidth + curCol) * 4 + 0] = curRed;
-                A.data[(curRow * colormapWidth + curCol) * 4 + 1] = curGreen;
-                A.data[(curRow * colormapWidth + curCol) * 4 + 2] = curBlue;
-                A.data[(curRow * colormapWidth + curCol) * 4 + 3] = 255; // alpha channel
-            }
-        });
-
-        this.canvasCTX.putImageData(A, colormapBox.left, colormapBox.top);
-
-        // do ticks
-        // find column for tick
-        this.tickX.forEach(function (curTick, curTickIDX) {
-            var curCol = 0;
-            if (curTick <= resampledCmapX[0]) {
-                curCol = 0;
-            } else if (curTick >= resampledCmapX[resampledCmapX.length - 1]) {
-                curCol = resampledCmapX.length - 1;
-            } else {
-                resampledCmapX.some(function (curXX, curIDX) {
-                    if (curXX >= curTick) {
-                        curCol = curIDX;
-                        return true;
-                    }
-                    return false;
-                });
-            }
-            _this.canvasCTX.textAlign = 'center';
-            _this.canvasCTX.textBaseline = 'top';
-            _this.canvasCTX.fillStyle = "black";
-            _this.canvasCTX.fillText(_this.tickLabelFormatter(_this.tickX[curTickIDX]), curCol + colormapBox.left, colormapBox.bottom + 3);
-        });
-    }
-}
 
 //console.log([colormapBox.left, colormapBox.top, colormapBox.right - colormapBox.left + 1, colormapBox.bottom - colormapBox.top + 1]);
 //ctx.drawImage(A, colormapBox.left, colormapBox.top, colormapBox.right - colormapBox.left + 1, colormapBox.bottom - colormapBox.top + 1);
@@ -578,7 +161,7 @@ class NeuroMarvl {
     // The dialog is also used for the batch download, using another callback
     // To not loose original reference, we save it in a variable
     exportCallbackFunction = null;
-    colormapObject: ContinuousColormap;
+    
 
 
     constructor() {
@@ -752,18 +335,7 @@ class NeuroMarvl {
         $("#div-edge-size-slider")['bootstrapSlider']().on('slide', this.setEdgeSize);
 
 
-        this.colormapObject = new ContinuousColormap(
-            document.getElementById('div-edge-colormap-slider'),
-            document.getElementById('div-edge-colormap-canvas'),
-            document.getElementById('checkbox-edge-color-is-discrete')
-        );
-
-        this.colormapObject.reset(
-            CommonUtilities.linspace(-1, 1, 256),
-            [-1, 1],
-            ["#000000", "#FFFFFF"],
-            false,
-            true);
+        
         //$("#div-edge-colormap-slider")['bootstrapSlider']({
         //    range: false,
         //    step: 0.01,
@@ -1451,7 +1023,7 @@ class NeuroMarvl {
     }
 
     setEdgeColorByWeight = () => {
-        console.log("setEdgeColorByWeight()");
+        //console.log("setEdgeColorByWeight()");
         var config = {};
 
         if (this.commonData.edgeWeightColorMode === "continuous-discretized") {
@@ -1497,7 +1069,7 @@ class NeuroMarvl {
             config["maxColor"] = maxColor;
 
         } else if (this.commonData.edgeWeightColorMode === "continuous-signedcorrelation") {
-            console.log('huhiuh');
+            
             var minusOneColor = (<any>$('#input-edge-correlation-minusone-color')).val();
             var zeroColor = (<any>$('#input-edge-correlation-zero-color')).val();
             var plusOneColor = (<any>$('#input-edge-correlation-plusone-color')).val();
@@ -1512,8 +1084,32 @@ class NeuroMarvl {
             config["minusonecolor"] = minusOneColor;
             config["zerocolor"] = zeroColor;
             config["plusonecolor"] = plusOneColor;
+        } else if (this.commonData.edgeWeightColorMode === "continuous-signedp") {
+            
+            this.saveFileObj.edgeSettings.colorBy = "weight";
+            this.saveFileObj.edgeSettings.weight.type = "continuous-signedp";
+            
+            config["type"] = "continuous-signedp";
+        } else if (this.commonData.edgeWeightColorMode === "continuous-custom") {
 
+            // load in pre-made ranges
+            this.saveFileObj.edgeSettings.colorBy = "weight";
+            this.saveFileObj.edgeSettings.weight.type = "continuous-custom";
+            let tickXString = <string>$('#input-edge-custom-tickx').val();
+            let tickColorsString = <string>$('#input-edge-custom-tickcolors').val();
+            if (tickXString.length > 0) {
+                config['tickx'] = JSON.parse(tickXString);
+            } else {
+                config['tickx'] = [];
+            }
 
+            if (tickColorsString.length > 0) {
+                config['tickcolors'] = JSON.parse(tickColorsString);
+            } else {
+                config['tickcolors'] = [];
+            }
+
+            config["type"] = "continuous-custom";
         } else if (this.commonData.edgeWeightColorMode === "discrete") {
             var valueArray = [];
             var colorArray = [];
@@ -2320,8 +1916,7 @@ class NeuroMarvl {
 
     setEdgeColor = () => {
         var value = $('#select-edge-color').val();
-        console.log("setEdgeColor()");
-        console.log(value);
+        
         if (value === "none") {
             this.setEdgeNoColor();
             this.commonData.edgeColorMode = "none";
@@ -2343,24 +1938,25 @@ class NeuroMarvl {
                 $("#div-edge-color-continuous").show();
                 $("#div-edge-color-discrete").hide();
 
-                if ($("#checkbox-edge-color-discretized").is(":checked")) {
-                    this.commonData.edgeWeightColorMode = "continuous-discretized";
-                    this.setDefaultEdgeDiscretizedValues();
+                //if ($("#checkbox-edge-color-discretized").is(":checked")) {
+                //    this.commonData.edgeWeightColorMode = "continuous-discretized";
+                //    this.setDefaultEdgeDiscretizedValues();
 
-                    $("#div-edge-color-continuous-discretized").show();
-                    $("#div-edge-color-continuous-minmax").hide();
+                //    $("#div-edge-color-continuous-discretized").show();
+                //    $("#div-edge-color-continuous-minmax").hide();
 
-                    var numCategory = Number($('#select-edge-color-number-discretized-category').val());
-                    for (var i = 0; i < 5; i++) {
-                        if (i < numCategory) {
-                            $('#div-edge-discretized-' + i).show();
-                        } else {
-                            $('#div-edge-discretized-' + i).hide();
-                        }
-                    }
-                } else {
+                //    var numCategory = Number($('#select-edge-color-number-discretized-category').val());
+                //    for (var i = 0; i < 5; i++) {
+                //        if (i < numCategory) {
+                //            $('#div-edge-discretized-' + i).show();
+                //        } else {
+                //            $('#div-edge-discretized-' + i).hide();
+                //        }
+                //    }
+                //}
+                //else {
                     this.commonData.edgeWeightColorMode = <string>$('#select-edge-color-map-mode').val();
-                    console.log('here');
+                    
                     // if it 
                     switch ($('#select-edge-color-map-mode').val()) {
                         case 'continuous-minmax':
@@ -2379,8 +1975,7 @@ class NeuroMarvl {
                             $("#div-edge-color-continuous-signedcorrelation").hide();
                             break;
                     }
-                    
-                }
+                //}
             } else if (this.referenceDataSet.info.edgeWeight.type === "discrete") {
                 // Enable force continuous checkbox
                 $("#checkbox-edge-color-force-continuous").show();
@@ -2596,9 +2191,9 @@ class NeuroMarvl {
 
         } else if (this.saveFileObj.edgeSettings.colorBy === "weight") {
             $('#select-edge-color').val("weight");
-            if (this.saveFileObj.edgeSettings.weight.type === "continuous-discretized") {
-                $('#checkbox-edge-color-discretized').prop('checked', true);
-            }
+            //if (this.saveFileObj.edgeSettings.weight.type === "continuous-discretized") {
+            //    $('#checkbox-edge-color-discretized').prop('checked', true);
+            //}
 
             // make all corresponding elements visible
 
@@ -3252,29 +2847,32 @@ class NeuroMarvl {
             this.setEdgeColor();
         });
 
-        $('#checkbox-edge-color-discretized').on('change', () => {
-            if ($("#checkbox-edge-color-discretized").is(":checked")) {
-                this.setDefaultEdgeDiscretizedValues();
-                $("#div-edge-color-continuous-discretized").show();
-                $("#div-edge-color-continuous-minmax").hide();
-                this.commonData.edgeWeightColorMode = "continuous-discretized";
+        $('#checkbox-edge-color-is-discrete').on('click', () => {
+            this.applicationsInstances.forEach(app => app.edgeWeightColorsObject.setDiscreteOrContinuousColormap())
+        })
+        //$('#checkbox-edge-color-discretized').on('change', () => {
+        //    if ($("#checkbox-edge-color-discretized").is(":checked")) {
+        //        this.setDefaultEdgeDiscretizedValues();
+        //        $("#div-edge-color-continuous-discretized").show();
+        //        $("#div-edge-color-continuous-minmax").hide();
+        //        this.commonData.edgeWeightColorMode = "continuous-discretized";
 
-                var numCategory = Number($('#select-edge-color-number-discretized-category').val());
-                for (var i = 0; i < 5; i++) {
-                    if (i < numCategory) {
-                        $('#div-edge-discretized-' + i).show();
-                    } else {
-                        $('#div-edge-discretized-' + i).hide();
-                    }
-                }
-            } else {
-                $("#div-edge-color-continuous-discretized").hide();
-                $("#div-edge-color-continuous-minmax").show();
-                this.commonData.edgeWeightColorMode = "continuous-minmax";
-            }
+        //        var numCategory = Number($('#select-edge-color-number-discretized-category').val());
+        //        for (var i = 0; i < 5; i++) {
+        //            if (i < numCategory) {
+        //                $('#div-edge-discretized-' + i).show();
+        //            } else {
+        //                $('#div-edge-discretized-' + i).hide();
+        //            }
+        //        }
+        //    } else {
+        //        $("#div-edge-color-continuous-discretized").hide();
+        //        $("#div-edge-color-continuous-minmax").show();
+        //        this.commonData.edgeWeightColorMode = "continuous-minmax";
+        //    }
 
-            this.setEdgeColorByWeight();
-        });
+        //    this.setEdgeColorByWeight();
+        //});
 
         $('#select-edge-direction').on('change', this.setEdgeDirection);
 
@@ -3292,73 +2890,6 @@ class NeuroMarvl {
 
                 this.setBrainModel(TL_VIEW, model);
             }
-        });
-
-        $('#select-edge-color-number-discretized-category').on('change', () => {
-            var numCategory = Number($('#select-edge-color-number-discretized-category').val());
-
-            this.setDefaultEdgeDiscretizedValues();
-            for (var i = 0; i < 5; i++) {
-                if (i < numCategory) {
-                    $('#div-edge-discretized-' + i).show();
-                } else {
-                    $('#div-edge-discretized-' + i).hide();
-                }
-            }
-
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-' + 0 + '-from').on('change keyup paste', this.setEdgeColorByWeight);
-
-        $('#input-edge-discretized-' + 4 + '-to').on('change keyup paste', this.setEdgeColorByWeight);
-
-        $('#input-edge-discretized-1-from').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-1-from').val();
-            $('#input-edge-discretized-0-to').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-2-from').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-2-from').val();
-            $('#input-edge-discretized-1-to').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-3-from').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-3-from').val();
-            $('#input-edge-discretized-2-to').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-4-from').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-4-from').val();
-            $('#input-edge-discretized-3-to').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-0-to').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-0-to').val();
-            $('#input-edge-discretized-1-from').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-1-to').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-1-to').val();
-            $('#input-edge-discretized-2-from').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-2-to').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-2-to').val();
-            $('#input-edge-discretized-3-from').val(val);
-            this.setEdgeColorByWeight();
-        });
-
-        $('#input-edge-discretized-3-to').on('change keyup paste', () => {
-            var val = $('#input-edge-discretized-3-to').val();
-            $('#input-edge-discretized-4-from').val(val);
-            this.setEdgeColorByWeight();
         });
 
         window.addEventListener('resize', () => {

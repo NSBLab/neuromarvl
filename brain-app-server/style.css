@@ -359,4 +359,21 @@ text {
     border-radius: 5px;
     padding:5px;
     margin-bottom:10px;
+
 }
+
+.slider-handle.line {
+    background: transparent none;
+    /* You can customize the handle and set a background image */
+}
+
+.slider-handle.line::before {
+    line-height: 20px;
+    font-size: 20px;
+    margin-left: 7px;
+    margin-right: 7px;
+    content: '\2223';
+    font-weight: bold;
+}
+
+/*#8739 2223*/

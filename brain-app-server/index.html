@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html>
+
 <head>
     <title>Brain Data Viewer</title>
 
@@ -8,7 +9,7 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="extern/bootstrap-4.6.2-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="extern/splashPage/splashPage.css" />
-    <link rel="stylesheet" href="extern/bootstrap-slider-11.0.2.min.css" />
+    <link rel="stylesheet" href="extern/bootstrap-slider-11.0.2.css" />
     <link rel="stylesheet" href="extern/jquery-ui-1.13.2.custom/jquery-ui.min.css" />
     <link rel="stylesheet" href="extern/bootstrap-icons-1.11.2/font/bootstrap-icons.min.css" />
 
@@ -17,6 +18,7 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
     <!-- <script>var exports = {};</script>-->
 </head>
+
 <body onload="defaultFunction()">
     <div id="file-save-dialog" title="Save Configuration">
         <div>Enter Filename</div>
@@ -33,7 +35,10 @@
             <div id="credit" align="center">
                 <p style="font-size:150%; color: #2c3e50;">Developed by:</p>
                 <p style="font-size:150%; color: #2c3e50;">Tim Dwyer, Alex Fornito</p>
-                <p style="font-size:150%; color:#2c3e50;">Thanh Nhan Pham, Mingzheng Shi, Nicholas Smith, James Manley and Matthias Klapperstueck</p>
+                <p style="font-size:150%; color:#2c3e50;">
+                    Thanh Nhan Pham, Mingzheng Shi, Nicholas Smith, James Manley
+                    and Matthias Klapperstueck
+                </p>
                 <p style="font-size:150%; color: #2c3e50;">Monash University, 2017</p>
             </div>
 
@@ -93,20 +98,25 @@
             </div>
             <div class="row">
                 <div class="col-4" style="height: 150px;">
-                    <div class="thumbnail" style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
+                    <div class="thumbnail"
+                         style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
                         <p style="font-size:120%"><strong>Sharing</strong></p>
 
-                        Allow neuroscientist to quickly share their visualisations on their own dataset with other scientists with just one click.
+                        Allow neuroscientist to quickly share their visualisations on their own dataset with other
+                        scientists with just one click.
                     </div>
                 </div>
                 <div class="col-4" style="height: 150px;">
-                    <div class="thumbnail" style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
+                    <div class="thumbnail"
+                         style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
                         <p style="font-size:120%"><strong>Flexible, interactive visualizations</strong></p>
-                        Visualize your network data using different anatomical and topological projections, and interrogate these projections to understand the properties of individual nodes and edges.
+                        Visualize your network data using different anatomical and topological projections, and
+                        interrogate these projections to understand the properties of individual nodes and edges.
                     </div>
                 </div>
                 <div class="col-4" style="height: 150px;">
-                    <div class="thumbnail" style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
+                    <div class="thumbnail"
+                         style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
                         <p style="font-size:120%"><strong>Export visualisations</strong></p>
 
                         Visualisations can be exported into JPEG or SVG file formats for further editing.
@@ -121,7 +131,8 @@
 
             <div id="logos" class="row justify-content-around">
                 <div class="col-6">
-                    <img class="float-start" src="extern/splashPage/images/lab-bmh-rgb-flat-colour-master.png" width="438" height="130" />
+                    <img class="float-start" src="extern/splashPage/images/lab-bmh-rgb-flat-colour-master.png"
+                         width="438" height="130" />
                 </div>
                 <div class="col-6">
                     <img class="float-end" src="extern/splashPage/images/IALab-logo.jpg" />
@@ -131,41 +142,62 @@
     </div>
 
     <div id="control-panel-bottom">
-        <div id="control-panel-bottom-close" class="btn btn-primary" style="height: 50%; width: 100%;" data-toggle="tooltip" data-placement="top" title="Show introduction with example links">Splash Page</div>
+        <div id="control-panel-bottom-close" class="btn btn-primary" style="height: 50%; width: 100%;"
+             data-toggle="tooltip" data-placement="top" title="Show introduction with example links">Splash Page</div>
         <div class="btn-group btn-group-justified bg-info" style="height: 50%; width: 100%;">
             <!--<div id="button-export-svg" class="btn btn-primary" data-toggle="modal" data-target="#exportModal" data-placement="top" title="Download visualisation as an image file">-->
-            <div id="button-export-svg" class="btn btn-primary" data-toggle="modal" data-target="#exportModal" title="Download visualisation as an image file">
+            <div id="button-export-svg" class="btn btn-primary" data-toggle="modal" data-target="#exportModal"
+                 title="Download visualisation as an image file">
                 <i class="bi bi-download"></i>
             </div>
-            <div id="button-save-settings" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Save settings for reload in another session">
+            <div id="button-save-settings" class="btn btn-primary" data-toggle="tooltip" data-placement="top"
+                 title="Save settings for reload in another session">
                 <i class="bi bi-file-arrow-down-fill"></i>
             </div>
-            <div id="button-load-settings" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Load settings from a previously saved session file. Will work best when the basic characteristics of the current and initial dataset (e.g., number of nodes, node labels, etc) are the same.">
+            <div id="button-load-settings" class="btn btn-primary" data-toggle="tooltip" data-placement="top"
+                 title="Load settings from a previously saved session file. Will work best when the basic characteristics of the current and initial dataset (e.g., number of nodes, node labels, etc) are the same.">
                 <i class="bi bi-file-arrow-up-fill"></i>
             </div>
-            <div id="button-save-app" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Share visualisation as a web link">
+            <div id="button-save-app" class="btn btn-primary" data-toggle="tooltip" data-placement="top"
+                 title="Share visualisation as a web link">
                 <i class="bi bi-send"></i>
             </div>
         </div>
     </div>
     <input id="input-select-load-file" style="display:none;" type="file" />
-    <div id="control-panel" class="bg-info">
+    <div id="control-panel" style="background-color: lightslategrey">
         <ul class="nav nav-tabs" role="tablist">
             <li id="tab1" role="presentation" class="nav-item">
-                <button class="nav-link active" data-toggle="tab" data-target="#tab-1" data-placement="bottom" title="3D brain model settings" type="button" role="tab" aria-controls="surface-tab-pane" aria-selected="true">Surface</button>
+                <button class="nav-link active" data-toggle="tab" data-target="#tab-1" data-placement="bottom"
+                        title="3D brain model settings" type="button" role="tab" aria-controls="surface-tab-pane"
+                        aria-selected="true">
+                    Surface
+                </button>
             </li>
             <li id="tab2" role="presentation" class="nav-item">
-                <button class="nav-link" data-toggle="tab" data-target="#tab-2" data-placement="bottom" title="Data source selection, loading, and batch output" type="button" role="tab" aria-controls="data-tab-pane" aria-selected="false">Data</button>
+                <button class="nav-link" data-toggle="tab" data-target="#tab-2" data-placement="bottom"
+                        title="Data source selection, loading, and batch output" type="button" role="tab"
+                        aria-controls="data-tab-pane" aria-selected="false">
+                    Data
+                </button>
             </li>
             <li id="tab3" role="presentation" class="nav-item">
-                <button class="nav-link" data-toggle="tab" data-target="#tab-3" data-placement="bottom" title="Attribute mappings to visualisation features, including filtering" type="button" role="tab" aria-controls="attribute-tab-pane" aria-selected="false">Attribute</button>
+                <button class="nav-link" data-toggle="tab" data-target="#tab-3" data-placement="bottom"
+                        title="Attribute mappings to visualisation features, including filtering" type="button" role="tab"
+                        aria-controls="attribute-tab-pane" aria-selected="false">
+                    Attribute
+                </button>
             </li>
         </ul>
-        <div class="tab-content" style="height: 100%; ">
+        <div class="tab-content" style="height: 100%">
             <div id="tab-1" class="tab-pane fade show active">
                 <br />
-                <a href="#" style="display: block; text-align: right"><span class="badge" data-toggle="modal" data-target="#modal-help-model">?</span></a>
-                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Set the 3D brain model to a preset option, or upload a new model geometry file in Wavefront OBJ (.obj) format">Model</label>
+                <a href="#" style="display: block; text-align: right">
+                    <span class="badge" data-toggle="modal"
+                          data-target="#modal-help-model">?</span>
+                </a>
+                <label class="control-label" data-toggle="tooltip" data-placement="right"
+                       title="Set the 3D brain model to a preset option, or upload a new model geometry file in Wavefront OBJ (.obj) format">Model</label>
                 <select id="select-brain3d-model" class="form-control input-sm">
                     <option value="icbm">ICBM152</option>
                     <option value="ch2">CH2</option>
@@ -173,14 +205,16 @@
                     <option value="none">None</option>
                 </select>
                 <br />
-                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Open color selection palette for the brain model surface">Color</label>
+                <label class="control-label" data-toggle="tooltip" data-placement="right"
+                       title="Open color selection palette for the brain model surface">Color</label>
                 <p style="margin-bottom: 0;">
                     <div id="input-surface-color-div" class="input-group">
                         <input type="color" id="input-surface-color" value="#e3e3e3" class="form-control" />
                     </div>
                 </p>
                 <br />
-                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Adjust brain model surface opacity">Opacity</label>
+                <label class="control-label" data-toggle="tooltip" data-placement="right"
+                       title="Adjust brain model surface opacity">Opacity</label>
                 <input id="div-surface-opacity-slider" data-slider-id='surface-opacity-slider' type="text"
                        data-slider-min="0.0" data-slider-max="1" data-slider-step="0.02" data-slider-value="0.5" />
                 <br />
@@ -205,10 +239,22 @@
                 <br />
                 <ul class="nav nav-tabs" role="tablist">
                     <li id="tab2-1" role="presentation" class="nav-item">
-                        <button class="nav-link active" data-toggle="tab" data-target="#div-set-data-tab" data-placement="bottom" title="Set data source files for node position, connectivity, attributes and labels" type="button" role="tab" aria-controls="surface-tab-pane" aria-selected="true">Dataset</button>
+                        <button class="nav-link active" data-toggle="tab" data-target="#div-set-data-tab"
+                                data-placement="bottom"
+                                title="Set data source files for node position, connectivity, attributes and labels"
+                                type="button" role="tab" aria-controls="surface-tab-pane"
+                                aria-selected="true">
+                            Dataset
+                        </button>
                     </li>
                     <li id="tab2-2" role="presentation" class="nav-item">
-                        <button class="nav-link" data-toggle="tab" data-target="#div-batching-tab" data-placement="bottom" title="Create and download batch images files using multiple source data files" type="button" role="tab" aria-controls="surface-tab-pane" aria-selected="true">Batching</button>
+                        <button class="nav-link" data-toggle="tab" data-target="#div-batching-tab"
+                                data-placement="bottom"
+                                title="Create and download batch images files using multiple source data files"
+                                type="button" role="tab" aria-controls="surface-tab-pane"
+                                aria-selected="true">
+                            Batching
+                        </button>
                     </li>
 
                 </ul>
@@ -220,29 +266,48 @@
                         <span data-toggle="tooltip" data-placement="bottom" title="Create and download batch images files using multiple source data files">Batching</span>
                     </a>
                 </div>-->
-                <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
+                <!-- the padding-right allows for the scroll control -->
+                <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto; padding-right: 15px">
 
                     <div id="div-set-data-tab" class="tab-pane active">
                         <br />
-                        <button id="load-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Immediately load default data">Load default data</button>
-                        <a id="download-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Download input files used for default data, to get an example of the format of the input files..." href="brain-app/data/example.zip">Get example files</a>
+                        <button id="load-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip"
+                                data-placement="top" title="Immediately load default data">
+                            Load default data
+                        </button>
+                        <a id="download-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip"
+                           data-placement="top"
+                           title="Download input files used for default data, to get an example of the format of the input files..."
+                           href="brain-app/data/example.zip">Get example files</a>
                         <br />
                         <br />
-                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Spatial coordinates of each node. This file should be a matrix comprising N rows and 3 columns, where N is the number of nodes and the columns represent the [x y z] coordinates of each node. The file can be space, tab or comma delimited.">Node coordinates</label>
+                        <label class="control-label" data-toggle="tooltip" data-placement="right"
+                               title="Spatial coordinates of each node. This file should be a matrix comprising N rows and 3 columns, where N is the number of nodes and the columns represent the [x y z] coordinates of each node. The file can be space, tab or comma delimited.">
+                            Node
+                            coordinates
+                        </label>
                         <input id="select-coords" style="display:none;" type="file" />
                         <div class="input-group input-group-sm">
                             <button class="input-group-addon bi bi-info-circle status-changed" id="coords-status"
                                     data-toggle="tooltip" data-placement="bottom"></button>
-                            <button id="button-select-coords" class="form-control btn-default"><span id="button-select-coords-filename">Coordinates file</span></button>
+                            <button id="button-select-coords" class="form-control btn-default">
+                                <span id="button-select-coords-filename">Coordinates file</span>
+                            </button>
                         </div>
                         <br />
                         <br />
-                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="An N*N adjacency or connectivity matrix, where N is the number of nodes. Can be tab, space or comma delimited. Order of rows/columns should correspond to the row order of the node coordinates.">Connectivity matrix</label>
+                        <label class="control-label" data-toggle="tooltip" data-placement="right"
+                               title="An N*N adjacency or connectivity matrix, where N is the number of nodes. Can be tab, space or comma delimited. Order of rows/columns should correspond to the row order of the node coordinates.">
+                            Connectivity
+                            matrix
+                        </label>
                         <input id="select-matrix" style="display:none;" type="file" />
                         <div class="input-group input-group-sm">
                             <button class="input-group-addon bi bi-info-circle status-changed" id="matrix-status"
                                     data-toggle="tooltip" data-placement="bottom"></button>
-                            <button id="button-select-matrix" class="form-control btn-default"><span id="button-select-matrix-filename">Matrix file</span></button>
+                            <button id="button-select-matrix" class="form-control btn-default">
+                                <span id="button-select-matrix-filename">Matrix file</span>
+                            </button>
                         </div>
                         <br />
                         <br />
@@ -257,7 +322,9 @@ If one of the attributes represents module affiliation for an overlapping module
                         <div class="input-group input-group-sm">
                             <button class="input-group-addon bi bi-info-circle status-changed" id="attrs-status"
                                     data-toggle="tooltip" data-placement="bottom"></button>
-                            <button id="button-select-attrs" class="form-control btn-default"><span id="button-select-attrs-filename">Attributes file</span></button>
+                            <button id="button-select-attrs" class="form-control btn-default">
+                                <span id="button-select-attrs-filename">Attributes file</span>
+                            </button>
                         </div>
                         <br />
                         <br />
@@ -271,7 +338,9 @@ R Amygdala ">Node labels (optional)</label>
                         <div class="input-group input-group-sm">
                             <button class="input-group-addon bi bi-info-circle status-changed" id="labels-status"
                                     data-toggle="tooltip" data-placement="bottom"></button>
-                            <button id="button-select-labels" class="form-control btn-default"><span id="button-select-labels-filename">Labels file</span></button>
+                            <button id="button-select-labels" class="form-control btn-default">
+                                <span id="button-select-labels-filename">Labels file</span>
+                            </button>
                         </div>
                         <br />
                     </div>
@@ -280,80 +349,119 @@ R Amygdala ">Node labels (optional)</label>
                         <div id="batching-tooltip" class="ui-visible-tooltip">
                             <p>Batch mode allows you to apply a given display setting to multiple networks. </p>
                             <p>
-                                Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. Each matrix must have a corresponding attributes file, with the same dimensions and column headings as the first attribute file. You can select multiple files at once, and correspondence between matrix and attribute files is established by loading them in the same order. The app will then generate these visualisations and save them as separate files to your desktop.
+                                Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first.
+                                Then use this button to select a set of other matrices that the visualisation will be
+                                applied to. The matrices must have the same dimensions as the original, but may
+                                represent different connections. Each matrix must have a corresponding attributes file,
+                                with the same dimensions and column headings as the first attribute file. You can select
+                                multiple files at once, and correspondence between matrix and attribute files is
+                                established by loading them in the same order. The app will then generate these
+                                visualisations and save them as separate files to your desktop.
                                 <!--Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.-->
                             </p>
                         </div>
-                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Batch mode allows you to apply a given display setting to multiple networks. First, you can select one dataset and generate a particular visualisation. Then you use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.">Connectivity matrices</label>
+                        <label class="control-label" data-toggle="tooltip" data-placement="right"
+                               title="Batch mode allows you to apply a given display setting to multiple networks. First, you can select one dataset and generate a particular visualisation. Then you use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.">
+                            Connectivity
+                            matrices
+                        </label>
                         <input id="select-matrices-batching" style="display:none;" type="file" multiple />
                         <div id="div-batching-tab" class="tab-pane">
                             <div class="input-group input-group-sm">
-                                <div class="input-group-addon bi bi-info-circle status-changed" id="matrices-batching-status"
-                                     data-toggle="tooltip" data-placement="bottom"></div>
-                                <button id="button-select-matrices-batching" class="form-control btn-default">Matrix files</button>
+                                <div class="input-group-addon bi bi-info-circle status-changed"
+                                     id="matrices-batching-status" data-toggle="tooltip" data-placement="bottom"></div>
+                                <button id="button-select-matrices-batching" class="form-control btn-default">
+                                    Matrix
+                                    files
+                                </button>
                             </div>
                         </div>
                         <br />
                         <br />
-                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select a corresponding attribute file for the connectivity matrices. There should be one attribute file for each matrix. They should be listed in the same order as the matrices.">Node attributes</label>
+                        <label class="control-label" data-toggle="tooltip" data-placement="right"
+                               title="Select a corresponding attribute file for the connectivity matrices. There should be one attribute file for each matrix. They should be listed in the same order as the matrices.">
+                            Node
+                            attributes
+                        </label>
                         <input id="select-attrs-batching" style="display:none;" type="file" multiple />
                         <div class="input-group input-group-sm">
                             <div class="input-group-addon bi bi-info-circle status-changed" id="attrs-batching-status"
                                  data-toggle="tooltip" data-placement="bottom"></div>
-                            <button id="button-select-attrs-batching" class="form-control btn-default">Attribute files</button>
+                            <button id="button-select-attrs-batching" class="form-control btn-default">
+                                Attribute
+                                files
+                            </button>
                         </div>
                         <br />
-                        <button id="btn-start-batching" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="right" title="Create batch images...">Batch</button>
+                        <button id="btn-start-batching" class="btn btn-sm btn-primary" data-toggle="tooltip"
+                                data-placement="right" title="Create batch images...">
+                            Batch
+                        </button>
                     </div>
                 </div>
             </div>
             <div id="tab-3" class="tab-pane" style="height: 100%;">
                 <ul class="nav nav-pills mb-3" role="tablist">
                     <li id="tab-node-attributes" role="presentation" class="nav-item">
-                        <button class="nav-link active" data-toggle="tab" data-target="#div-node-attribute-tab" data-placement="bottom" title="visual settings and selection filtering for nodes">Node attributes</button>
+                        <button class="nav-link active" data-toggle="tab" data-target="#div-node-attribute-tab"
+                                data-placement="bottom" title="visual settings and selection filtering for nodes">
+                            Node
+                            attributes
+                        </button>
                     </li>
 
                     <li id="tab-edge-attributes" role="presentation" class="nav-item">
-                        <button class="nav-link" data-toggle="tab" data-target="#div-edge-attribute-tab" data-placement="bottom" title="visual settings for edges">Edge attributes</button>
+                        <button class="nav-link" data-toggle="tab" data-target="#div-edge-attribute-tab"
+                                data-placement="bottom" title="visual settings for edges">
+                            Edge attributes
+                        </button>
                     </li>
                 </ul>
                 <br>
-                <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
+                <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto; padding-right: 15px">
                     <div id="div-node-attribute-tab" class="tab-pane active" role="tabpanel">
                         <div>
                             <div id="div-set-node-scale" style="display: none; margin-bottom: 5px; ">
-                                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select node property to change">Set</label>
+                                <label class="control-label" data-toggle="tooltip" data-placement="right"
+                                       title="Select node property to change">Set</label>
                                 <select id="select-node-size-color" class="form-control input-sm">
                                     <option value="node-size">Size</option>
                                     <option value="node-color">Color</option>
                                     <option value="node-default">None</option>
                                 </select>
-                                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Change node property according to one of the following attributes">by</label>
+                                <label class="control-label" data-toggle="tooltip" data-placement="right"
+                                       title="Change node property according to one of the following attributes">by</label>
                                 <select id="select-attribute" class="form-control input-sm"></select>
                             </div>
                         </div>
                         <div id="div-node-size" style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p>
-                                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Scale range of node sizes">range:</label>
+                                <label class="control-label" data-toggle="tooltip" data-placement="right"
+                                       title="Scale range of node sizes">range:</label>
                                 <label id="label_node_size_range"></label>
                             </p>
                             <input id="div-node-size-slider" data-slider-id='node-size-slider' type="text"
-                                   data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="[0.5,1]" />
+                                   data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02"
+                                   data-slider-value="[0.5,1]" />
                         </div>
-                        <div id="div-node-color-mode" style="display:none;" data-toggle="tooltip" data-placement="right" title="Toggle continuous or discrete colouring">
+                        <div id="div-node-color-mode" style="display:none;" data-toggle="tooltip" data-placement="right"
+                             title="Toggle continuous or discrete colouring">
                             <input type="checkbox" id="checkbox-node-color-continuous" style="width: 12px;">
                             <strong>Treat as continuous</strong>
                         </div>
-                        <div id="div-node-color-pickers-discrete" style="display:none; margin-top: 20px; margin-left: 20px;">
+                        <div id="div-node-color-pickers-discrete"
+                             style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p>
                                 <label class="control-label" style="display: inline-block;">Key</label>
-                                <select id="select-node-key" class="form-control input-sm" style="width: 80px; display: inline-block;"></select>
+                                <select id="select-node-key" class="form-control input-sm"
+                                        style="width: 80px; display: inline-block;"></select>
                                 <div class="input-group">
                                     <input type="color" id="input-node-color" value="#ffff00" class="form-control" />
                                 </div>
                             </p>
                         </div>
 
+                        <!--<div id="div-node-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">-->
                         <div id="div-node-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p style="margin-bottom: 0;">
                                 <label class="control-label" style="display: inline-block;">Min</label>
@@ -369,24 +477,33 @@ R Amygdala ">Node labels (optional)</label>
                         </div>
                         <div id="div-charts" class="dc-data-count" style="width: 95%">
                             <div id="barCharts"></div>
-                            <button id="button-apply-filter" data-toggle="tooltip" data-placement="bottom" title="Show only nodes that are selected using the histogram ranges above" class="btn btn-primary btn-sm">Apply</button>
+                            <button id="button-apply-filter" data-toggle="tooltip" data-placement="bottom"
+                                    title="Show only nodes that are selected using the histogram ranges above"
+                                    class="btn btn-primary btn-sm">
+                                Apply
+                            </button>
                             <span class="filter-count"></span> selected out of <span class="total-count"></span> | <a href="javascript:dc.filterAll();dc.renderAll();">Reset</a>
                         </div>
                     </div>
                     <div id="div-edge-attribute-tab" class="tab-pane" role="tabpanel">
-                        <div id="div-edge-size" style="margin-left: 0px; margin-bottom: 10px;" data-toggle="tooltip" data-placement="right" title="Adjust edge thickness">
+                        <div id="div-edge-size" style="margin-left: 0px; margin-bottom: 10px;" data-toggle="tooltip"
+                             data-placement="right" title="Adjust edge thickness">
                             <p><strong>Edge size</strong></p>
                             <input id="div-edge-size-slider" data-slider-id='edge-size-slider' type="text"
-                                   data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="1" />
+                                   data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02"
+                                   data-slider-value="1" />
                             <label id="label_edge_size"></label>
                         </div>
 
-                        <p data-toggle="tooltip" data-placement="right" title="Toggle thickness proportional to edge weight">
-                            <input type="checkbox" id="checkbox-thickness-by-weight" style="width: 12px;"> <strong>Thickness by weight</strong>
+                        <p data-toggle="tooltip" data-placement="right"
+                           title="Toggle thickness proportional to edge weight">
+                            <input type="checkbox" id="checkbox-thickness-by-weight" style="width: 12px;">
+                            <strong>Thickness by weight</strong>
                         </p>
 
                         <p style="margin-top: 5px; margin-bottom: 0;">
-                            <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set a visual indicator of edge direction. Only appropriate for directed networks.">
+                            <div class="form-group" data-toggle="tooltip" data-placement="right"
+                                 title="Set a visual indicator of edge direction. Only appropriate for directed networks.">
                                 <label for="select-edge-direction">Edge direction</label>
                                 <select class="form-control" id="select-edge-direction">
                                     <option value="none">None</option>
@@ -397,7 +514,8 @@ R Amygdala ">Node labels (optional)</label>
                                 </select>
                             </div>
                         </p>
-                        <div id="div-edge-gradient-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
+                        <div id="div-edge-gradient-color-pickers"
+                             style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p style="margin-bottom: 0;">
                                 <label class="control-label" style="display: inline-block;">Start</label>
                                 <div class="input-group">
@@ -413,7 +531,8 @@ R Amygdala ">Node labels (optional)</label>
                         </div>
                         <div id="div-edge-color">
                             <p style="margin-top: 5px; margin-bottom: 0;">
-                                <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set edge color either to the color of the connecting nodes or a color scale that represents variations in edge weight. If edges are coloured by nodes, you have the option to select a color for edge attached to nodes of two different colours (e.g., inter-module edges).">
+                                <div class="form-group" data-toggle="tooltip" data-placement="right"
+                                     title="Set edge color either to the color of the connecting nodes or a color scale that represents variations in edge weight. If edges are coloured by nodes, you have the option to select a color for edge attached to nodes of two different colours (e.g., inter-module edges).">
                                     <label for="select-edge-color">Color edges by</label>
                                     <select class="form-control" id="select-edge-color">
                                         <option value="none">None</option>
@@ -422,120 +541,138 @@ R Amygdala ">Node labels (optional)</label>
                                     </select>
                                 </div>
                             </p>
-                            <div id="div-edge-color-by-node-picker" style="display: none; margin-top: 30px; margin-left: 40px;" data-toggle="tooltip" data-placement="right" title="Set an alternative color for edges with end nodes of different values">
-                                <p><input type="checkbox" id="checkbox-color-transitional-edges" style="width: 12px;"><strong> Customise inter-cluster edges</strong></p>
+                            <div id="div-edge-color-by-node-picker"
+                                 style="display: none; margin-top: 30px; margin-left: 40px;" data-toggle="tooltip"
+                                 data-placement="right"
+                                 title="Set an alternative color for edges with end nodes of different values">
+                                <!--<p><B>Color by node options</B></p>-->
+                                <p>
+                                    <input type="checkbox" id="checkbox-color-transitional-edges"
+                                           style="width: 12px;"><strong> Customise inter-cluster edges</strong>
+                                </p>
                                 <p>
                                     <label for="pick-color-intercluster">Color</label>
                                     <div class="input-group">
-                                        <input type="color" id="input-edge-transitional-color" value="#ee2211" class="form-control" />
+                                        <input type="color" id="input-edge-transitional-color" value="#ee2211"
+                                               class="form-control" />
                                     </div>
                                     <br>
                                 </p>
                             </div>
-                            <div id="div-edge-color-pickers" style="display: none; margin-top: 30px; margin-left: 40px;">
-                                <p><input type="checkbox" id="checkbox-edge-color-force-continuous" style="display:none; width: 12px;"><strong>Treat as continuous</strong></p>
+                            <div id="div-edge-color-pickers"
+                                 style="display: none; margin-top: 0px; margin-left: 10px; margin-right: 10px">
+                                <!--<p><B>Color by weight options</B></p>-->
+                                <!--<p>
+    <input type="checkbox" id="checkbox-edge-color-force-continuous"
+        style="display:none; width: 12px;"><strong>Treat as continuous</strong>
+    </p>-->
                                 <div id="div-edge-color-continuous">
-                                    <p data-toggle="tooltip" data-placement="right" title="Set specific colours for value ranges">
-                                        <input type="checkbox" id="checkbox-edge-color-discretized" style="width: 12px;"><strong> Discretise continuous values</strong>
-                                    </p>
-                                    <div id="div-edge-color-continuous-discretized" data-toggle="tooltip" data-placement="right" title="Set the number and color of divisions based on value ranges">
-
-                                        <strong>Select number of divisions </strong>
-                                        <select id="select-edge-color-number-discretized-category" class="form-control" style="margin-bottom: 10px;">
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                        </select>
-
-                                        <div id="div-edge-discretized-0">
-                                            <strong>From </strong><input id="input-edge-discretized-0-from" type="text" />
-                                            <br />
-                                            <strong>To </strong><input id="input-edge-discretized-0-to" type="text" />
-                                            <div id="input-edge-discretized-0-color" class="input-group">
-                                                <input type="color" id="input-edge-discretized-0-color" value="#2ecc71" class="form-control" />
-                                            </div>
-                                            <br>
-                                        </div>
-
-                                        <div id="div-edge-discretized-1">
-                                            From:<input id="input-edge-discretized-1-from" type="text" />
-                                            To:<input id="input-edge-discretized-1-to" type="text" />
-                                               <div class="input-group">
-                                                   <input type="color" id="input-edge-discretized-1-color" value="#3498db" class="form-control" />
-                                               </div>
-                                        </div>
-
-                                        <div id="div-edge-discretized-2">
-                                            From:<input id="input-edge-discretized-2-from" type="text" />
-                                            To:<input id="input-edge-discretized-2-to" type="text" />
-                                               <div class="input-group">
-                                                   <input type="color" id="input-edge-discretized-2-color" value="#9b59b6" class="form-control" />
-                                               </div>
-                                            <br>
-                                        </div>
-
-                                        <div id="div-edge-discretized-3">
-                                            From:<input id="input-edge-discretized-3-from" type="text" />
-                                            To:<input id="input-edge-discretized-3-to" type="text" />
-                                               <div class="input-group">
-                                                   <input type="color" id="input-edge-discretized-3-color" value="#f1c40f" class="form-control" />
-                                               </div>
-                                        </div>
-
-                                        <div id="div-edge-discretized-4">
-                                            From:<input id="input-edge-discretized-4-from" type="text" />
-                                            To:<input id="input-edge-discretized-4-to" type="text" />
-                                               <div class="input-group">
-                                                   <input type="color" id="input-edge-discretized-4-color" value="#e74c3c" class="form-control" />
-                                               </div>
-                                            <br>
-                                        </div>
-
-                                    </div>
-                                    <div id="div-edge-color-continuous-normal">
-                                        <p style="margin-bottom: 0;">
-                                            <strong>Minimum</strong>
-                                            <div class="input-group">
-                                                <input type="color" id="input-edge-min-color" value="#ffff00" class="form-control" />
-                                            </div>
-
-                                        </p>
-                                        <p style="margin-top: 0;">
-                                            <strong>Maximum</strong>
-                                            <div class="input-group">
-                                                <input type="color" id="input-edge-max-color" value="#ff0000" class="form-control" />
-                                            </div>
-                                            <br>
-                                        </p>
-                                    </div>
+                                    <label for="select-edge-color-weight-map-mode">Colormap</label>
+                                    <select class="form-control" id="select-edge-color-weight-map-mode">
+                                        <option value="continuous-minmax">Min-max</option>
+                                        <option value="continuous-signedp">Signed p-value (blue/purple negative, red/yellow positive)</option>
+                                        <option value="continuous-signedcorrelation">Correlation</option>
+                                        <option value="continuous-custom">Custom</option>
+                                    </select>
                                 </div>
 
-                                <div id="div-edge-color-discrete">
-                                    <p>
-                                        key:
-                                        <select id="select-edge-key" style="background-color: #feeebd"></select>
+                                <!--<p data-toggle="tooltip" data-placement="right">
+        <input type="checkbox" disabled id="checkbox-edge-color-discretized"
+               style="width: 12px;"><strong> Discretise continuous values</strong>
+    </p>-->
+
+
+                                <!--<div id="div-edge-color-continuous-minmax">
+                                    <p style="margin-bottom: 0;">
+                                        <strong>Minimum</strong>
                                         <div class="input-group">
-                                            <input type="color" id="input-edge-color" value="#ffff00" class="form-control" />
+                                            <input type="color" id="input-edge-minmax-min-color" value="#ffff00"
+                                                   class="form-control" />
+                                        </div>
+                                    </p>
+                                    <p style="margin-top: 0;">
+                                        <strong>Maximum</strong>
+                                        <div class="input-group">
+                                            <input type="color" id="input-edge-minmax-max-color" value="#ff0000"
+                                                   class="form-control" />
                                         </div>
                                         <br>
                                     </p>
-
                                 </div>
+
+                                <div id="div-edge-color-continuous-signedcorrelation">
+                                    <p style="margin-bottom: 0;">
+                                        <strong>-1 color</strong>
+                                        <div class="input-group">
+                                            <input type="color" id="input-edge-correlation-minusone-color" value="#0000ff"
+                                                   class="form-control" />
+                                        </div>
+                                    </p>
+                                    <p style="margin-bottom: 0;">
+                                        <strong>Zero color</strong>
+                                        <div class="input-group">
+                                            <input type="color" id="input-edge-correlation-zero-color" value="#007700"
+                                                   class="form-control" />
+                                        </div>
+                                    </p>
+                                    <p style="margin-bottom: 0;">
+                                        <strong>+1 color</strong>
+                                        <div class="input-group">
+                                            <input type="color" id="input-edge-correlation-plusone-color" value="#ff0000"
+                                                   class="form-control" />
+                                        </div>
+                                    </p>
+                                </div>-->
+
+                                <!--<input type="hidden" id="input-edge-custom-tickx" value="" />
+                                <input type="hidden" id="input-edge-custom-tickcolors" value="" />-->
+
+                                <div id="div-checkbox-edge-color-is-discrete" style="display: block; padding-bottom: 10px; padding-top: 10px;">
+                                    <input type="checkbox" id="checkbox-edge-color-is-discrete"
+                                           style="width: 12px;"
+                                           data-toggle="tooltip"
+                                           data-placement="right"
+                                           title="The colormap will be discrete ranges according to the control colors"><strong>Colormap is discretized</strong>
+                                </div>
+
+                                <input id="div-edge-colormap-slider" data-slider-id='edge-colormap-slider' type="text"
+                                       data-slider-min="0.0" data-slider-max="1" data-slider-step="0.02" data-slider-value="0.5"
+                                       style="width: 100%;" />
+
+                                <br />
+                                <div id="div-edge-colormap-custom-limits" style="display: block; padding-bottom: 10px; padding-top: 10px;">
+                                    Min: <input type="number" id="edge-colormap-custom-min" size="6" />
+                                    Max: <input type="number" id="edge-colormap-custom-max" size="6" />
+                                    <button id="edge-colormap-custom-apply">Apply</button>
+                                </div>
+
+                                    <!--<p data-toggle="tooltip" data-placement="right"
+                                        title="Set specific colours for value ranges">-->
+                                </div>
+
+                                <!--<div id="div-edge-color-discrete">
+        <p>
+            key:
+            <select id="select-edge-key" style="background-color: #feeebd"></select>
+        <div class="input-group">
+            <input type="color" id="input-edge-color" value="#ffff00"
+                class="form-control" />
+        </div>
+        <br>
+        </p>
+
+    </div>-->
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
-            <div style="position: absolute; bottom: 0">
-                <label data-toggle="tooltip" data-placement="top" title="Toggle tooltip help">
-                    <input id="checkbox-tips" type="checkbox" value="" checked>Show tips
-                </label>
-            </div>
+        </div>
+        <div style="position: absolute; bottom: 0">
+            <label data-toggle="tooltip" data-placement="top" title="Toggle tooltip help">
+                <input id="checkbox-tips" type="checkbox" value="" checked>Show tips
+            </label>
         </div>
     </div>
-
 
     <!-- Page structure -->
     <div id="outer-view-panel">
@@ -570,25 +707,56 @@ R Amygdala ">Node labels (optional)</label>
                 </div>
                 <div class="modal-body">
                     <h2>Layout</h2>
-                    <p>The 2D graph layout can use a selection of layout algorithms to achieve different visual results, in some cases having very different running times.</p>
+                    <p>
+                        The 2D graph layout can use a selection of layout algorithms to achieve different visual results,
+                        in some cases having very different running times.
+                    </p>
                     <h3>cola</h3>
                     <p>Produces the most attractive layout for most graphs.</p>
-                    <p>The CoLa layout algorithm is implemented with <a href="http://marvl.infotech.monash.edu/webcola/" target="_blank">WebCola</a>, developed by Tim Dwyer of the Monash Adaptive Visualisation Lab (<a href="http://marvl.infotech.monash.edu.au/" target="_blank">MArVL</a>).</p>
+                    <p>
+                        The CoLa layout algorithm is implemented with <a href="http://marvl.infotech.monash.edu/webcola/"
+                                                                         target="_blank">WebCola</a>, developed by Tim Dwyer of the Monash Adaptive Visualisation Lab
+                        (<a href="http://marvl.infotech.monash.edu.au/" target="_blank">MArVL</a>).
+                    </p>
                     <h3>cola-flow</h3>
-                    <p>A variation on the CoLa layout for directed graphs, which will arrange nodes so that edges run generally downward.</p>
+                    <p>
+                        A variation on the CoLa layout for directed graphs, which will arrange nodes so that edges run
+                        generally downward.
+                    </p>
                     <h3>cose</h3>
-                    <p>The <a href="http://js.cytoscape.org/#layouts/cose" target="_blank">COSE</a> (Compound Spring Embedder) layout algortithm is a physics-based method that produces fast results for large, complex graphs. </p>
+                    <p>
+                        The <a href="http://js.cytoscape.org/#layouts/cose" target="_blank">COSE</a> (Compound Spring
+                        Embedder) layout algortithm is a physics-based method that produces fast results for large,
+                        complex graphs.
+                    </p>
                     <h3>cose-bilkent</h3>
-                    <p>A <a href="https://github.com/cytoscape/cytoscape.js-cose-bilkent" target="_blank">variation</a> on the cose layout developed by the <a href="http://cs.bilkent.edu.tr/~ivis/" target="_blank">i-Vis group</a> of Bilkent University. It aims for a good balance between looks and speed</p>
+                    <p>
+                        A <a href="https://github.com/cytoscape/cytoscape.js-cose-bilkent" target="_blank">variation</a>
+                        on the cose layout developed by the <a href="http://cs.bilkent.edu.tr/~ivis/"
+                                                               target="_blank">i-Vis group</a> of Bilkent University. It aims for a good balance between
+                        looks and speed
+                    </p>
                     <h3>grid</h3>
-                    <p>Simple gridwise positioning with no meaningful edge handling. This will provide the fastest possible result, but will have limited utility for complex graphs.</p>
+                    <p>
+                        Simple gridwise positioning with no meaningful edge handling. This will provide the fastest
+                        possible result, but will have limited utility for complex graphs.
+                    </p>
                     <h3>concentric</h3>
-                    <p>Simple positioning into concentric circles. It has similar performance and drawbacks to the grid layout.</p>
+                    <p>
+                        Simple positioning into concentric circles. It has similar performance and drawbacks to the grid
+                        layout.
+                    </p>
                     <h2>Bundle</h2>
-                    <p>The bundling option is handled differently by each layout option, but generally attempts to group nodes of the same value for the given attribute.</p>
+                    <p>
+                        The bundling option is handled differently by each layout option, but generally attempts to group
+                        nodes of the same value for the given attribute.
+                    </p>
                     <h2>Controls</h2>
                     <p>Use shift + click or shift + drag to select multiple nodes, which can then be moved together.</p>
-                    <p>Nodes that have been bundled together can be moved as a group by hovering with their area until a box around the group is visible, then dragging.</p>
+                    <p>
+                        Nodes that have been bundled together can be moved as a group by hovering with their area until a
+                        box around the group is visible, then dragging.
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -605,21 +773,46 @@ R Amygdala ">Node labels (optional)</label>
                     <h4 class="modal-title">Circular layout</h4>
                 </div>
                 <div class="modal-body">
-                    <p>This visualisation places nodes around a circular arrangement, with edges crossing the circle and optionally bundled by value.</p>
-                    <p>It is an adaptation and extension of the <a href="https://d3js.org/" target="_blank">D3.js</a> example for <a href="http://mbostock.github.io/d3/talk/20111116/bundle.html" target="_blank">hierarchical edge bundling</a>.</p>
+                    <p>
+                        This visualisation places nodes around a circular arrangement, with edges crossing the circle and
+                        optionally bundled by value.
+                    </p>
+                    <p>
+                        It is an adaptation and extension of the <a href="https://d3js.org/" target="_blank">D3.js</a>
+                        example for <a href="http://mbostock.github.io/d3/talk/20111116/bundle.html"
+                                       target="_blank">hierarchical edge bundling</a>.
+                    </p>
                     <h2>Options</h2>
                     <h3>Display all nodes</h3>
-                    <p>Toggle whether to include or exclude nodes with no connected edges under the current filter and edge visibility settings.</p>
+                    <p>
+                        Toggle whether to include or exclude nodes with no connected edges under the current filter and
+                        edge visibility settings.
+                    </p>
                     <h3>Bundle</h3>
-                    <p>Group nodes together based on the given attribute value. Edges wil also be bundled together to better differentiate connectivity between bundle groups.</p>
+                    <p>
+                        Group nodes together based on the given attribute value. Edges wil also be bundled together to
+                        better differentiate connectivity between bundle groups.
+                    </p>
                     <p>For continuous values this will group into bands.</p>
-                    <p>For attributes where a node can have multiple values (e.g., the assignment of a single node to multiple modules in an overlapping module decomposition), nodes will be grouped with other nodes that have exactly the same set of values. Nodes with more values (e.g., belong to more modules) will be placed in concentric circles closer to the centre.</p>
+                    <p>
+                        For attributes where a node can have multiple values (e.g., the assignment of a single node to
+                        multiple modules in an overlapping module decomposition), nodes will be grouped with other nodes
+                        that have exactly the same set of values. Nodes with more values (e.g., belong to more modules)
+                        will be placed in concentric circles closer to the centre.
+                    </p>
                     <h3>Sort</h3>
-                    <p>Assign an attribute used to determine the order of nodes around the circle. If bundling is applied, this will affect the order within a bundle, but not the bundles themselves.</p>
+                    <p>
+                        Assign an attribute used to determine the order of nodes around the circle. If bundling is
+                        applied, this will affect the order within a bundle, but not the bundles themselves.
+                    </p>
                     <h3>Label</h3>
                     <p>Set the node label to the label data, or alternatively the value of a given attribute.</p>
                     <h3>Histogram</h3>
-                    <p>The histogram option allows for the addition of a bar graph representation of node attributes to be added on the circle's outer edge. Set the number and assignment of attributes, and use the color palette to set the respective colours.</p>
+                    <p>
+                        The histogram option allows for the addition of a bar graph representation of node attributes to
+                        be added on the circle's outer edge. Set the number and assignment of attributes, and use the
+                        color palette to set the respective colours.
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -636,11 +829,25 @@ R Amygdala ">Node labels (optional)</label>
                     <h4 class="modal-title">Brain surface model</h4>
                 </div>
                 <div class="modal-body">
-                    <p>The model used to represent the brain surface can changed to a preset model or from a custom model file uploaded by the user.</p>
-                    <p>To use a custom model, select the "Upload" option, specify the file to use with the "Choose File" button, and finally press "Upload" to transfer and apply the new model.</p>
-                    <p>The model must be in <a href="http://paulbourke.net/dataformats/obj/" target="_blank">Wavefront OBJ</a> (.obj) format. Some 3D modelling software such as <a href="http://www.autodesk.com/products/3ds-max/overview" , target="_blank">3ds Max</a> can import and export to this format.</p>
+                    <p>
+                        The model used to represent the brain surface can changed to a preset model or from a custom
+                        model file uploaded by the user.
+                    </p>
+                    <p>
+                        To use a custom model, select the "Upload" option, specify the file to use with the "Choose File"
+                        button, and finally press "Upload" to transfer and apply the new model.
+                    </p>
+                    <p>
+                        The model must be in <a href="http://paulbourke.net/dataformats/obj/" target="_blank">
+                            Wavefront
+                            OBJ
+                        </a> (.obj) format. Some 3D modelling software such as <a href="http://www.autodesk.com/products/3ds-max/overview" , target="_blank">3ds Max</a> can
+                        import and export to this format.
+                    </p>
                     <br />
-                    <a id="download-example-model" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Download an example model file, to get an example of the format..." href="examples/graphdata/BrainMesh_ICBM152.obj">Get example model</a>
+                    <a id="download-example-model" class="btn btn-sm btn-primary" data-toggle="tooltip"
+                       data-placement="top" title="Download an example model file, to get an example of the format..."
+                       href="examples/graphdata/BrainMesh_ICBM152.obj">Get example model</a>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -653,12 +860,16 @@ R Amygdala ">Node labels (optional)</label>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                     <h4 id="alertModalTitle" class="modal-title">Modal title</h4>
                 </div>
                 <div class="modal-body">
                     <div class="progress">
-                        <div id="progressBar" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
+                        <div id="progressBar" class="progress-bar progress-bar-info progress-bar-striped"
+                             role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"
+                             style="width: 20%">
                             <span class="sr-only">20% Complete</span>
                         </div>
 
@@ -670,11 +881,14 @@ R Amygdala ">Node labels (optional)</label>
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
-    <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                     <h4 id="alertModalTitle" class="modal-title">Export Settings</h4>
                 </div>
                 <div class="modal-body">
@@ -752,8 +966,7 @@ R Amygdala ">Node labels (optional)</label>
     </script>-->
     <script src="extern/three-0.159.0.min.js"></script>
     <!--<script src="extern/three-0.159.0.module.min.js" type="module"></script>-->
-
-     <!--<script src="extern/bootstrap-colorpicker-3.4.0/js/bootstrap-colorpicker.min.js"></script>-->
+    <!--<script src="extern/bootstrap-colorpicker-3.4.0/js/bootstrap-colorpicker.min.js"></script>-->
 
     <script src="extern/OBJLoader.js" type="module"></script>
 
@@ -763,7 +976,6 @@ R Amygdala ">Node labels (optional)</label>
     <!--<script src="../node_modules/d3/dist/d3.min.js" charset="utf-8"></script>-->
     <script src="extern/d3-7.8.5.min.js"></script>
     <!--<script src="extern/d3-transform.js"></script>-->
-
     <!-- seems to be unused-->
     <!--<script src="extern/extra.js"></script>-->
     <!--<script src="../node_modules/crossfilter2/crossfilter.min.js"></script>
@@ -774,7 +986,7 @@ R Amygdala ">Node labels (optional)</label>
     <script src="extern/dc-4.2.7.js"></script>
     <script src="extern/js-yaml-4.1.0.min.js" referrerpolicy="no-referrer"></script>
 
-    <script src="extern/bootstrap-slider-11.0.2.min.js"></script>
+    <script src="extern/bootstrap-slider-11.0.2.js"></script>
     <script src="extern/jquery.ui.touch-punch-0.2.3.min.js"></script>
     <script src="extern/numeric-1.2.6.min.js"></script>
 
@@ -816,5 +1028,5 @@ R Amygdala ">Node labels (optional)</label>
     </script>
 
 </body>
-</html>
 
+</html>

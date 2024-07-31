@@ -68,9 +68,7 @@ class Brain3DApp implements Application, Loopable {
     brainGeometry;
     colaCoords: number[][];
 
-    // color by edge weight map handler
-    edgeWeightColorsObject: EdgeWeightColors;
-
+    
     //Graphs
     circularGraph: CircularGraph;
     colaGraph: Graph3D;
@@ -126,11 +124,13 @@ class Brain3DApp implements Application, Loopable {
     networkType: string;
     prevInBoundingSphere: boolean;
 
+    // constructs colormap functions and colormap canvasses from the global settings EdgeWeightColorSettings object in the application instance
+    edgeWeightColorMapObject: EdgeWeightColorMap;
 
     mouse = {
         dx: 0,
         dy: 0
-    }
+    };
 
     // Constants
     nearClip = 0;
@@ -247,20 +247,20 @@ class Brain3DApp implements Application, Loopable {
                                                 this.svg, this.svgDefs, this.svgAllElements,
                                                 this.d3Zoom, this.commonData, this.saveFileObj);
 
-        console.log(this.id);
-        this.edgeWeightColorsObject = new EdgeWeightColors(
-            this,
-            document.getElementById('div-edge-colormap-slider'),
-            document.getElementById('div-edge-colormap-canvas-' + this.id),
-            document.getElementById('checkbox-edge-color-is-discrete')
-        );
+        //console.log(this.id);
+        //this.edgeWeightColorsObject = new EdgeWeightColors(
+        //    this,
+        //    document.getElementById('div-edge-colormap-slider'),
+        //    document.getElementById('div-edge-colormap-canvas-' + this.id),
+        //    document.getElementById('checkbox-edge-color-is-discrete')
+        //);
 
-        this.edgeWeightColorsObject.reset(
-            CommonUtilities.linspace(-1, 1, 256),
-            [-1, 1],
-            ["#000000", "#FFFFFF"],
-            false,
-            true);
+        //this.edgeWeightColorsObject.reset(
+        //    CommonUtilities.linspace(-1, 1, 256),
+        //    [-1, 1],
+        //    ["#000000", "#FFFFFF"],
+        //    false,
+        //    true);
 
         //initialize display
         this.initialiseDisplay();
@@ -579,7 +579,10 @@ class Brain3DApp implements Application, Loopable {
             .attr("width", jDiv.width())
             .attr("height", jDiv.height() - sliderSpace);
 
-        //console.log(this.svg);
+
+        this.edgeWeightColorMapObject = new EdgeWeightColorMap(
+            document.getElementById('div-edge-colormap-canvas-' + this.id));
+
         try {
             this.svg.attr("id", "svgGraph" + this.id);
             this.svg
@@ -1541,17 +1544,96 @@ class Brain3DApp implements Application, Loopable {
 
     edgeColorOnChange(colorMode: string, config?) {
         if ((!this.physioGraph) || (!this.colaGraph)) return;
-
-
         
         this.colorMode = colorMode;
-        this.edgeWeightColorsObject.setColormapVisibility(colorMode == 'weight');
         
         this.colorConfig = config;
 
-        this.physioGraph.setEdgeColorConfig(this.colorMode, config);
-        this.colaGraph.setEdgeColorConfig(this.colorMode, config);
-        if (this.circularGraph) this.circularGraph.circularLayoutEdgeColorModeOnChange(colorMode, config);
+        // if the colorMode is weight, we need to update the color functions
+        // and colors based on the settings
+
+        if (this.colorMode == 'weight') {
+            // set the colormap functions
+            // set all the edges to use the updated function and that they need their colour changed
+            if (config.type === "continuous-minmax") {
+                // set the colormap according to the minimum and maximum weights in the physioGraph
+                this.edgeWeightColorMapObject.update(
+                    CommonUtilities.linspace(this.physioGraph.edgeMinWeight, this.physioGraph.edgeMaxWeight, 256),
+                    [this.physioGraph.edgeMinWeight, this.physioGraph.edgeMaxWeight],
+                    config.tickColors,
+                    false,
+                    true);
+            } else if (config.type === "continuous-signedcorrelation") {
+                this.edgeWeightColorMapObject.update(
+                    config.cmapX,
+                    config.tickX,
+                    config.tickColors,
+                    config.isDiscrete,
+                    true);
+            } else if (config.type === "continuous-signedp") {
+                this.edgeWeightColorMapObject.update(
+                    config.cmapX,
+                    config.tickX,
+                    config.tickColors,
+                    false,
+                    true);
+            } else if (config.type === "continuous-custom") {
+                this.edgeWeightColorMapObject.update(
+                    config.cmapX,
+                    config.tickX,
+                    config.tickColors,
+                    config.isDiscrete,
+                    true);
+
+                // set the cmap, tick locations and colours via the config, use defaults if not found
+                //let realTickX;
+                //let realTickColors;
+                //let realCMAPX;
+
+                //if (config['tickx'].length == 0) {
+                //    // default, we use the data limits and go from black to purple
+                //    realCMAPX = CommonUtilities.linspace(this.edgeMinWeight, this.edgeMaxWeight, 256);
+                //    realTickX = [this.edgeMinWeight, this.edgeMaxWeight];
+                //    realTickColors = ['#000000', '#FF00FF'];
+                //    // set the radio box for the limits to be "from data"
+                //    (<any>$('#edge-colormap-custom-limits-data')).attr('checked', true);
+                //    (<any>$('#edge-colormap-custom-limits-fixed-min')).attr('disabled', true);
+                //    (<any>$('#edge-colormap-custom-limits-fixed-max')).attr('disabled', true);
+                //} else {
+                //    realCMAPX = CommonUtilities.linspace(config.tickx[0], config.tickx[config.tickx.length - 1], 256);
+                //    realTickX = config.tickx;
+                //    realTickColors = config.tickcolors;
+                //}
+
+                //this.edgeWeightColorsObject.reset(
+                //    realCMAPX,
+                //    realTickX,
+                //    realTickColors,
+                //    false,
+                //    true
+                //);
+
+                //for (var i = 0; i < this.edgeList.length; i++) {
+                //    var edge = this.edgeList[i];
+                //    edge.colorMode = colorMode;
+                //    edge.colorMapFunction = this.edgeWeightColorsObject.d3CMAPfunc;
+                //    edge.isColorChanged = true;
+                //}
+            }
+        }
+
+        // set the cmap function
+        let newConfig;
+        if (config) {
+            newConfig = JSON.parse(JSON.stringify(config));
+            newConfig.CMAPFunc = this.edgeWeightColorMapObject.d3CMAPfunc;
+        } else {
+            newConfig = null;
+        }
+        
+        this.physioGraph.setEdgeColorConfig(this.colorMode, newConfig);
+        this.colaGraph.setEdgeColorConfig(this.colorMode, newConfig);
+        if (this.circularGraph) this.circularGraph.circularLayoutEdgeColorModeOnChange(colorMode, newConfig);
         
         this.svgNeedsUpdate = true;
         this.needUpdate = true;
@@ -2391,7 +2473,7 @@ class Brain3DApp implements Application, Loopable {
         var edgeMatrix = this.dataSet.adjMatrixFromEdgeCount(maxEdgesShowable); // Don't create more edges than we will ever be showing
 
         if (this.physioGraph) this.physioGraph.destroy();
-        this.physioGraph = new Graph3D(this.brainObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj, this.edgeWeightColorsObject);
+        this.physioGraph = new Graph3D(this.brainObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj);
 
         if (this.brainSurfaceMode === 0) {
             this.physioGraph.setNodePositions(this.dataSet.brainCoords);
@@ -2404,7 +2486,7 @@ class Brain3DApp implements Application, Loopable {
 
         edgeMatrix = this.dataSet.adjMatrixFromEdgeCount(maxEdgesShowable);
         if (this.colaGraph) this.colaGraph.destroy();
-        this.colaGraph = new Graph3D(this.colaObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj, this.edgeWeightColorsObject);
+        this.colaGraph = new Graph3D(this.colaObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj);
         this.colaGraph.setVisible(false);
         //console.log("this.graph2dContainer");
         //console.log(this.graph2dContainer.selection());
@@ -2674,432 +2756,77 @@ class Brain3DApp implements Application, Loopable {
     draw() {
         this.renderer.render(this.scene, this.camera);
     }
+
+    //updateColormap(cmapX, tickX, drawColormap) {
+    //    this.edgeWeightColorMapObject.update(cmapX, tickX, drawColormap);
+    //}
 }
 
-class EdgeWeightColors {
+class EdgeWeightColorMap {
 
-    // HTML elements
-    // the slider element 
-    private sliderElement: HTMLInputElement;
     // the colormap canvas
     private canvasElement: HTMLCanvasElement;
     private canvasCTX: CanvasRenderingContext2D;
-    // the "is colormap discrete" checkbox
-    private colormapDiscreteCheckbox: HTMLInputElement;
 
-    // convenience variable to make syntax easier to deal with
-    private bootstrapSliderData;
-
-    private brain3DAppObject;
-
-    private drawColormap: boolean;
-    // all cmap x values
-    private cmapX: number[];
-    // tick locations
-    private tickX: number[];
-    // tick strings
-    //private tickStrings: string[]; // dont need to store these because we generate them
-    // tick colours
-    private tickColors: string[];
-
-    // when we recreate the slider, this will be the previous value
-    private valueBeforeRecreate: number;
-
-    // function that map tickX -> tickColors
-    public d3CMAPfunc;
-
-    // whether the slider is enabled or not, will be disabled for fixed colormaps, i.e. p-values, correlation values
-    private sliderEnabled: boolean;
-
-    // is the slider sliding, used to determine whether we need to fire the color picker
-    private sliderSliding: boolean = false;
-
-    private defaultTickColor: string = "#7c7c7c";
+    public d3CMAPfunc: Function;
 
     private reHex: RegExp = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
     private reRGB: RegExp = /^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$/;
-
-    /*
-     * sets private variables and makes a fake initial slider
-     */
-    constructor(brain3DAppObject, sliderElement, canvasElement, colormapDiscreteCheckbox) {
-        this.brain3DAppObject = brain3DAppObject;
-        this.sliderElement = sliderElement;
+    private defaultTickColor: string = "#7c7c7c";
+    constructor(canvasElement) {
         this.canvasElement = canvasElement;
+      
         this.canvasCTX = this.canvasElement.getContext("2d");
-        this.colormapDiscreteCheckbox = colormapDiscreteCheckbox;
-        this.sliderEnabled = false;
-        // this is null on creation because we don't need to preserve the dummy value
-        this.valueBeforeRecreate = null;
-
-        this.tickX = [0, 1];
-        this.tickColors = ['#000000', '#FFFFFF'];
-
-        //console.log(this.sliderElement.parentElement);
-        // initialize the slider with dummy values, we need to do this because it will be reinitialized later
-        $(this.sliderElement)['bootstrapSlider']({
-            range: false,
-            step: 0.01,
-            ticks: [0, 1],
-            ticks_colors: this.tickColors,
-            precision: 2,
-            selection: 'none',
-            enabled: this.sliderEnabled,
-            value: 0.5,
-            select_handle: 'line'
-        })
-        this.bootstrapSliderData = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider');
-        this.drawColormap = false;
         this.canvasElement.style.width = '100%';
         this.canvasElement.style.height = '50px';
         this.canvasElement.width = this.canvasElement.offsetWidth;
         this.canvasElement.height = this.canvasElement.offsetHeight;
-        //console.log(this.canvasElement);
-        //console.log(this.bootstrapSliderData.getElement());
-        //console.log($(this.sliderElement).slider('getValue'));
-        //console.log(this.bootstrapSliderData.getValue());
-        //console.log(this.bootstrapSliderData.getAttribute('ticks'));
-        //console.log(this.bootstrapSliderData.getAttribute('ticks_colors'));
     }
 
-    /*
-     *
-     * cmapX: all the X values
-     * tickX: all the tick values
-     * tickColors: the colours associated with each tick
-     * isDiscrete: do we have a discrete colormap
-     * isEnabled: is the slider enabled
-     */
-    public reset(cmapX, tickX, tickColors, isDiscrete, isEnabled) {
-        if (cmapX.length < 2) {
-            console.log("cmapX.length < 2");
-            return;
-        }
+    //private createCMAPFunc() {
+    //    if ($(this.colormapDiscreteCheckbox).is(':checked')) {
+    //        this.d3CMAPfunc = d3.scaleThreshold()
+    //            .domain(this.tickX)
+    //            .range(this.tickColors);
+    //    } else {
+    //        this.d3CMAPfunc = d3.scaleLinear()
+    //            .domain(this.tickX)
+    //            .range(this.tickColors)
+    //            .unknown(this.defaultTickColor)
+    //            .clamp(true);
+    //    }
 
-        if (tickX.length < 2) {
-            console.log("tickX.length < 2");
-            return;
-        }
+    //    // update the colormap(s)
+    //    for (var i = 0; i < this.applicationsInstances.length; i++) {
+    //        if (this.applicationsInstances[i]) {
+    //            if (this.applicationsInstances[i].physioGraph) {
+    //                this.setGraphEdgesToBeUpdated(this.applicationsInstances[i].physioGraph);
+    //                this.setGraphEdgesCMAPFunc(this.applicationsInstances[i].physioGraph);
+    //            }
+    //            if (this.applicationsInstances[i].colaGraph) {
+    //                this.setGraphEdgesToBeUpdated(this.applicationsInstances[i].colaGraph);
+    //                this.setGraphEdgesCMAPFunc(this.applicationsInstances[i].colaGraph);
+    //            }
+    //            this.applicationsInstances[i].updateColormap(this.cmapX, this.tickX, this.d3CMAPfunc, this.drawColormap);
+    //            this.applicationsInstances[i].needUpdate = true;
+    //            this.applicationsInstances[i].update(0);
+    //        }
+    //    }
+    //}
 
-        // check if the cmapX values are increasing
-        for (let i = 1; i < cmapX.length; i++) {
-            if (cmapX[i] < cmapX[i - 1]) {
-                console.log("cmapX[i] < cmapX[i - 1]");
-                return;
-            }
-        }
-
-        for (let i = 1; i < tickX.length; i++) {
-            if (tickX[i] < tickX[i - 1]) {
-                console.log("tickX[i] < tickX[i - 1]");
-                return;
-            }
-        }
-
-        // check if the lengths of the tickX and tickColors are the same
-        if (tickX.length != tickColors.length) {
-            console.log("tickX.length != tickColors.length")
-            return;
-        }
-
-        // make sure all the tick colours are hex formatted
-        for (let i = 1; i < tickColors.length; i++) {
-            let matchHex = this.reHex.exec(tickColors[i]);
-            if (matchHex === null) {
-                console.log("matchHex === null");
-                return;
-            }
-        }
-
-        $(this.colormapDiscreteCheckbox).prop('checked', isDiscrete);
-        this.sliderEnabled = isEnabled;
-
-        this.cmapX = cmapX.slice();
-        this.tickX = tickX.slice();
-        this.tickColors = tickColors.slice();
-        this.create();
-        // this can be dodgy
-        //if (cmapX[0] != tickX[0] || cmapX[cmapX.length - 1] != tickX[tickX.length - 1]) {
-        //    return;
-        //}
-
-    }
-
-
-    /* 
-     * gets the color for value `val` from the current colormap
-     */
-    public getColor(val) {
-        return this.d3CMAPfunc(val);
-    }
-
-    public setColormapVisibility(t: boolean) {
-        this.drawColormap = t;
-
-        this.updateColormap();
-    }
-
-    public toggleColormapVisibility() {
-        this.drawColormap = !this.drawColormap;
-        
-        this.updateColormap();
-    }
-
-    /*
-     * Sets the colormap function to be continuous or discrete based on the checkbox $('#checkbox-edge-color-is-discrete')
-     */
-    public setDiscreteOrContinuousColormap() {
-        this.createCMAPFuncAndUpdateEdges();
-    }
-
-
-    /*
-     * Resets the edge colormap functions to the existing d3CMAPfunc
-     */
-    private setGraphEdgesCMAPFunc(g) {
-        for (var i = 0; i < g.edgeList.length; i++) {
-            g.edgeList[i].colorMapFunction = this.d3CMAPfunc;
-        }
-        //g.needUpdate = true;
-    }
-    
-    /*
-     * Sets the edge properties of the edges `isColorChanged` to true so the colours get updated.
-     */
-    private setGraphEdgesToBeUpdated(g) {
-        for (var i = 0; i < g.edgeList.length; i++) {
-            g.edgeList[i].isColorChanged = true;
-            
-        }
-        //g.needUpdate = true;
-    }
-
-    private createCMAPFuncAndUpdateEdges() {
-        if ($(this.colormapDiscreteCheckbox).is(':checked')) {
-            this.d3CMAPfunc = d3.scaleThreshold()
-                .domain(this.tickX)
-                .range(this.tickColors);
-        } else {
-            this.d3CMAPfunc = d3.scaleLinear()
-                .domain(this.tickX)
-                .range(this.tickColors)
-                .unknown(this.defaultTickColor)
-                .clamp(true);
-        }
-
-        if (this.brain3DAppObject.physioGraph) {
-            this.setGraphEdgesToBeUpdated(this.brain3DAppObject.physioGraph);
-            this.setGraphEdgesCMAPFunc(this.brain3DAppObject.physioGraph);
-        }
-        if (this.brain3DAppObject.colaGraph) {
-            this.setGraphEdgesToBeUpdated(this.brain3DAppObject.colaGraph);
-            this.setGraphEdgesCMAPFunc(this.brain3DAppObject.colaGraph);
-        }
-        this.brain3DAppObject.needUpdate = true;
-        this.brain3DAppObject.update();
-        // update the colormap
-        this.updateColormap();
-    }
-    /*
-     * recreates the slider with current options
-     */
-    private create(needToResetColors?) {
-
-        $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider').destroy();
-
-        var self = this;
-        let initValue;
-        if (this.valueBeforeRecreate === null) {
-            initValue = (this.cmapX[0] + this.cmapX[this.cmapX.length - 1]) / 2;
-        } else {
-            initValue = this.valueBeforeRecreate;
-        }
-
-        var self = this;
-
-        function onSliderTickColorChange(e) {
-            //console.log('here');
-            //console.log(e);
-            //console.log(this);
-            //console.log($(this).val());
-            let tickIDX = $(this).attr('colorpickeridx');
-
-            //let curTicks = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider').getAttribute('ticks');
-            //let curTicksColors = $(this.sliderElement).slider('getAttribute', 'ticks_colors');
-
-            self.tickColors[tickIDX] = $(this).val();
-
-            // change the color of the tick
-            (<any>$(self.bootstrapSliderData.getElement()))
-                .find('.slider-tick-container')
-                .find('div[tickindex="' + tickIDX + '"]')
-                .css({ 'background': $(this).val() });
-
-            // change the colormap function
-            self.d3CMAPfunc
-                .range(self.tickColors);
-
-            // update the colormap
-            self.updateColormap();
-
-            // store the ticks and colors
-            $('#input-edge-custom-tickcolors').val(JSON.stringify(self.tickColors));
-            $('#input-edge-custom-tickx').val(JSON.stringify(self.tickX));
-            // update all the edges
-            if (self.brain3DAppObject.physioGraph) {
-                self.setGraphEdgesToBeUpdated(self.brain3DAppObject.physioGraph);
-            }
-            if (self.brain3DAppObject.colaGraph) {
-                self.setGraphEdgesToBeUpdated(self.brain3DAppObject.colaGraph);
-            }
-            self.brain3DAppObject.needUpdate = true;
-            self.brain3DAppObject.update();
-        }
-
-        $(this.sliderElement)['bootstrapSlider']({
-            range: false,
-            step: 0.01,
-            ticks: this.tickX,
-            ticks_labels: this.tickX.map(function (elem) { return self.tickLabelFormatter(elem); }),
-            ticks_positions: this.getTickPositions(),
-            ticks_colors: this.tickColors,
-            ticks_colorchange_func: onSliderTickColorChange,
-            selection: 'none',
-            enabled: this.sliderEnabled,
-            value: initValue,
-            select_handle: 'line'
-        });
-
-
-
-        this.createCMAPFuncAndUpdateEdges();
-
-        this.bootstrapSliderData = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider');
-
-        // add event listeners on the slider
-        
-        $(this.sliderElement)['bootstrapSlider']().on('change slide', function (e) { self.onSlide() });
-        $(this.sliderElement)['bootstrapSlider']().on('slideStop', function (e) { self.onSlideStop(e); });
-
-        // store the ticks and colors
-        $('#input-edge-custom-tickcolors').val(JSON.stringify(self.tickColors));
-        $('#input-edge-custom-tickx').val(JSON.stringify(self.tickX));
-
-
-        // update the edges
-        //if (needToResetColors) {
-        //    this.brain3DAppObject.setEdgeColorByWeight();
-        //}
-        
-    }
-    
-    /*
-     * get the percentage (left-to-right) for a set of values in order to set the tick_positions property of bootstrapSlider
-     */
-    private getTickPositions() {
-        var tickPositions = [];
-        var self = this;
-        this.tickX.forEach(function (curTick) {
-            var curCol = 0;
-            if (curTick <= self.cmapX[0]) {
-                curCol = 0;
-            } else if (curTick >= self.cmapX[self.cmapX.length - 1]) {
-                curCol = self.cmapX.length - 1;
-            } else {
-                self.cmapX.some(function (curXX, curIDX) {
-                    if (curXX >= curTick) {
-                        // the value is in between xx[curIDX - 1] and xx[curIDX]
-                        // find the proportion of where it is between those two
-                        let xFrac = (curTick - self.cmapX[curIDX - 1]) / (self.cmapX[curIDX] - self.cmapX[curIDX - 1]);
-
-                        curCol = curIDX - 1 + xFrac;
-                        return true;
-                    }
-                    return false;
-                });
-            }
-            tickPositions.push(curCol / self.cmapX.length * 100);
-        });
-        //console.log(tickPositions);
-        return tickPositions;
-    }
-
-    private onSlide() {
-        this.sliderSliding = true;
-    }
-
-    private onSlideStop(e) {
-        var self = this;
-        //console.log('slideStop()');
-
-        if (!this.sliderSliding) {
-            //console.log(e);
-
-            let curValue = this.bootstrapSliderData.getValue();
-            let curTicks = this.tickX.slice();
-            let curTicksColors = this.tickColors.slice();
-
-            if (curTicks.includes(curValue)) {
-
-                let curTickIDX = curTicks.indexOf(curValue);
-                if (e.originalEvent.button == 1) {
-                    // wheel, select colour
-                    let sliderTickColorPicker = $(this.bootstrapSliderData.getElement())
-                        .find('.slider-tick-container')
-                        .find('input[colorpickeridx="' + curTickIDX + '"]');
-                    $(sliderTickColorPicker).trigger('click');
-                } else if (e.originalEvent.button == 0) {
-                    // left-click, delete
-
-                    // don't delete the extreme ticks
-                    if (curTickIDX != 0 && curTickIDX != self.tickX.length - 1) {
-                        curTicks.splice(curTickIDX, 1);
-                        curTicksColors.splice(curTickIDX, 1);
-                        this.tickX = curTicks;
-                        this.tickColors = curTicksColors;
-                        this.valueBeforeRecreate = curValue;
-                        $('#input-edge-custom-tickcolors').val(JSON.stringify(this.tickColors));
-                        $('#input-edge-custom-tickx').val(JSON.stringify(this.tickX));
-
-                        this.create();
-                    }
-
-                }
-            } else {
-
-                // insert the new location into the ticks
-                var idxToInsert = -1;
-                curTicks.some(function (curTickValue, curTickIDX) {
-                    if (curTickValue > curValue) {
-                        idxToInsert = curTickIDX;
-                        return true;
-                    }
-                    return false;
-                })
-                curTicks.splice(idxToInsert, 0, curValue);
-                curTicksColors.splice(idxToInsert, 0, this.defaultTickColor)
-
-                this.tickX = curTicks;
-                this.tickColors = curTicksColors;
-                this.valueBeforeRecreate = curValue;
-                this.create();
-            }
-        } else {
-            this.sliderSliding = false;
-        }
-
-    }
-
-    private tickLabelFormatter(v) {
-        return v.toPrecision(2);
-    }
-
-    private updateColormap() {
+    update(cmapX, tickX, tickColors, isDiscrete, drawColormap) {
         var self = this;
         //var canvasWidth = this.canvasElement.width;
         //var canvasHeight = this.canvasElement.height;
         //console.log(canvasWidth);
         //console.log(canvasHeight);
+        console.log("EdgeColorMap::update()");
+        console.log(cmapX);
+        console.log(tickX);
+        console.log(tickColors);
+        console.log(isDiscrete);
+        console.log(drawColormap);
+
         const canvasWidth = this.canvasElement.getBoundingClientRect().width;
         const canvasHeight = this.canvasElement.getBoundingClientRect().height;
 
@@ -3117,39 +2844,50 @@ class EdgeWeightColors {
         };
         let colormapWidth = colormapBox.right - colormapBox.left + 1;
 
+        if (isDiscrete) {
+            this.d3CMAPfunc = d3.scaleThreshold()
+                .domain(tickX)
+                .range(tickColors);
+        } else {
+            this.d3CMAPfunc = d3.scaleLinear()
+                .domain(tickX)
+                .range(tickColors)
+                .unknown(this.defaultTickColor)
+                .clamp(true);
+        }
+        this.canvasCTX.rect(0, 0, canvasWidth, canvasHeight);
+        this.canvasCTX.fillStyle = "white";
+        this.canvasCTX.fill();
+        if (!drawColormap) {
+            return;
+        }
+
         // so we are given
         // the X values that we want to sample the domain
         // we need to uniformly resample these values according to the width of the required colormap
         //console.log(colormapWidth);
         //console.log(xx);
         // cell coordinates we need to resample xx at
-        let cmapXResampleX = CommonUtilities.linspace(0, this.cmapX.length - 1, colormapWidth);
+        let cmapXResampleX = CommonUtilities.linspace(0, cmapX.length - 1, colormapWidth);
         //console.log(xxResampleX);
         let resampledCmapX = [];
-
         cmapXResampleX.forEach(function (curCmapXResampleX) {
             var XI = Math.floor(curCmapXResampleX);
             var xFrac = curCmapXResampleX - XI;
 
-            if (XI == self.cmapX.length - 1) {
+            if (XI == cmapX.length - 1) {
                 XI = XI - 1;
                 xFrac = 1;
             }
-            resampledCmapX.push((1 - xFrac) * self.cmapX[XI] + xFrac * self.cmapX[XI + 1]);
+            resampledCmapX.push((1 - xFrac) * cmapX[XI] + xFrac * cmapX[XI + 1]);
         })
-        //console.log(resampledXX);
 
         // clear the canvas
-        this.canvasCTX.rect(0, 0, canvasWidth, canvasHeight);
-        this.canvasCTX.fillStyle = "white";
-        this.canvasCTX.fill();
-        if (!this.drawColormap) {
-            return;
-        }
+        
         var A = this.canvasCTX.createImageData(colormapWidth, colormapBox.bottom - colormapBox.top + 1);
         resampledCmapX.forEach(function (xxVal, curCol) {
             let curColor = self.d3CMAPfunc(xxVal);
-
+            
             let matchRGB = self.reRGB.exec(curColor);
             let matchHex = self.reHex.exec(curColor);
             var curRed = 0;
@@ -3179,7 +2917,7 @@ class EdgeWeightColors {
 
         // do ticks
         // find column for tick
-        this.tickX.forEach(function (curTick, curTickIDX) {
+        tickX.forEach(function (curTick, curTickIDX) {
             var curCol = 0;
             if (curTick <= resampledCmapX[0]) {
                 curCol = 0;
@@ -3197,8 +2935,12 @@ class EdgeWeightColors {
             self.canvasCTX.textAlign = 'center';
             self.canvasCTX.textBaseline = 'top';
             self.canvasCTX.fillStyle = "black";
-            self.canvasCTX.fillText(self.tickLabelFormatter(self.tickX[curTickIDX]), curCol + colormapBox.left, colormapBox.bottom + 3);
+            self.canvasCTX.fillText(self.tickLabelFormatter(tickX[curTickIDX]), curCol + colormapBox.left, colormapBox.bottom + 3);
         });
+    }
+
+    private tickLabelFormatter(v) {
+        return v.toPrecision(2);
     }
 }
 

@@ -17,6 +17,8 @@ class CommonData {
     //public edgeColorByNodeTransition = false;
     //public edgeColorByNodeTransitionColor = "#ee2211";
 
+    public edgeWeightColorSettingsObject: EdgeWeightColorSettings;
+
     coordCallbacks: Array<() => void> = new Array();
     labelCallbacks: Array<() => void> = new Array();
     surfaceCallbacks: Array<() => void> = new Array();
@@ -310,8 +312,21 @@ class SaveFile {
                     colorArray: []
                 },
                 continuousSetting: {
-                    maxColor: "",
-                    minColor: "",
+                    "continuous-minmax": {
+                        tickColors: []
+                    },
+                    "continuous-signedcorrelation": {
+                        tickColors: [],
+                        isDiscrete: false
+                    },
+                    "continuous-signedp": {
+                        tickColors: []
+                    },
+                    "continuous-custom": {
+                        tickX: [],
+                        tickColors: [],
+                        isDiscrete: false
+                    },
                 },
                 discreteSetting: {
                     colorArray: [],
@@ -423,7 +438,7 @@ class SaveFile {
 
         if (this.edgeSettings.colorBy === "weight") {
             this.edgeSettings.weight.type = yamlObj["edge settings"]["weight"]["type"];
-
+            console.trace();
             if (this.edgeSettings.weight.type === "discrete") {
                 this.edgeSettings.weight.discreteSetting.colorArray = yamlObj["edge settings"]["weight"]["color list"];
                 this.edgeSettings.weight.discreteSetting.valueArray = yamlObj["edge settings"]["weight"]["value list"];
@@ -721,3 +736,659 @@ class Attributes {
     }
 }
 
+
+class EdgeWeightColorSettings {
+    // the application instances
+    applicationsInstances: Brain3DApp[];
+
+    // HTML elements
+    // the slider element 
+    private sliderElement: HTMLInputElement;
+
+    // the "is colormap discrete" checkbox
+    private colormapDiscreteCheckbox: HTMLInputElement;
+
+    // the current color mode selection box element
+    private colorModeSelectElement: HTMLSelectElement;
+
+    // convenience variable to make syntax easier to deal with
+    private bootstrapSliderData;
+
+    private drawColormap: boolean;
+    // all cmap x values
+    private cmapX: number[];
+    // tick locations
+    private tickX: number[];
+    // tick strings
+    private tickLabels: string[];
+    // tick colours
+    private tickColors: string[];
+
+    private isDiscrete: Boolean;
+
+    // when we recreate the slider, this will be the previous value
+    private valueBeforeRecreate: number;
+
+    // function that map tickX -> tickColors
+    // the color functions handled per application instance
+    //public d3CMAPfunc;
+
+    // whether the slider is locked or not, will be enabled for fixed colormaps, i.e. p-values, correlation values
+    private lockToTicks: boolean;
+
+    // is the slider sliding, used to determine whether we need to fire the color picker
+    private sliderSliding: boolean = false;
+
+    private defaultTickColor: string = "#7c7c7c";
+
+    private reHex: RegExp = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
+    private reRGB: RegExp = /^rgb\((\d{1,3}), (\d{1,3}), (\d{1, 3})\)$/;
+
+    private defaultConfig = {
+        'continuous-minmax': {
+            cmapX: CommonUtilities.linspace(0, 1, 256),
+            tickX: [0, 1],
+            tickColors: ["#ffff00", "#ff0000"],
+            ticksEditable: false
+        },
+        'continuous-signedcorrelation': {
+            cmapX: CommonUtilities.linspace(-1, 1, 256),
+            tickX: [-1, 0, 1],
+            tickColors: ["#0000ff", "#007700", "#ff0000"],
+            isDiscrete: false,
+            ticksEditable: false
+        },
+        'continuous-signedp': {
+            cmapX: CommonUtilities.linspace(-1, -0.95, 120).concat(
+                CommonUtilities.linspace(-0.94, -0.9, 10),
+                [0],
+                CommonUtilities.linspace(0.9, 0.94, 10),
+                CommonUtilities.linspace(0.95, 1, 120)
+            ),
+            tickX: [-1, -0.95, -0.90, 0, 0.90, 0.95, 1],
+            tickColors: [
+                '#FF00FF', // purple
+                '#00FFFF', // blue-green
+                '#cfcfcf', // grey
+                '#cfcfcf', // grey
+                '#cfcfcf', // grey
+                '#FF3300', // red
+                '#FFFF77', // yellow
+            ],
+            ticksEditable: false
+        },
+        'continuous-custom': {
+            cmapX: CommonUtilities.linspace(0, 1, 256),
+            tickX: [0, 1],
+            tickColors: ["#ffff00", "#ff0000"],
+            isDiscrete: false,
+            ticksEditable: true
+        }
+    }
+
+    private emptyConfig = {
+        'continuous-minmax': {
+            cmapX: CommonUtilities.linspace(0, 1, 256),
+            tickX: [0, 1],
+            tickColors: [], // these can be customised
+            ticksEditable: false
+        },
+        'continuous-signedcorrelation': {
+            cmapX: CommonUtilities.linspace(-1, 1, 256),
+            tickX: [-1, 0, 1],
+            tickColors: [], // these can be custom
+            isDiscrete: false,
+            ticksEditable: false
+        },
+        'continuous-signedp': {
+            cmapX:
+                CommonUtilities.linspace(-1, -0.95, 120).concat(
+                    CommonUtilities.linspace(-0.94, -0.9, 10),
+                    [0],
+                    CommonUtilities.linspace(0.9, 0.94, 10),
+                    CommonUtilities.linspace(0.95, 1, 120)
+                ),
+            tickX: [-1, -0.95, -0.90, 0, 0.90, 0.95, 1],
+            tickColors: [
+                '#FF00FF', // purple
+                '#00FFFF', // blue-green
+                '#cfcfcf', // grey
+                '#cfcfcf', // grey
+                '#cfcfcf', // grey
+                '#FF3300', // red
+                '#FFFF77', // yellow
+            ],
+            ticksEditable: false
+        },
+        'continuous-custom': {
+            cmapX: CommonUtilities.linspace(0, 1, 256),
+            tickX: [],
+            tickColors: [],
+            isDiscrete: false,
+            ticksEditable: true
+        }
+    }
+
+    private config = {
+        'continuous-minmax': {
+            cmapX: CommonUtilities.linspace(0, 1, 256),
+            tickX: [0, 1],
+            tickColors: [], // these can be customised
+            ticksEditable: false
+        },
+        'continuous-signedcorrelation': {
+            cmapX: CommonUtilities.linspace(-1, 1, 256),
+            tickX: [-1, 0, 1],
+            tickColors: [], // these can be custom
+            isDiscrete: false,
+            ticksEditable: false
+        },
+        'continuous-signedp': {
+            cmapX:
+                CommonUtilities.linspace(-1, -0.95, 120).concat(
+                    CommonUtilities.linspace(-0.94, -0.9, 10),
+                    [0],
+                    CommonUtilities.linspace(0.9, 0.94, 10),
+                    CommonUtilities.linspace(0.95, 1, 120)
+                ),
+            tickX: [-1, -0.95, -0.90, 0, 0.90, 0.95, 1],
+            tickColors: [
+                '#FF00FF', // purple
+                '#00FFFF', // blue-green
+                '#cfcfcf', // grey
+                '#cfcfcf', // grey
+                '#cfcfcf', // grey
+                '#FF3300', // red
+                '#FFFF77', // yellow
+            ],
+            ticksEditable: false
+        },
+        'continuous-custom': {
+            cmapX: CommonUtilities.linspace(0, 1, 256),
+            tickX: [],
+            tickColors: [],
+            isDiscrete: false,
+            ticksEditable: true
+        }
+    }
+
+    /*
+     * sets private variables and makes a fake initial slider
+     */
+    constructor(applicationsInstances, sliderElement, colormapDiscreteCheckbox, colorModeSelectElement) {
+        this.applicationsInstances = applicationsInstances;
+        this.sliderElement = sliderElement;
+        this.colormapDiscreteCheckbox = colormapDiscreteCheckbox;
+        this.colorModeSelectElement = colorModeSelectElement;
+        // this is null on creation because we don't need to preserve the dummy value
+        this.valueBeforeRecreate = null;
+
+        this.tickX = [0, 1];
+        this.tickColors = ['#000000', '#FFFFFF'];
+
+        //console.log(this.sliderElement.parentElement);
+        // initialize the slider with dummy values, we need to do this because it will be reinitialized later
+        $(this.sliderElement)['bootstrapSlider']({
+            range: false,
+            step: 0.05,
+            ticks: [0, 1],
+            ticks_colors: this.tickColors,
+            precision: 2,
+            selection: 'none',
+            enabled: true,
+            value: 0.5,
+            select_handle: 'line'
+        })
+        this.bootstrapSliderData = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider');
+        //console.log(this.canvasElement);
+        //console.log(this.bootstrapSliderData.getElement());
+        //console.log($(this.sliderElement).slider('getValue'));
+        //console.log(this.bootstrapSliderData.getValue());
+        //console.log(this.bootstrapSliderData.getAttribute('ticks'));
+        //console.log(this.bootstrapSliderData.getAttribute('ticks_colors'));
+        var self = this;
+        (<any>$(colormapDiscreteCheckbox)).on('click', function () {
+            let curColorMapMode = (<any>$(self.colorModeSelectElement)).val();
+
+            self.config[curColorMapMode].isDiscrete = (<any>$(colormapDiscreteCheckbox)).is(':checked');
+            for (var i = 0; i < self.applicationsInstances.length; i++) {
+                if (self.applicationsInstances[i]) {
+
+                    self.applicationsInstances[i].edgeColorOnChange('weight', {
+                        type: curColorMapMode,
+                        cmapX: self.config[curColorMapMode].cmapX,
+                        tickX: self.config[curColorMapMode].tickX,
+                        tickColors: self.config[curColorMapMode].tickColors,
+                        isDiscrete: self.config[curColorMapMode].isDiscrete
+                    });
+                }
+            }
+        });
+
+        (<any>$('#edge-colormap-custom-apply')).on('click', function () {
+            let curColorMapMode = (<any>$(self.colorModeSelectElement)).val();
+
+            let curMin = self.config[curColorMapMode].tickX[0];
+            let curMax = self.config[curColorMapMode].tickX[self.config[curColorMapMode].tickX.length - 1];
+
+            let newMin = parseFloat((<any>$('#edge-colormap-custom-min')).val());
+            let newMax = parseFloat((<any>$('#edge-colormap-custom-max')).val());
+            if (newMax <= newMin) {
+                return;
+            }
+            self.config[curColorMapMode].cmapX = CommonUtilities.linspace(newMin, newMax, 256);
+
+            // scale the ticks by the new limits
+            for (var i = 0; i < self.config[curColorMapMode].tickX.length; i++) {
+                self.config[curColorMapMode].tickX[i] = (self.config[curColorMapMode].tickX[i] - curMin) / (curMax - curMin);
+                self.config[curColorMapMode].tickX[i] = newMin + self.config[curColorMapMode].tickX[i] * (newMax - newMin);
+            }
+            let curValue = self.bootstrapSliderData.getValue();
+            self.valueBeforeRecreate = (curValue - curMin) / (curMax - curMin);
+            self.valueBeforeRecreate = newMin + self.valueBeforeRecreate * (newMax - newMin);
+
+            // reset the sliders
+            self.reset(self.config[curColorMapMode].cmapX,
+                self.config[curColorMapMode].tickX,
+                self.config[curColorMapMode].tickColors,
+                self.config[curColorMapMode].isDiscrete,
+                false
+            );
+            for (var i = 0; i < self.applicationsInstances.length; i++) {
+                if (self.applicationsInstances[i]) {
+
+                    self.applicationsInstances[i].edgeColorOnChange('weight', {
+                        type: curColorMapMode,
+                        cmapX: self.config[curColorMapMode].cmapX,
+                        tickX: self.config[curColorMapMode].tickX,
+                        tickColors: self.config[curColorMapMode].tickColors,
+                        isDiscrete: self.config[curColorMapMode].isDiscrete
+                    });
+                }
+            }
+        })
+    }
+
+    /*
+     *
+     * cmapX: all the X values
+     * tickX: all the tick values
+     * tickColors: the colours associated with each tick
+     * isDiscrete: do we have a discrete colormap
+     * lockToTicks: lock the selections to ticks, ticks can change colour but are not editable
+     */
+    public reset(cmapX, tickX, tickColors, isDiscrete, lockToTicks, tickLabels?) {
+        console.log("reset()");
+        console.log(cmapX);
+        console.log(tickX);
+        console.log(tickColors);
+        console.log(lockToTicks);
+
+        if (!this.isTicksValid(cmapX)) {
+            console.log("cmapX invalid");
+            return;
+        }
+        if (!this.isTicksValid(tickX)) {
+            console.log("tickX invalid");
+            return;
+        }
+
+        // check if the lengths of the tickX and tickColors are the same
+        if (tickX.length != tickColors.length) {
+            console.log("tickX.length != tickColors.length")
+            return;
+        }
+
+        // make sure all the tick colours are hex formatted
+        if (!this.isTicksColorsValid(tickColors)) {
+            console.log("matchHex === null");
+            return;
+        }
+
+        //$(this.colormapDiscreteCheckbox).prop('checked', isDiscrete);
+        this.lockToTicks = lockToTicks;
+
+        this.cmapX = cmapX.slice();
+        this.tickX = tickX.slice();
+        this.tickColors = tickColors.slice();
+        this.isDiscrete = isDiscrete;
+        if (tickLabels) {
+            this.tickLabels = tickLabels.slice();
+        } else {
+            this.tickLabels = [];
+        }
+
+        this.create();
+        // this can be dodgy
+        //if (cmapX[0] != tickX[0] || cmapX[cmapX.length - 1] != tickX[tickX.length - 1]) {
+        //    return;
+        //}
+
+    }
+
+    private isTicksColorsValid(T) {
+        // make sure all the tick colours are hex formatted
+        for (let i = 1; i < T.length; i++) {
+            let matchHex = this.reHex.exec(T[i]);
+            if (matchHex === null) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private isTicksValid(T) {
+
+        if (T.length < 2) {
+            console.log("cmapX.length < 2");
+            return false;
+        }
+
+        for (let i = 1; i < T.length; i++) {
+            if (T[i] < T[i - 1]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* 
+     * Gets the config for a particular mode.
+     * If the configuration is empty (empty tickColors) then it is copied from the default and returned
+     */
+    public getConfig(mode) {
+        if (this.config.hasOwnProperty(mode)) {
+            if (this.config[mode].tickColors.length == 0) {
+                this.config[mode] = structuredClone(this.defaultConfig[mode]);
+            }
+            return this.config[mode];
+        }
+        return null;
+    }
+
+    /*
+     * Used to set the config when loading settings from a file.
+     */
+    public setConfig(newConfig) {
+        // set to empty config
+        this.config = structuredClone(this.emptyConfig);
+
+        if (newConfig['continuous-minmax']) {
+            if (newConfig['continuous-minmax'].hasOwnProperty('tickColors')) {
+                if (this.isTicksColorsValid(newConfig['continuous-minmax'].tickColors)
+                ) {
+                    this.config['continuous-minmax'].tickColors = newConfig['continuous-minmax'].tickColors.slice();
+                }
+            }
+        }
+
+        if (newConfig['continuous-signedcorrelation']) {
+            if (newConfig['continuous-signedcorrelation'].hasOwnProperty('tickColors') &&
+                newConfig['continuous-signedcorrelation'].hasOwnProperty('isDiscrete')) {
+                if (this.isTicksColorsValid(newConfig['continuous-signedcorrelation'].tickColors)
+                ) {
+                    this.config['continuous-signedcorrelation'].tickColors = newConfig['continuous-signedcorrelation'].tickColors.slice();
+                    this.config['continuous-signedcorrelation'].isDiscrete = newConfig['continuous-signedcorrelation'].isDiscrete;
+                }
+            }
+        }
+
+        if (newConfig['continuous-signedp']) {
+            if (newConfig['continuous-signedp'].hasOwnProperty('tickColors')) {
+                if (this.isTicksColorsValid(newConfig['continuous-signedp'].tickColors)
+                ) {
+                    this.config['continuous-signedp'].tickColors = newConfig['continuous-signedp'].tickColors.slice();
+                }
+            }
+        }
+
+        if (newConfig['continuous-custom']) {
+            if (newConfig['continuous-custom'].hasOwnProperty('tickX') &&
+                newConfig['continuous-custom'].hasOwnProperty('tickColors') &&
+                newConfig['continuous-custom'].hasOwnProperty('isDiscrete')) {
+                if (this.isTicksValid(newConfig['continuous-custom'].tickX) &&
+                    this.isTicksColorsValid(newConfig['continuous-custom'].tickColors)
+                ) {
+                    if (newConfig['continuous-custom'].tickX.length == newConfig['continuous-custom'].tickColors.length) {
+                        this.config['continuous-custom'].tickX = newConfig['continuous-custom'].tickX.slice();
+                        this.config['continuous-custom'].tickColors = newConfig['continuous-custom'].tickColors.slice();
+                        this.config['continuous-custom'].isDiscrete = newConfig['continuous-custom'].isDiscrete;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*
+     * recreates the slider with current options
+     */
+    private create(needToResetColors?) {
+
+        $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider').destroy();
+
+        var self = this;
+        let initValue;
+        if (this.valueBeforeRecreate === null) {
+            initValue = (this.cmapX[0] + this.cmapX[this.cmapX.length - 1]) / 2;
+        } else {
+            initValue = this.valueBeforeRecreate;
+        }
+
+        var self = this;
+
+        function onSliderTickColorChange(e) {
+            //console.log(e);
+            //console.log(this);
+            //console.log($(this).val());
+            let tickIDX = $(this).attr('colorpickeridx');
+
+            //let curTicks = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider').getAttribute('ticks');
+            //let curTicksColors = $(this.sliderElement).slider('getAttribute', 'ticks_colors');
+
+            self.tickColors[tickIDX] = $(this).val();
+
+            // change the color of the tick
+            (<any>$(self.bootstrapSliderData.getElement()))
+                .find('.slider-tick-container')
+                .find('div[tickindex="' + tickIDX + '"]')
+                .css({ background: $(this).val() });
+
+            // change the colormap function
+            //self.d3CMAPfunc
+            //    .range(self.tickColors);
+            let curColorMapMode = (<any>$(self.colorModeSelectElement)).val();
+
+            self.config[curColorMapMode].tickColors[tickIDX] = $(this).val();
+
+            // update the colours of the edges on the graphs and the colormaps
+            for (var i = 0; i < self.applicationsInstances.length; i++) {
+                if (self.applicationsInstances[i]) {
+                    
+                    self.applicationsInstances[i].edgeColorOnChange('weight', {
+                        type: curColorMapMode,
+                        cmapX: self.config[curColorMapMode].cmapX,
+                        tickX: self.config[curColorMapMode].tickX,
+                        tickColors: self.config[curColorMapMode].tickColors,
+                        isDiscrete: self.config[curColorMapMode].isDiscrete
+                    });
+                }
+            }
+        }
+
+        let curColorMapMode = (<any>$(self.colorModeSelectElement)).val();
+
+        $(this.sliderElement)['bootstrapSlider']({
+            range: false,
+            step: 0.05 * (self.config[curColorMapMode].tickX[self.config[curColorMapMode].tickX.length - 1] - self.config[curColorMapMode].tickX[0]),
+            ticks: self.config[curColorMapMode].tickX,
+            ticks_labels: (this.tickLabels.length == self.config[curColorMapMode].tickX.length) ? this.tickLabels : self.config[curColorMapMode].tickX.map(function (elem) { return self.tickLabelFormatter(elem); }),
+            ticks_positions: this.getTickPositions(),
+            ticks_colors: this.tickColors,
+            ticks_colorchange_func: onSliderTickColorChange,
+            selection: 'none',
+            enabled: true,
+            lock_to_ticks: this.lockToTicks,
+            value: initValue,
+            select_handle: 'line',
+            ticks_snap_bounds: curColorMapMode != 'continuous-custom' ? 0 : 0.1 * (self.config[curColorMapMode].tickX[self.config[curColorMapMode].tickX.length - 1] - self.config[curColorMapMode].tickX[0])
+        });
+
+        //this.createCMAPFuncAndUpdateEdges();
+
+        this.bootstrapSliderData = $(this.sliderElement)['bootstrapSlider']().data('bootstrapSlider');
+
+        // add event listeners on the slider
+
+        $(this.sliderElement)['bootstrapSlider']().on('change slide', function (e) { self.onSlide() });
+        $(this.sliderElement)['bootstrapSlider']().on('slideStop', function (e) { self.onSlideStop(e); });
+
+    }
+
+    /*
+     * get the percentage (left-to-right) for a set of values in order to set the tick_positions property of bootstrapSlider
+     */
+    private getTickPositions() {
+        var tickPositions = [];
+        var self = this;
+        this.tickX.forEach(function (curTick) {
+            var curCol = 0;
+            if (curTick <= self.cmapX[0]) {
+                curCol = 0;
+            } else if (curTick >= self.cmapX[self.cmapX.length - 1]) {
+                curCol = self.cmapX.length - 1;
+            } else {
+                self.cmapX.some(function (curXX, curIDX) {
+                    if (curXX >= curTick) {
+                        // the value is in between xx[curIDX - 1] and xx[curIDX]
+                        // find the proportion of where it is between those two
+                        let xFrac = (curTick - self.cmapX[curIDX - 1]) / (self.cmapX[curIDX] - self.cmapX[curIDX - 1]);
+
+                        curCol = curIDX - 1 + xFrac;
+                        return true;
+                    }
+                    return false;
+                });
+            }
+            tickPositions.push(curCol / self.cmapX.length * 100);
+        });
+        //console.log(tickPositions);
+        return tickPositions;
+    }
+
+    private onSlide() {
+        this.sliderSliding = true;
+    }
+
+    private onSlideStop(e) {
+        var self = this;
+        console.log('slideStop()');
+
+        if (!this.sliderSliding) {
+            let curColorMapMode = (<any>$(self.colorModeSelectElement)).val();
+            let curValue = this.bootstrapSliderData.getValue();
+            
+            if (self.config[curColorMapMode].tickX.includes(curValue)) {
+
+                let curTickIDX = self.config[curColorMapMode].tickX.indexOf(curValue);
+                if (e.originalEvent.button == 1) {
+                    // wheel, select colour
+                    let sliderTickColorPicker = $(this.bootstrapSliderData.getElement())
+                        .find('.slider-tick-container')
+                        .find('input[colorpickeridx="' + curTickIDX + '"]');
+                    $(sliderTickColorPicker).val(self.config[curColorMapMode].tickColors[curTickIDX]);
+                    $(sliderTickColorPicker).trigger('click');
+
+                }
+                else if (e.originalEvent.button == 0) {
+                    // left-click, delete
+                    if (!self.config[curColorMapMode].ticksEditable) {
+                        return;
+                    }
+                    
+                    // don't delete the extreme ticks
+                    if (curTickIDX != 0 && curTickIDX != self.config[curColorMapMode].tickColors.length - 1) {
+
+                        self.config[curColorMapMode].tickX.splice(curTickIDX, 1);
+                        self.config[curColorMapMode].tickColors.splice(curTickIDX, 1);
+                        //this.tickX = curTicks;
+                        //this.tickColors = curTicksColors;
+                        this.valueBeforeRecreate = curValue;
+                        
+                        // reset the sliders
+                        self.reset(self.config[curColorMapMode].cmapX,
+                            self.config[curColorMapMode].tickX,
+                            self.config[curColorMapMode].tickColors,
+                            self.config[curColorMapMode].isDiscrete,
+                            false
+                        );
+                        for (var i = 0; i < self.applicationsInstances.length; i++) {
+                            if (self.applicationsInstances[i]) {
+
+                                self.applicationsInstances[i].edgeColorOnChange('weight', {
+                                    type: curColorMapMode,
+                                    cmapX: self.config[curColorMapMode].cmapX,
+                                    tickX: self.config[curColorMapMode].tickX,
+                                    tickColors: self.config[curColorMapMode].tickColors,
+                                    isDiscrete: self.config[curColorMapMode].isDiscrete
+                                });
+                            }
+                        }
+                    }
+
+                }
+            }
+            else {
+                if (!self.config[curColorMapMode].ticksEditable) {
+                    return;
+                }
+                // insert the new location into the ticks
+                var idxToInsert = -1;
+                self.config[curColorMapMode].tickX.some(function (curTickValue, curTickIDX) {
+                    if (curTickValue > curValue) {
+                        idxToInsert = curTickIDX;
+                        return true;
+                    }
+                    return false;
+                })
+
+                console.log('insert');
+                self.config[curColorMapMode].tickX.splice(idxToInsert, 0, curValue);
+                self.config[curColorMapMode].tickColors.splice(idxToInsert, 0, self.defaultTickColor)
+
+                //this.tickX = curTicks;
+                //this.tickColors = curTicksColors;
+                this.valueBeforeRecreate = curValue;
+                // reset the sliders
+                self.reset(self.config[curColorMapMode].cmapX,
+                    self.config[curColorMapMode].tickX,
+                    self.config[curColorMapMode].tickColors,
+                    self.config[curColorMapMode].isDiscrete,
+                    false
+                );
+                for (var i = 0; i < self.applicationsInstances.length; i++) {
+                    if (self.applicationsInstances[i]) {
+
+                        self.applicationsInstances[i].edgeColorOnChange('weight', {
+                            type: curColorMapMode,
+                            cmapX: self.config[curColorMapMode].cmapX,
+                            tickX: self.config[curColorMapMode].tickX,
+                            tickColors: self.config[curColorMapMode].tickColors,
+                            isDiscrete: self.config[curColorMapMode].isDiscrete
+                        });
+                    }
+                }
+                //$('#input-edge-custom-tickcolors').val(JSON.stringify(this.tickColors));
+                //$('#input-edge-custom-tickx').val(JSON.stringify(this.tickX));
+
+                //this.create();
+            }
+        } else {
+            this.sliderSliding = false;
+        }
+
+    }
+
+    private tickLabelFormatter(v) {
+        return v.toPrecision(2);
+    }
+}

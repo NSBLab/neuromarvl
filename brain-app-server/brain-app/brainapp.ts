@@ -161,8 +161,8 @@ class NeuroMarvl {
     // The dialog is also used for the batch download, using another callback
     // To not loose original reference, we save it in a variable
     exportCallbackFunction = null;
-    
 
+    edgeWeightColorSettingsObject: EdgeWeightColorSettings;
 
     constructor() {
         this.brainSurfaceColor = "0xe3e3e3";
@@ -334,7 +334,12 @@ class NeuroMarvl {
 
         $("#div-edge-size-slider")['bootstrapSlider']().on('slide', this.setEdgeSize);
 
-
+        this.commonData.edgeWeightColorSettingsObject = new EdgeWeightColorSettings(
+            this.applicationsInstances,
+            document.getElementById('div-edge-colormap-slider'),
+            document.getElementById('checkbox-edge-color-is-discrete'),
+            document.getElementById('select-edge-color-weight-map-mode')
+        );
         
         //$("#div-edge-colormap-slider")['bootstrapSlider']({
         //    range: false,
@@ -456,7 +461,7 @@ class NeuroMarvl {
                         if (!data || !data.length) return;
                         
                         this.saveFileObj = new SaveFile(JSON.parse(data));
-                        
+                        console.log(this.saveFileObj);
                         for (var app of this.saveFileObj.saveApps) {
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
 
@@ -499,6 +504,8 @@ class NeuroMarvl {
 
     initApp = id => {
         // init edge count
+
+        console.log("initApp()");
         var savedApp = this.saveFileObj.saveApps[id];
         if (savedApp.surfaceModel) {
             this.applicationsInstances[id].initEdgeCountSlider(savedApp);
@@ -513,6 +520,8 @@ class NeuroMarvl {
         // set newly created saveFileObj to Brain3D object
         this.applicationsInstances[id].saveFileObj = this.saveFileObj;
 
+        console.log(this.saveFileObj);
+        this.commonData.edgeWeightColorSettingsObject.setConfig(this.saveFileObj.edgeSettings.weight.continuousSetting);
         // make sure the app has required graphs created
         this.applicationsInstances[id].restart();
 
@@ -1022,122 +1031,103 @@ class NeuroMarvl {
         }, this);
     }
 
+    /*
+     * This occurs on a settings change.
+     * Get the current configuration for the mode.
+     */
     setEdgeColorByWeight = () => {
         //console.log("setEdgeColorByWeight()");
         var config = {};
 
-        if (this.commonData.edgeWeightColorMode === "continuous-discretized") {
-            var numCategory = Number($('#select-edge-color-number-discretized-category').val());
+        // set the colormap functions for each 
+        //this.saveFileObj.edgeSettings.weight.isDiscrete = (<any>$('#checkbox-edge-color-is-discrete')).is(':checked');
+        //config['isDiscrete'] = this.saveFileObj.edgeSettings.weight.isDiscrete;
 
-            var domainArray = [];
-            var colorArray = [];
-            var from = Number($('#input-edge-discretized-' + 0 + '-from').val());
-            domainArray[domainArray.length] = from;
-            for (var i = 0; i < numCategory; i++) {
-                var to = Number($('#input-edge-discretized-' + i + '-to').val());
-                domainArray[domainArray.length] = to;
-                colorArray[colorArray.length] = (<any>$('#input-edge-discretized-' + i + '-color')).val();
-            }
-
-            // save updated settings 
+        
+        var curEdgeModeConfig;
+        if (this.commonData.edgeWeightColorMode === 'continuous-minmax' ||
+            this.commonData.edgeWeightColorMode === 'continuous-signedp' ||
+            this.commonData.edgeWeightColorMode === 'continuous-signedcorrelation' ||
+            this.commonData.edgeWeightColorMode === 'continuous-custom'
+        ) {
+            curEdgeModeConfig = this.commonData.edgeWeightColorSettingsObject.getConfig(this.commonData.edgeWeightColorMode);
+            console.log(curEdgeModeConfig);
+            this.saveFileObj.edgeSettings.weight.type = this.commonData.edgeWeightColorMode;
             this.saveFileObj.edgeSettings.colorBy = "weight";
-            this.saveFileObj.edgeSettings.weight.type = "continuous-discretized";
-            this.saveFileObj.edgeSettings.weight.discretizedSetting.numCategory = numCategory;
-            this.saveFileObj.edgeSettings.weight.discretizedSetting.domainArray = domainArray;
-            this.saveFileObj.edgeSettings.weight.discretizedSetting.colorArray = colorArray;
-
-            // set config
-            config["type"] = "continuous-discretized";
-            config["domainArray"] = domainArray;
-            config["colorArray"] = colorArray;
-
-        } else if (this.commonData.edgeWeightColorMode === "continuous-minmax") {
-            var minColor = (<any>$('#input-edge-minmax-min-color')).val();
-            var maxColor = (<any>$('#input-edge-minmax-max-color')).val();
-
-            //var minColor = "#000000";
-            //var maxColor = "#000000";
-            // save updated settings
-            this.saveFileObj.edgeSettings.colorBy = "weight";
-            this.saveFileObj.edgeSettings.weight.type = "continuous-minmax";
-            this.saveFileObj.edgeSettings.weight.continuousSetting.minColor = minColor;
-            this.saveFileObj.edgeSettings.weight.continuousSetting.maxColor = maxColor;
-
-            // set config
-            config["type"] = "continuous-minmax";
-            config["minColor"] = minColor;
-            config["maxColor"] = maxColor;
-
+            config["type"] = this.commonData.edgeWeightColorMode;
+        }
+        if (this.commonData.edgeWeightColorMode === "continuous-minmax") {
+            // hide discrete checkbox
+            $('#div-checkbox-edge-color-is-discrete').hide();
+            
+            config['cmapX'] = curEdgeModeConfig.cmapX;
+            config['tickX'] = curEdgeModeConfig.tickX;
+            config['tickColors'] = curEdgeModeConfig.tickColors;
+            
+            // if it is minmax, the ticks are from 0-1 and the values just interpolate from the minColor to the maxColour
+            this.commonData.edgeWeightColorSettingsObject.reset(
+                config['cmapX'],
+                config['tickX'],
+                config['tickColors'],
+                false,
+                true,
+                ['Min', 'Max']
+            );
         } else if (this.commonData.edgeWeightColorMode === "continuous-signedcorrelation") {
-            
-            var minusOneColor = (<any>$('#input-edge-correlation-minusone-color')).val();
-            var zeroColor = (<any>$('#input-edge-correlation-zero-color')).val();
-            var plusOneColor = (<any>$('#input-edge-correlation-plusone-color')).val();
+            // show discrete checkbox
+            $('#div-checkbox-edge-color-is-discrete').show();
 
-            this.saveFileObj.edgeSettings.colorBy = "weight";
-            this.saveFileObj.edgeSettings.weight.type = "continuous-signedcorrelation";
-            this.saveFileObj.edgeSettings.weight.continuousSetting.minusOneColor = minusOneColor;
-            this.saveFileObj.edgeSettings.weight.continuousSetting.zeroColor = zeroColor;
-            this.saveFileObj.edgeSettings.weight.continuousSetting.plusOneColor = plusOneColor;
+            config['cmapX'] = curEdgeModeConfig.cmapX;
+            config['tickX'] = curEdgeModeConfig.tickX;
+            config['tickColors'] = curEdgeModeConfig.tickColors;
+            config['isDiscrete'] = curEdgeModeConfig.isDiscrete;
+            $('#checkbox-edge-color-is-discrete').prop('checked', curEdgeModeConfig.isDiscrete);
+            this.commonData.edgeWeightColorSettingsObject.reset(
+                config['cmapX'],
+                config['tickX'],
+                config['tickColors'],
+                config['isDiscrete'],
+                true
+            );
 
-            config["type"] = "continuous-signedcorrelation";
-            config["minusonecolor"] = minusOneColor;
-            config["zerocolor"] = zeroColor;
-            config["plusonecolor"] = plusOneColor;
         } else if (this.commonData.edgeWeightColorMode === "continuous-signedp") {
-            
-            this.saveFileObj.edgeSettings.colorBy = "weight";
-            this.saveFileObj.edgeSettings.weight.type = "continuous-signedp";
-            
-            config["type"] = "continuous-signedp";
+            // show discrete checkbox
+            $('#div-checkbox-edge-color-is-discrete').hide();
+
+            config['cmapX'] = curEdgeModeConfig.cmapX;
+            config['tickX'] = curEdgeModeConfig.tickX;
+            config['tickColors'] = curEdgeModeConfig.tickColors;
+
+            this.commonData.edgeWeightColorSettingsObject.reset(
+                config['cmapX'],
+                config['tickX'],
+                config['tickColors'],
+                false,
+                true
+            );
+
         } else if (this.commonData.edgeWeightColorMode === "continuous-custom") {
+            $('#checkbox-edge-color-is-discrete').prop('checked', curEdgeModeConfig.isDiscrete);
 
-            // load in pre-made ranges
-            this.saveFileObj.edgeSettings.colorBy = "weight";
-            this.saveFileObj.edgeSettings.weight.type = "continuous-custom";
-            let tickXString = <string>$('#input-edge-custom-tickx').val();
-            let tickColorsString = <string>$('#input-edge-custom-tickcolors').val();
-            if (tickXString.length > 0) {
-                config['tickx'] = JSON.parse(tickXString);
-            } else {
-                config['tickx'] = [];
-            }
+            config['cmapX'] = curEdgeModeConfig.cmapX;
+            config['tickX'] = curEdgeModeConfig.tickX;
+            config['tickColors'] = curEdgeModeConfig.tickColors;
 
-            if (tickColorsString.length > 0) {
-                config['tickcolors'] = JSON.parse(tickColorsString);
-            } else {
-                config['tickcolors'] = [];
-            }
+            // set the min and max values in the boxes
+            (<any>$('#edge-colormap-custom-min')).val(curEdgeModeConfig.tickX[0]);
+            (<any>$('#edge-colormap-custom-max')).val(curEdgeModeConfig.tickX[curEdgeModeConfig.tickX.length - 1]);
 
-            config["type"] = "continuous-custom";
-        } else if (this.commonData.edgeWeightColorMode === "discrete") {
-            var valueArray = [];
-            var colorArray = [];
-
-            var keySelection = <any>document.getElementById('select-edge-key');
-
-            for (var i = 0; i < keySelection.length; i++) {
-                var key = keySelection.options[i].value;
-                var color = keySelection.options[i].style.backgroundColor;
-                var hex: string = this.colorToHex(color);
-                valueArray.push(key);
-                colorArray.push(hex);
-            }
-
-            // save updated settings
-            this.saveFileObj.edgeSettings.colorBy = "weight";
-            this.saveFileObj.edgeSettings.weight.type = "discrete";
-            this.saveFileObj.edgeSettings.weight.discretizedSetting.domainArray = domainArray;
-            this.saveFileObj.edgeSettings.weight.discretizedSetting.colorArray = colorArray;
-
-            // set config
-            config["type"] = "discrete";
-            config["valueArray"] = valueArray;
-            config["colorArray"] = colorArray;
-
+            this.commonData.edgeWeightColorSettingsObject.reset(
+                config['cmapX'],
+                config['tickX'],
+                config['tickColors'],
+                false,
+                false
+            );
         } else {
             console.log("Nothing is visible");
         }
+
         this.validApplicationIDX.forEach(function (i) {
             if (this.applicationsInstances[i]) this.applicationsInstances[i].setEdgeColorByWeight(config);
         }, this);
@@ -1914,6 +1904,11 @@ class NeuroMarvl {
         }, this);
     }
 
+    /*
+     * Executes when new data are loaded or any edge colour mode setting is changed.
+     * Make divs for selected mode visible, unselected nodes hidden.
+     * Execute edge colour setting routines
+     */
     setEdgeColor = () => {
         var value = $('#select-edge-color').val();
         
@@ -1938,70 +1933,62 @@ class NeuroMarvl {
                 $("#div-edge-color-continuous").show();
                 $("#div-edge-color-discrete").hide();
 
-                //if ($("#checkbox-edge-color-discretized").is(":checked")) {
-                //    this.commonData.edgeWeightColorMode = "continuous-discretized";
-                //    this.setDefaultEdgeDiscretizedValues();
-
-                //    $("#div-edge-color-continuous-discretized").show();
-                //    $("#div-edge-color-continuous-minmax").hide();
-
-                //    var numCategory = Number($('#select-edge-color-number-discretized-category').val());
-                //    for (var i = 0; i < 5; i++) {
-                //        if (i < numCategory) {
-                //            $('#div-edge-discretized-' + i).show();
-                //        } else {
-                //            $('#div-edge-discretized-' + i).hide();
-                //        }
-                //    }
-                //}
-                //else {
-                    this.commonData.edgeWeightColorMode = <string>$('#select-edge-color-map-mode').val();
+                this.commonData.edgeWeightColorMode = <string>$('#select-edge-color-weight-map-mode').val();
                     
-                    // if it 
-                    switch ($('#select-edge-color-map-mode').val()) {
-                        case 'continuous-minmax':
-                            $("#div-edge-color-continuous-discretized").hide();
-                            $("#div-edge-color-continuous-minmax").show();
-                            $("#div-edge-color-continuous-signedcorrelation").hide();
-                            break;
-                        case 'continuous-signedcorrelation':
-                            $("#div-edge-color-continuous-discretized").hide();
-                            $("#div-edge-color-continuous-minmax").hide();
-                            $("#div-edge-color-continuous-signedcorrelation").show();
-                            break;
-                        default:
-                            $("#div-edge-color-continuous-discretized").hide();
-                            $("#div-edge-color-continuous-minmax").hide();
-                            $("#div-edge-color-continuous-signedcorrelation").hide();
-                            break;
-                    }
-                //}
-            } else if (this.referenceDataSet.info.edgeWeight.type === "discrete") {
-                // Enable force continuous checkbox
-                $("#checkbox-edge-color-force-continuous").show();
-
-                this.commonData.edgeWeightColorMode = "discrete";
-                $("#div-edge-color-continuous").hide();
-                $("#div-edge-color-discrete").show();
-
-                var distinctValues = this.referenceDataSet.info.edgeWeight.distincts;
-                distinctValues.sort((a, b) => a - b);
-                var d3ColorSelector = d3.scaleOrdinal(d3.schemeCategory10);
-                var distinctColors = distinctValues.map((group: number) => { return d3ColorSelector(group); });
-                $('#select-edge-key').empty();
-                for (var i = 0; i < distinctValues.length; i++) {
-                    var option = document.createElement('option');
-                    option.text = distinctValues[i];
-                    option.value = distinctValues[i];
-                    option.style.backgroundColor = distinctColors[i];
-                    if (i == 0) {
-                        var color = option.style.backgroundColor;
-                        var hex = this.colorToHex(color);
-                        (<any>document.getElementById('input-edge-color')).color.fromString(hex.substring(1));
-                    }
-                    $('#select-edge-key').append(option);
+                // if it 
+                switch ($('#select-edge-color-weight-map-mode').val()) {
+                    case 'continuous-minmax':
+                        $("#div-checkbox-edge-color-is-discrete").hide();
+                        //$("#div-edge-color-continuous-minmax").show();
+                        //$("#div-edge-color-continuous-signedcorrelation").hide();
+                        $('#div-edge-colormap-custom-limits').hide();
+                        break;
+                    case 'continuous-signedcorrelation':
+                        $("#div-checkbox-edge-color-is-discrete").show();
+                        //$("#div-edge-color-continuous-minmax").hide();
+                        //$("#div-edge-color-continuous-signedcorrelation").show();
+                        $('#div-edge-colormap-custom-limits').hide();
+                        break;
+                    case 'continuous-custom':
+                        $("#div-checkbox-edge-color-is-discrete").show();
+                        //$("#div-edge-color-continuous-minmax").hide();
+                        //$("#div-edge-color-continuous-signedcorrelation").hide();
+                        $('#div-edge-colormap-custom-limits').show();
+                        break;
+                    default:
+                        $("#div-checkbox-edge-color-is-discrete").hide();
+                        //$("#div-edge-color-continuous-minmax").hide();
+                        //$("#div-edge-color-continuous-signedcorrelation").hide();
+                        $('#div-edge-colormap-custom-limits').hide();
+                        break;
                 }
             }
+            //else if (this.referenceDataSet.info.edgeWeight.type === "discrete") {
+            //    // Enable force continuous checkbox
+            //    $("#checkbox-edge-color-force-continuous").show();
+
+            //    this.commonData.edgeWeightColorMode = "discrete";
+            //    $("#div-edge-color-continuous").hide();
+            //    $("#div-edge-color-discrete").show();
+
+            //    var distinctValues = this.referenceDataSet.info.edgeWeight.distincts;
+            //    distinctValues.sort((a, b) => a - b);
+            //    var d3ColorSelector = d3.scaleOrdinal(d3.schemeCategory10);
+            //    var distinctColors = distinctValues.map((group: number) => { return d3ColorSelector(group); });
+            //    $('#select-edge-key').empty();
+            //    for (var i = 0; i < distinctValues.length; i++) {
+            //        var option = document.createElement('option');
+            //        option.text = distinctValues[i];
+            //        option.value = distinctValues[i];
+            //        option.style.backgroundColor = distinctColors[i];
+            //        if (i == 0) {
+            //            var color = option.style.backgroundColor;
+            //            var hex = this.colorToHex(color);
+            //            (<any>document.getElementById('input-edge-color')).color.fromString(hex.substring(1));
+            //        }
+            //        $('#select-edge-key').append(option);
+            //    }
+            //}
 
             this.setEdgeColorByWeight();
         } else if (value === "node") {
@@ -2147,7 +2134,8 @@ class NeuroMarvl {
         //
         // Go through the order as UI elements appear in tab
         //
-
+        console.trace();
+        console.log(this.saveFileObj);
         // Edge size
         if (this.saveFileObj.edgeSettings.size != null) {
             let slider = $("#div-edge-size-slider");
@@ -2180,6 +2168,10 @@ class NeuroMarvl {
             this.setEdgeDirection();
         }
 
+        // set up the edge color weight config from the file
+        console.log(this.commonData.edgeWeightColorSettingsObject);
+        console.log(this.saveFileObj);
+        this.commonData.edgeWeightColorSettingsObject.setConfig(this.saveFileObj.edgeSettings.weight.continuousSetting);
 
         if (this.saveFileObj.edgeSettings.colorBy === "none") {
             $('#select-edge-color').val("none");
@@ -2197,45 +2189,32 @@ class NeuroMarvl {
 
             // make all corresponding elements visible
 
-            if (this.saveFileObj.edgeSettings.weight.type === "discrete") {
-                var setting = this.saveFileObj.edgeSettings.weight.discreteSetting;
-                var keySelection = <any>document.getElementById('select-edge-key');
 
-                for (var i = 0; i < setting.valueArray; i++) {
-                    keySelection.options[i].style.backgroundColor = setting.colorArray[i];
-                }
+            //if (this.saveFileObj.edgeSettings.weight.type === "discrete") {
+            //    var setting = this.saveFileObj.edgeSettings.weight.discreteSetting;
+            //    var keySelection = <any>document.getElementById('select-edge-key');
 
-            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-minmax") {
-                var setting = this.saveFileObj.edgeSettings.weight.continuousSetting;
+            //    for (var i = 0; i < setting.valueArray; i++) {
+            //        keySelection.options[i].style.backgroundColor = setting.colorArray[i];
+            //    }
 
-                (<any>$('#input-edge-minmax-min-color')).val(setting.minColor);
-                (<any>$('#input-edge-minmax-max-color')).val(setting.maxColor);
+            //}
+            if (this.saveFileObj.edgeSettings.weight.type === "continuous-minmax") {
+                // these are all fixed and are always continuous
+                (<any>$('#select-edge-color-weight-map-mode')).val(this.saveFileObj.edgeSettings.weight.type);
+                
+                
+            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-signedp") {
 
-            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-discretized") {
-                var setting = this.saveFileObj.edgeSettings.weight.discretizedSetting;
+            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-signedcorrelation") {
+                // fixed tick points but can be discrete
+                (<any>$('#select-edge-color-weight-map-mode')).val(this.saveFileObj.edgeSettings.weight.type);
+                //var setting = this.saveFileObj.edgeSettings.weight.continuousSetting;
 
-                $('#select-edge-color-number-discretized-category').val(setting.numCategory);
-                for (var i = 0; i < 5; i++) {
-                    if (i < setting.numCategory) {
-                        $('#div-edge-discretized-' + i).show();
-                    } else {
-                        $('#div-edge-discretized-' + i).hide();
-                    }
-                }
-
-                $('#input-edge-discretized-' + 0 + '-from').val(setting.domainArray[0]);
-                $('#input-edge-discretized-' + (setting.numCategory - 1) + '-to')
-                    .val(setting.domainArray[setting.domainArray.length - 1]);
-                for (var i = 0; i < setting.numCategory - 1; i++) {
-                    var value = setting.domainArray[i + 1];
-                    $('#input-edge-discretized-' + (i + 1) + '-from').val(value);
-                    $('#input-edge-discretized-' + i + '-to').val(value);
-                }
-
-                for (var i = 0; i < setting.numCategory; i++) {
-                    (<any>$('#input-edge-discretized-' + i + '-color')).val(setting.colorArray[i]);
-                }
-
+                
+            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-custom") {
+                (<any>$('#select-edge-color-weight-map-mode')).val(this.saveFileObj.edgeSettings.weight.type);
+                //var setting = this.saveFileObj.edgeSettings.weight.continuousSetting;
             } else {
                 throw "Load Data: Wrong data type setting for weight";
             }
@@ -2565,21 +2544,15 @@ class NeuroMarvl {
         $("#input-max-color").on("input change", e => this.setNodeSizeOrColor());
         $("#input-edge-start-color").on("input change", e => this.setEdgeDirectionGradient());
         $("#input-edge-end-color").on("input change", e => this.setEdgeDirectionGradient());
-        $("#input-edge-discretized-0-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-discretized-1-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-discretized-2-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-discretized-3-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-discretized-4-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-minmax-min-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-minmax-max-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-color").on("input change", e => {
-            this.setSelectEdgeKeyBackgroundColor((<any>$(e.target)).val());
-            this.setEdgeColorByWeight()
-        });
 
-        $("#input-edge-correlation-minusone-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-correlation-zero-color").on("input change", e => this.setEdgeColorByWeight());
-        $("#input-edge-correlation-plusone-color").on("input change", e => this.setEdgeColorByWeight());
+        //$("#input-edge-color").on("input change", e => {
+        //    this.setSelectEdgeKeyBackgroundColor((<any>$(e.target)).val());
+        //    this.setEdgeColorByWeight()
+        //});
+
+        //$("#input-edge-correlation-minusone-color").on("input change", e => this.setEdgeColorByWeight());
+        //$("#input-edge-correlation-zero-color").on("input change", e => this.setEdgeColorByWeight());
+        //$("#input-edge-correlation-plusone-color").on("input change", e => this.setEdgeColorByWeight());
 
         //$("#input-context-menu-node-color").on("change", e => this.setNodeColorInContextMenu($(<any>e).val()));
         $("#input-context-menu-node-color").on("input change", e => this.setNodeColorInContextMenu((<any>$(e.target)).val()) );
@@ -2834,45 +2807,9 @@ class NeuroMarvl {
 
         $('#checkbox-thickness-by-weight').on('change', this.setEdgeThicknessByWeight);
 
-
-        $('#checkbox-edge-color-force-continuous').on('change', () => {
-            if ($("#checkbox-edge-color-force-continuous").is(":checked")) {
-                this.commonData.edgeForceContinuous = true;
-            } else {
-                this.commonData.edgeForceContinuous = false;
-            }
+        $('#select-edge-color-weight-map-mode').on('change', () => {
             this.setEdgeColor();
         });
-        $('#select-edge-color-map-mode').on('change', () => {
-            this.setEdgeColor();
-        });
-
-        $('#checkbox-edge-color-is-discrete').on('click', () => {
-            this.applicationsInstances.forEach(app => app.edgeWeightColorsObject.setDiscreteOrContinuousColormap())
-        })
-        //$('#checkbox-edge-color-discretized').on('change', () => {
-        //    if ($("#checkbox-edge-color-discretized").is(":checked")) {
-        //        this.setDefaultEdgeDiscretizedValues();
-        //        $("#div-edge-color-continuous-discretized").show();
-        //        $("#div-edge-color-continuous-minmax").hide();
-        //        this.commonData.edgeWeightColorMode = "continuous-discretized";
-
-        //        var numCategory = Number($('#select-edge-color-number-discretized-category').val());
-        //        for (var i = 0; i < 5; i++) {
-        //            if (i < numCategory) {
-        //                $('#div-edge-discretized-' + i).show();
-        //            } else {
-        //                $('#div-edge-discretized-' + i).hide();
-        //            }
-        //        }
-        //    } else {
-        //        $("#div-edge-color-continuous-discretized").hide();
-        //        $("#div-edge-color-continuous-minmax").show();
-        //        this.commonData.edgeWeightColorMode = "continuous-minmax";
-        //    }
-
-        //    this.setEdgeColorByWeight();
-        //});
 
         $('#select-edge-direction').on('change', this.setEdgeDirection);
 

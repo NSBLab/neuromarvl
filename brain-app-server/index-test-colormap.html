@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Brain Data Viewer</title>
+
+    <link rel="stylesheet" type="text/css" href="extern/dc-4.2.7.min.css" />
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="extern/bootstrap-4.6.2-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="extern/bootstrap-slider-11.0.2.min.css" />
+    <link rel="stylesheet" type="text/css" href="//use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <!-- <script>var exports = {};</script>-->
+</head>
+
+<body>
+    <Center>
+        <input id="div-edge-colormap-slider" data-slider-id='edge-colormap-slider' type="text"
+               data-slider-min="0.0" data-slider-max="1" data-slider-step="0.02" data-slider-value="0.5" />
+        <br />
+        <canvas id="colormap-canvas" width="256" height="50" style="border-style: solid;">
+        </canvas>
+        <button id="addtick" onclick="addtickfunc();">Click me</button>
+        <br />
+        <input type="checkbox" id="color-segment-checkbox" />Segments
+    </Center>
+    <script src="extern/jquery-3.7.1.min.js"></script>
+    <script src="extern/bootstrap-4.6.2-dist/js/bootstrap.bundle.js"></script>
+    <script src="extern/popper-1.16.1.umd.min.js"></script>
+    <script src="extern/three-0.159.0.min.js"></script>
+
+    <script src="extern/d3-7.8.5.min.js"></script>
+
+    <script src="extern/bootstrap-slider-11.0.2.js"></script>
+
+    <script>
+
+        //class ContinuousColorMap {
+
+            /* tyescript stuff
+            inputElement;
+            canvasElement;
+
+            defaultTickColor: string = "#7c7c7c";
+            */
+        //}
+        var ticks = [-1, 0, 1];
+        var tickStrings = ["-1", "0", "1"];
+        var xx = linspace(-1, 1, 256);
+        
+        function getTickPositions(curTicks) {
+            var tickPositions = [];
+            //console.log(curTicks);
+
+            curTicks.forEach(function (curTick) {
+                var curCol = 0;
+                if (curTick <= xx[0]) {
+                    curCol = 0;
+                } else if (curTick >= xx[xx.length - 1]) {
+                    curCol = xx.length - 1;
+                } else {
+                    xx.some(function (curXX, curIDX) {
+                        if (curXX >= curTick) {
+                            // the value is in between xx[curIDX - 1] and xx[curIDX]
+                            // find the proportion of where it is between those two
+                            let xFrac = (curTick - xx[curIDX - 1]) / (xx[curIDX] - xx[curIDX - 1]);
+
+                            curCol = curIDX - 1 + xFrac;
+                            return true;
+                        }
+                        return false;
+                    });
+                }
+                tickPositions.push(curCol / xx.length * 100);
+            });
+            //console.log(tickPositions);
+            return tickPositions;
+        }
+
+        var curTickPostions = getTickPositions(ticks);
+        // find the tick positions
+
+        var defaultTickColor = "#7c7c7c";
+
+        $('#div-edge-colormap-slider').slider({
+            range: false,
+            step: 0.01,
+            ticks: ticks,
+            ticks_labels: ticks.map(function (elem) { return elem.toPrecision(2); }),
+            ticks_positions: curTickPostions,
+            ticks_colorchange_func: onSliderColorInputChange,
+            ticks_colors: ["#FF0000", "#00FF00", "#0000FF"],
+            precision: 2,
+            selection: 'none',
+            select_handle: 'line'
+        });
+
+        var sliderSliding = false;
+        
+        //$('#div-edge-colormap-slider').on('slideStart', function (e) {
+        //    console.log('slideStart()');
+
+        //});
+
+        $('#div-edge-colormap-slider').on('change slide', function (e) { onSlide() });
+        $('#div-edge-colormap-slider').on('slideStop', function (e) { onSlideStop(e); });
+
+        function onSlide(e) {
+            sliderSliding = true;
+        }
+
+        var funcLinear = d3.scaleLinear()
+            .domain([-1, 0, 1])
+            .range(["#0000FF", "#FFFFFF", "#FF0000"])
+            .clamp(true)
+            .unknown("#000000");
+
+        var funcThreshold = d3.scaleThreshold()
+            .domain([-1, 0, 1])
+            .range(["#0000FF", "#FFFFFF", "#FF0000"])
+            .unknown("#000000");
+
+
+        function onSliderColorInputChange(e) {
+            console.log('here');
+            console.log(e);
+            console.log(this);
+            console.log($(this).val());
+            let tickIDX = $(this).attr('colorpickeridx');
+            let curTicks = $('#div-edge-colormap-slider').slider('getAttribute', 'ticks');
+            let curTicksColors = $('#div-edge-colormap-slider').slider('getAttribute', 'ticks_colors');
+            curTicksColors[tickIDX] = $(this).val();
+
+            // change the color of the tick
+            $($('#div-edge-colormap-slider').slider('getElement')).find('.slider-tick-container').find('div[tickindex="' + tickIDX + '"]').css({ 'background': $(this).val() });
+            func.domain(curTicks)
+                .range(curTicksColors)
+                .clamp(true)
+                .unknown(defaultTickColor);
+
+            updateColormap(
+                xx,
+                func,
+                $('#div-edge-colormap-slider').slider('getAttribute', 'ticks'),
+                $('#div-edge-colormap-slider').slider('getAttribute', 'ticks_labels'));
+        }
+
+        function onSlideStop(e) {
+
+            //console.log('slideStop()');
+
+            if (!sliderSliding) {
+                console.log(e);
+
+                let curValue = $('#div-edge-colormap-slider').slider('getValue');
+                let curTicks = $('#div-edge-colormap-slider').slider('getAttribute', 'ticks').slice();
+                let curTicksColors = $('#div-edge-colormap-slider').slider('getAttribute', 'ticks_colors').slice();
+
+                if (curTicks.includes(curValue)) {
+                    let curTickIDX = curTicks.indexOf(curValue);
+                    
+                    let sliderTickColorPicker = $($('#div-edge-colormap-slider').slider('getElement')).find('.slider-tick-container').find('input[colorpickeridx="' + curTickIDX + '"]');
+                    $(sliderTickColorPicker).trigger('click');
+
+                } else {
+                    // insert the new location into the ticks
+                    var idxToInsert = -1;
+                    curTicks.some(function (curTickValue, curTickIDX) {
+                        if (curTickValue > curValue) {
+                            idxToInsert = curTickIDX;
+                            return true;
+                        }
+                        return false;
+                    })
+                    curTicks.splice(idxToInsert, 0, curValue);
+                    curTicksColors.splice(idxToInsert, 0, defaultTickColor)
+
+                    $('#div-edge-colormap-slider').slider('destroy');
+                    $('#div-edge-colormap-slider').slider({
+                        range: false,
+                        step: 0.01,
+                        ticks: curTicks,
+                        ticks_labels: curTicks.map(function (elem) { return elem.toPrecision(2); }),
+                        ticks_positions: getTickPositions(curTicks),
+                        ticks_colors: curTicksColors,
+                        ticks_colorchange_func: onSliderColorInputChange,
+                        precision: 2,
+                        value: curValue,
+                        selection: 'none',
+                        select_handle: 'line'
+                    });
+                    $('#div-edge-colormap-slider').on('change slide', function (e) { onSlide(e) });
+                    $('#div-edge-colormap-slider').on('slideStop', function (e) { onSlideStop(e); });
+                    funcLinear.domain(curTicks)
+                        .range(curTicksColors)
+                        .clamp(true)
+                        .unknown(defaultTickColor);
+                    funcThreshold.domain(curTicks)
+                        .range(curTicksColors)
+                        .unknown(defaultTickColor);
+
+                }
+
+
+                updateColormap(xx, funcThreshold, curTicks, $('#div-edge-colormap-slider').slider('getAttribute', 'ticks_labels'));
+
+                // if the value we 
+                // wheel, 
+                if (e.originalEvent.button == 1) {
+
+                    //if ( $('#div-edge-colormap-slider').slider('getValue')
+                }
+            } else {
+                sliderSliding = false;
+            }
+
+        }
+                    
+        function linspace(startValue, stopValue, cardinality) {
+            var arr = [];
+            var step = (stopValue - startValue) / (cardinality - 1);
+            for (var i = 0; i < cardinality; i++) {
+                arr.push(startValue + (step * i));
+            }
+            return arr;
+        }
+
+        function addtickfunc() {
+            updateColormap(xx, funcThreshold, [-1, 0.5, 1], ["-1", "0.5", "1"])
+        }
+
+        updateColormap(xx, funcThreshold, ticks, tickStrings);
+
+        function updateColormap(cmapx, cmapFunc, ticks, tickStrings) {
+            var canvas = document.getElementById('colormap-canvas');
+            var ctx = canvas.getContext("2d");
+            //var R = canvas.getBoundingClientRect();
+            
+            var canvasWidth = canvas.width;
+            var canvasHeight = canvas.height;
+            //console.log(canvasWidth);
+            
+            // the bounding box of the colormap inside the canvas
+            var colormapBox = {
+                top: 0,
+                bottom: canvasHeight - 20,
+                left: 10,
+                right: canvasWidth - 10
+            };
+            colormapWidth = colormapBox.right - colormapBox.left + 1;
+
+            // so we are given
+            // the X values that we want to sample the domain
+            // we need to uniformly resample these values according to the width of the required colormap
+            //console.log(colormapWidth);
+            //console.log(xx);
+            // cell coordinates we need to resample xx at
+            xxResampleX = linspace(0, cmapx.length - 1, colormapWidth);
+            //console.log(xxResampleX);
+            resampledXX = [];
+
+            xxResampleX.forEach(function (curxxResampledXX) {
+                var XI = Math.floor(curxxResampledXX);
+                var xFrac = curxxResampledXX - XI;
+
+                if (XI == xx.length - 1) {
+                    XI = XI - 1;
+                    xFrac = 1;
+                }
+                resampledXX.push((1 - xFrac) * xx[XI] + xFrac * xx[XI + 1]);
+            })
+            //console.log(resampledXX);
+
+            // clear the canvas
+            ctx.rect(0, 0, canvasWidth, canvasHeight);
+            ctx.fillStyle = "white";
+            ctx.fill();
+
+            var A = ctx.createImageData(colormapWidth, colormapBox.bottom - colormapBox.top + 1);
+
+            resampledXX.forEach(function (xxVal, curCol) {
+                let curColor = cmapFunc(xxVal);
+                console.log(xxVal + " " + curColor);
+                var reColors = /rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)/;
+                var reHex = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
+                var matchColors = reColors.exec(curColor);
+                var matchHex = reHex.exec(curColor);
+                var curRed = 0;
+                var curGreen = 0;
+                var curBlue = 0;
+
+                if (matchColors !== null) {
+                    // red channel
+                    curRed = parseInt(matchColors[1]);
+                    curGreen = parseInt(matchColors[2]);
+                    curBlue = parseInt(matchColors[3]);
+                } else if (matchHex !== null) {
+                    curRed = parseInt(matchHex[1], 16);
+                    curGreen = parseInt(matchHex[2], 16);
+                    curBlue = parseInt(matchHex[3], 16);
+                }
+                for (var curRow = 0; curRow < colormapWidth; curRow++) {
+                    // base index for the current pixel is (curRow * canvasWidth + curColumn) * 4
+                    A.data[(curRow * colormapWidth + curCol) * 4 + 0] = curRed;
+                    A.data[(curRow * colormapWidth + curCol) * 4 + 1] = curGreen;
+                    A.data[(curRow * colormapWidth + curCol) * 4 + 2] = curBlue;
+                    A.data[(curRow * colormapWidth + curCol) * 4 + 3] = 255; // alpha channel
+                }
+            });
+
+            ctx.putImageData(A, colormapBox.left, colormapBox.top);
+
+            // do ticks
+            // find column for tick
+            ticks.forEach(function (curTick, curTickIDX) {
+                var curCol = 0;
+                if (curTick <= resampledXX[0]) {
+                    curCol = 0;
+                } else if (curTick >= resampledXX[resampledXX.length - 1]) {
+                    curCol = resampledXX.length - 1;
+                } else {
+                    resampledXX.some(function (curXX, curIDX) {
+                        if (curXX >= curTick) {
+                            curCol = curIDX;
+                            return true;
+                        }
+                        return false;
+                    });
+                }
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = "black";
+                ctx.fillText(tickStrings[curTickIDX], curCol + colormapBox.left, colormapBox.bottom + 3);
+            });
+
+        }
+        
+        //console.log([colormapBox.left, colormapBox.top, colormapBox.right - colormapBox.left + 1, colormapBox.bottom - colormapBox.top + 1]);
+        //ctx.drawImage(A, colormapBox.left, colormapBox.top, colormapBox.right - colormapBox.left + 1, colormapBox.bottom - colormapBox.top + 1);
+
+    </script>
+</body>
+
+</html >

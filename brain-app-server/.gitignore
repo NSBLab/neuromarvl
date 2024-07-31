@@ -36,5 +36,5 @@ Icon
 .Spotlight-V100
 .Trashes
 
-brain-app/*.js
-brain-app/*.js.map
+brain-app-server/brain-app/*.js
+brain-app-server/brain-app/*.js.map

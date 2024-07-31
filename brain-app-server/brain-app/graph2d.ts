@@ -106,6 +106,7 @@ class Graph2D {
             nodeObject["colors"] = d.colors;
             nodeObject["highlighted"] = d.highlighted;
 
+            node.updateWorldMatrix();
             // Use projection of colaGraph to screen space to initialise positions
             let position = (new THREE.Vector3()).setFromMatrixPosition(node.matrixWorld);
             position.project(this.camera);

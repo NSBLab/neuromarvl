@@ -355,18 +355,31 @@ class InputTargetManager {
             }
         }, false);
 
-        document.addEventListener('mousewheel', (event) => {
-            var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);
+        var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel";
 
+        document.addEventListener(mousewheelevt, (event) => {
+            var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);
             if (viewID == this.activeTarget) {
                 var it = this.inputTargets[this.activeTarget];
+                //console.log((<WheelEvent>event));
+
+
                 if (it) {
                     //console.log(event.wheelDelta);
                     var callback = it.mouseWheelCallback;
-                    if (callback) callback((<WheelEvent>event).deltaY / 2000);
+                    var realDelta = 0;
+
+                    if ((<WheelEvent>event).deltaY) {
+                        realDelta = Math.sign((<WheelEvent>event).deltaY) * 0.05;
+                    } else if ((<WheelEvent>event).detail) {
+                        realDelta = Math.sign((<WheelEvent>event).detail) * 0.05;
+                    }
+                    // in chrome the deltaY values are -100, 100 and the original code divides by 2000, making the values 1 / 20
+                    //if (callback) callback((<WheelEvent>event).deltaY / 2000);
+                    // so we just pass in
+                    if (callback) callback(realDelta);
                 }
             }
-
         }, false);
 
         document.addEventListener('mousemove', (event) => {            

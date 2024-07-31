@@ -167,7 +167,7 @@ class Brain3DApp implements Application, Loopable {
         this.setupUserInteraction(this.jDiv);
 
         // Set up camera
-        this.camera = new THREE.PerspectiveCamera(45, 1, this.nearClip, this.farClip);
+        this.camera = new THREE.OrthographicCamera(-500, 500, 500, -500, this.nearClip, this.farClip);
         this.resize(this.jDiv.width(), this.jDiv.height());
 
         // Set up scene
@@ -280,10 +280,8 @@ class Brain3DApp implements Application, Loopable {
         let valueArray = a.get(colorAttribute);
 
         // D3 can scale colours, but needs to use color strings
-        let minString = "#" + minColor.toString(16);
-        let maxString = "#" + maxColor.toString(16);
-        console.log(minString);
-        console.log(maxString);
+        let minString = "#" + minColor.toString(16).replace(/^#+/gm, '');;
+        let maxString = "#" + maxColor.toString(16).replace(/^#+/gm, '');;
         // Continuous has each value mapped with equal proportion
         let i = a.columnNames.indexOf(colorAttribute);
         let singlePortion = (1 / a.info[colorAttribute].numElements) || 0;

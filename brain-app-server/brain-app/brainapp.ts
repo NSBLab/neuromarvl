@@ -2289,7 +2289,7 @@ class NeuroMarvl {
             }
         }
 
-        let scale = d3.scaleLinear().domain([min, max]).range([0, 1]);
+        let scale = d3.scaleLinear().domain([min, max]).range([min, max]);
         simMatrix = simMatrix.map(row => row.map(scale));
 
         dataSet.setSimMatrix(simMatrix);

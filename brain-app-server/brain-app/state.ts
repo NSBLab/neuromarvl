@@ -183,7 +183,7 @@ class DataSet {
         var max = this.info.nodeCount * (this.info.nodeCount - 1) / 2;
         if (count > max) count = max;
         if (count > this.sortedSimilarities.length) count = this.sortedSimilarities.length;
-        var threshold = this.sortedSimilarities[count - 1];
+        var threshold = Math.abs(this.sortedSimilarities[count - 1]);
         var adjMatrix: number[][] = Array<Array<number>>(this.info.nodeCount);
 
         for (var i = 0; i < this.info.nodeCount; ++i) {
@@ -193,16 +193,16 @@ class DataSet {
         for (var i = 0; i < this.info.nodeCount - 1; ++i) {
 
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
-                var val = this.simMatrix[i][j];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+                var val = Math.abs(this.simMatrix[i][j]);
+                if (val >= threshold && val != 0) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[i][j] = 1;
                 }
                 else {
                     adjMatrix[i][j] = 0;
                 }
 
-                val = this.simMatrix[j][i];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+                val = Math.abs(this.simMatrix[j][i]);
+                if (val >= threshold && val != 0) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[j][i] = 1;
                 }
                 else {

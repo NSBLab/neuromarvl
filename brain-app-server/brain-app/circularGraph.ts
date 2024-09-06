@@ -829,10 +829,16 @@ class CircularGraph {
 
 		// Only set if not already moved
 		// If user moved the circular graph to another position and zoom level, keep it when reloading
-		if (this.d3Zoom.translate().reduce((a,b) =>a+b) == 0) {
+        
+        let translation = this.d3Zoom.translate();
+        if (translation[0] == 0 && translation[1] == 0) {
 			this.d3Zoom.scale(1);
 			this.d3Zoom.translate([width, height]);
 		}
+        translation = this.d3Zoom.translate();
+
+        // force the transform onto svgAllElements
+        this.svgAllElements.attr("transform", "translate(" + translation[0] + "," + translation[1] + ")scale(" + this.d3Zoom.scale() + ")");
 
         // An alternative solutions to sorting the children while keeping
         // the order of the clusters

@@ -83,6 +83,15 @@ class CircularGraph {
         // Loop through and clear all existing bar.
         var allBars = this.svgAllElements.selectAll(".rectCircular[barID]").data(new Array());
         allBars.exit().remove();
+
+        
+        // Loop through and clear all existing bar.
+        for (var barIndex in this.attributeBars) {
+            var b = this.attributeBars[barIndex];
+            var bar = this.svgAllElements.selectAll(".rect" + b.id + "Circular").data(new Array());
+            bar.exit().remove();
+        }
+
         //for (var barIndex in this.attributeBars) {
         //    var b = this.attributeBars[barIndex];
         //    var bar = this.svgAllElements.selectAll(".rect" + b.id + "Circular").data(new Array());

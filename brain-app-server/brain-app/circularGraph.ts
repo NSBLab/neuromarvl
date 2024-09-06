@@ -421,6 +421,7 @@ class CircularGraph {
         if (bundledLinks.length > 0) {
             this.svgAllElements.selectAll(".linkCircular")
                 .data(function () {
+                    console.log(bundledLinks[0][0].bundleByAttribute);
                     if (bundledLinks[0][0].bundleByAttribute == "none") {
                         for (var i = 0; i < bundledLinks.length; i++) {
                             bundledLinks[i][1].y = 70;

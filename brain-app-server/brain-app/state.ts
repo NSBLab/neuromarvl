@@ -17,6 +17,9 @@ class CommonData {
     //public edgeColorByNodeTransition = false;
     //public edgeColorByNodeTransitionColor = "#ee2211";
 
+    public graph2DBoundingBox;
+    public resizing: Boolean;
+
     coordCallbacks: Array<() => void> = new Array();
     labelCallbacks: Array<() => void> = new Array();
     surfaceCallbacks: Array<() => void> = new Array();
@@ -340,7 +343,8 @@ class SaveFile {
         };
 
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
-            opacity: 0.5
+            opacity: 0.5,
+            color: "#000000"
         };
 
         this.displaySettings = (sourceObject && sourceObject.displaySettings) || {

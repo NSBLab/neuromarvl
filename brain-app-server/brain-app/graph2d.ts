@@ -38,7 +38,7 @@ class Graph2D {
         private commonData: CommonData,
         private saveObj: SaveFile,
         private graph3d: Graph3D,
-        private camera: THREE.Camera,
+        private camera: THREE.OrthographicCamera,
         complexity: number
     ) {
         this.nodes = [];
@@ -492,6 +492,20 @@ class Graph2D {
             cy.zoom(cy.zoom() * 0.6);
         });
         cy.fit();
+        //cy.on("render", e => {
+        //    this.commonData.graph2DBoundingBox = cy.elements().renderedBoundingBox();
+        //});
+        //cy.on("dragpan", e => {
+        //    console.log("dragpan");
+        //});
+        cy.on("drag pan", e => {
+            if (!this.commonData.resizing) {
+                this.commonData.graph2DBoundingBox = cy.elements().renderedBoundingBox();
+            }
+        });
+        //cy.on("touchpan", e => {
+        //    console.log("touchpan");
+        //});
         if (this.layout === "concentric") {
             // This layout tends to centre near the upper-left corner
             cy.pan({

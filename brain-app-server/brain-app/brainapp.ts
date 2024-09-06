@@ -30,7 +30,7 @@ interface Application {
     brainSurfaceMode;
 
     setDataSet(dataSet: DataSet);
-    resize(width: number, height: number);
+    resize(width: number, height: number, action: string);
     applyFilter(filteredIDs: number[]);
     showNetwork(switchNetwork);
 
@@ -401,7 +401,7 @@ class NeuroMarvl {
     recordDisplaySettings() {
         // surfaceSettings.color                        
         var col = this.saveFileObj.surfaceSettings.color;
-        $("#input-surface-color :input").val(col);
+        $("#input-surface-color").val(col);
 
         //set Display Mode
         $('#display_settings_mode').val(this.saveFileObj.displaySettings.mode);
@@ -510,11 +510,15 @@ class NeuroMarvl {
                 this.applicationsInstances[0].showNetwork(false, () => {
                     this.setNodeSizeOrColor();
                     this.setEdgeColor();
+                    this.setEdgeSize();
                     this.applicationsInstances[0].update(0);
 
                     fnExportFunctionAndContinue();
                 });
             } else {
+                this.setNodeSizeOrColor();
+                this.setEdgeColor();
+                this.setEdgeSize();
                 this.applicationsInstances[0].update(0);
                 fnExportFunctionAndContinue();
             }
@@ -1256,7 +1260,7 @@ class NeuroMarvl {
         let origWidth = canvas.width;
         let origHeight = canvas.height;
 
-        this.applicationsInstances[viewport].resize(resolution.x, resolution.y);
+        this.applicationsInstances[viewport].resize(resolution.x, resolution.x / origWidth * origHeight, 'screenshotzoomstart');
 
         let prevsvgtransform = this.applicationsInstances[viewport].svgAllElements.attr("transform");
         if (prevsvgtransform != null) {
@@ -1298,7 +1302,8 @@ class NeuroMarvl {
             requestAnimationFrame(() => {
                 this.applicationsInstances[viewport].resize(
                     this.applicationsInstances[viewport].jDiv.width(),
-                    this.applicationsInstances[viewport].jDiv.height());
+                    this.applicationsInstances[viewport].jDiv.height(),
+                    'screenshotzoomend');
                 if (prevsvgtransform != null)
                     this.applicationsInstances[viewport].svgAllElements.attr("transform", prevsvgtransform);
 
@@ -1918,10 +1923,10 @@ class NeuroMarvl {
         $(BR_VIEW).css({ width: rw, height: bh });
 
         // Make callbacks to the application windows
-        if (this.applicationsInstances[0]) this.applicationsInstances[0].resize(lw, th);
-        if (this.applicationsInstances[1]) this.applicationsInstances[1].resize(rw, th);
-        if (this.applicationsInstances[2]) this.applicationsInstances[2].resize(lw, bh);
-        if (this.applicationsInstances[3]) this.applicationsInstances[3].resize(rw, bh);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].resize(lw, th, 'resize');
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].resize(rw, th, 'resize');
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].resize(lw, bh, 'resize');
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].resize(rw, bh, 'resize');
     }
 
     // Load the physiological coordinates of each node in the brain
@@ -2822,8 +2827,8 @@ class NeuroMarvl {
 ///                  On Default                                 //
 //////////////////////////////////////////////////////////////////
 
+var neuroMarvl;
 function defaultFunction() {
-    let neuroMarvl = new NeuroMarvl();
+    neuroMarvl = new NeuroMarvl();
     neuroMarvl.start();
 }
-

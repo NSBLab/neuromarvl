@@ -40,7 +40,7 @@ class Brain3DApp implements Application, Loopable {
     deleted: boolean = false;
 
     // THREE variables
-    camera;
+    camera: THREE.OrthographicCamera;
     scene;
     renderer;
     cursor = new THREE.Vector2();
@@ -76,7 +76,7 @@ class Brain3DApp implements Application, Loopable {
     isAnimationOn = false;
 
     graph2dContainer;
-
+    graph2dContainerWidthHeightBeforeResize;
     svg;
     svgDefs;
     ignore3dControl: boolean;
@@ -101,10 +101,13 @@ class Brain3DApp implements Application, Loopable {
     //CAMERA
     CAMERA_ZOOM_SPEED = 15;
     originalCameraPosition: THREE.Vector3;
+    originalCameraBox; 
 
     defaultFov: number;
     fovZoomRatio = 1;
     currentViewWidth: number; 
+    oldWidth: number;
+    oldHeight: number;
 
     allLabels: boolean = false;
     autoRotation: boolean = false;
@@ -127,13 +130,16 @@ class Brain3DApp implements Application, Loopable {
     }
 
     // Constants
-    nearClip = 1;
+    nearClip = 0;
     farClip = 2000;
     //modeLerpLength: number = 0.6;
     modeLerpLength: number = 0.0;       //TODO: Effectively kills the animation. Remove it properly (or fix if easy to do)
     rotationSpeed: number = 1.2;
     graphOffset: number = 120;
     colaLinkDistance = 15;
+    brain3DModelDefaultXPosition: number;
+    canvasGraphPanAndZoomBeforeScreenShotZoom;
+    cameraBeforeScreenshotZoom;
 
     /*
     closeBrainAppCallback;
@@ -164,8 +170,16 @@ class Brain3DApp implements Application, Loopable {
         this.setupUserInteraction(this.jDiv);
 
         // Set up camera
-        this.camera = new THREE.PerspectiveCamera(45, 1, this.nearClip, this.farClip);
-        this.resize(this.jDiv.width(), this.jDiv.height());
+        
+        this.camera = new THREE.OrthographicCamera(
+            -this.jDiv.width() / 4, // left
+            this.jDiv.width() / 4, // right
+            this.jDiv.height() / 4, // top
+            -this.jDiv.height() / 4, // bottom
+            this.nearClip, this.farClip);
+
+        this.resize(this.jDiv.width(), this.jDiv.height(), 'resizestart');
+        this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
 
         // Set up scene
         var ambient = new THREE.AmbientLight(0x1f1f1f);
@@ -179,12 +193,14 @@ class Brain3DApp implements Application, Loopable {
         this.brainObject = new THREE.Object3D();
         this.brainContainer = new THREE.Object3D();
         this.brainContainer.add(this.brainObject);
-        this.brainContainer.position.set(-this.graphOffset, 0, 0);
-        this.brainContainer.lookAt(this.camera.position);
+        this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
+
+        // CA causes the brain to look at the camera
+        //this.brainContainer.lookAt(this.camera.position);
         this.scene.add(this.brainContainer);
 
         this.colaObject = new THREE.Object3D();
-        this.colaObject.position.set(-this.graphOffset, 0, 0);
+        this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
         this.scene.add(this.colaObject);
 
         // Register the data callbacks
@@ -215,6 +231,7 @@ class Brain3DApp implements Application, Loopable {
 
         //initialize display
         this.initialiseDisplay();
+        this.resize(this.jDiv.width(), this.jDiv.height(), 'resizestart');
     }
     
     initialiseDisplay() {
@@ -279,8 +296,10 @@ class Brain3DApp implements Application, Loopable {
         let valueArray = a.get(colorAttribute);
 
         // D3 can scale colours, but needs to use color strings
-        let minString = "#" + minColor.toString(16);
-        let maxString = "#" + maxColor.toString(16);
+        // remove any leading # characters and then append
+        let minString = "#" + minColor.toString(16).replace(/^#+/gm, '');
+        let maxString = "#" + maxColor.toString(16).replace(/^#+/gm, '');
+        
         
         // Continuous has each value mapped with equal proportion
         let i = a.columnNames.indexOf(colorAttribute);
@@ -614,7 +633,26 @@ class Brain3DApp implements Application, Loopable {
         });
 
         this.input.regMouseDragCallback((dx: number, dy: number, mode: number) => {
-            if (this.isControllingGraphOnly) return;
+            let SZ = {
+                height: this.jDiv.height(),
+                width: this.jDiv.width()
+            };
+
+            var pixelHeight = (this.camera.top - this.camera.bottom) / SZ.height;
+            var pixelWidth = (this.camera.right - this.camera.left) / SZ.width;
+
+            console.log(this.isControllingGraphOnly);
+            if (this.isControllingGraphOnly) {
+                this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
+                return;
+            }
+            var pointer = this.input.localPointerPosition();
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(pointer, this.camera);
+
+            var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
+
+            if (!inBoundingSphere) { return; }
 
             // right button: rotation
             if (mode == 3) {
@@ -645,13 +683,28 @@ class Brain3DApp implements Application, Loopable {
                 var defaultViewWidth = 800;
 
                 // move brain model
-                pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
-                pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
-                this.brainContainer.position.set(this.brainContainer.position.x + dx / pixelDistanceRatio, this.brainContainer.position.y - dy / pixelDistanceRatio, this.brainContainer.position.z);
-                this.colaObject.position.set(this.colaObject.position.x + dx / pixelDistanceRatio, this.colaObject.position.y - dy / pixelDistanceRatio, this.colaObject.position.z);
+                //perspective camera
+                //pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
+                //pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
+                //this.brainContainer.position.set(this.brainContainer.position.x + dx / pixelDistanceRatio, this.brainContainer.position.y - dy / pixelDistanceRatio, this.brainContainer.position.z);
+                //this.colaObject.position.set(this.colaObject.position.x + dx / pixelDistanceRatio, this.colaObject.position.y - dy / pixelDistanceRatio, this.colaObject.position.z);
 
-                var prevQuaternion = this.brainContainer.quaternion.clone();
-                this.brainContainer.lookAt(this.camera.position);
+                //var prevQuaternion = this.brainContainer.quaternion.clone();
+                //this.brainContainer.lookAt(this.camera.position);
+
+                //orthographic camera
+                // the height and width of each pixel in world space
+                let pixelHeight = (this.camera.top - this.camera.bottom) / SZ.height;
+                var pixelWidth = (this.camera.right - this.camera.left) / SZ.width;
+
+                //console.log({
+                //    cameraWidth: cameraWidth,
+                //    cameraHeight: cameraHeight
+                //});
+                // why is this causing the brain to rotate?
+                
+                this.brainContainer.position.set(this.brainContainer.position.x + dx * pixelWidth, this.brainContainer.position.y - dy * pixelHeight, this.brainContainer.position.z);
+
             }
         });
 
@@ -732,34 +785,109 @@ class Brain3DApp implements Application, Loopable {
         this.input.regMouseDoubleClickCallback(() => {
             if (this.isControllingGraphOnly) return;
 
-            this.fovZoomRatio = 1;
-            this.camera.fov = this.defaultFov;
+            //this.fovZoomRatio = 1;
+            //this.camera.fov = this.defaultFov;
             this.camera.updateProjectionMatrix();
             
-            this.brainContainer.position.set(-this.graphOffset, 0, 0);
+            this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
             this.brainContainer.lookAt(this.camera.position);
             this.brainObject.rotation.set(0, 0, 0);
             
-            this.colaObject.position.set(this.graphOffset, 0, 0);
+            this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
             this.colaObject.rotation.set(0, 0, 0);
         });
 
         /* Interact with mouse wheel will zoom in and out the 3D Model */
         this.input.regMouseWheelCallback((delta: number) => {
-            const ZOOM_FACTOR = 10;
-
+            const ZOOM_FACTOR = 50;
+            
             if (this.isControllingGraphOnly) return; // 2D Flat Version of the network
             var pointer = this.input.localPointerPosition();
-            var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
+            //var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
+            
+            // the box for the pointer is
+            // [left edge, right edge]: [-1, 1]
+            // [bottom edge, top edge]: [-1, 1]
 
-            pointerNDC.unproject(this.camera);
-            pointerNDC.sub(this.camera.position);
+            // I'm not zooming if the pointer is outside the fov
 
-            if (delta < 0) {
-                this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(ZOOM_FACTOR));
-            } else {
-                this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(-ZOOM_FACTOR));
+            if (Math.abs(pointer.x) > 1 || Math.abs(pointer.y) > 1) {
+                return;
             }
+
+            // point coordinates in normalized coordinates, from top-left [0, 0], bottom-right [1, 1]
+            let pointerFrac = {
+                x: (pointer.x + 1) / 2,
+                y: (1 - pointer.y) / 2
+            };
+
+            //console.log({
+            //    left: this.camera.left,
+            //    right: this.camera.right,
+            //    top: this.camera.top,
+            //    bottom: this.camera.bottom
+            //});
+
+            //console.log(pointer);
+            //console.log(pointerFrac);
+
+            // expand or contract the box around the pointer location
+
+            //let cameraAspect = (this.originalCameraBox.right - this.originalCameraBox.left) / (this.originalCameraBox.top - this.originalCameraBox.bottom);
+            //console.log(this.originalCameraBox);
+
+            // change the left proportionally to the location of the pointer in the screen
+            // if the pointer is closer to the left then we zoom less on the left, more on the right
+
+
+            let leftDelta = -(pointerFrac.x * CommonUtilities.sign(delta) * (this.camera.right - this.camera.left) / ZOOM_FACTOR);
+            let rightDelta = (1 - pointerFrac.x) * CommonUtilities.sign(delta) * (this.camera.right - this.camera.left) / ZOOM_FACTOR;
+            let topDelta = pointerFrac.y * CommonUtilities.sign(delta) * (this.camera.top - this.camera.bottom) / ZOOM_FACTOR;
+            let bottomDelta = -((1 - pointerFrac.y) * CommonUtilities.sign(delta) * (this.camera.top - this.camera.bottom) / ZOOM_FACTOR);
+
+            if ((this.camera.left + leftDelta > this.camera.right + rightDelta)
+                || (this.camera.bottom + bottomDelta > this.camera.top + topDelta)) {
+                return;
+            }
+
+            this.camera.left += leftDelta;
+            this.camera.right += rightDelta;
+            this.camera.top += topDelta;
+            this.camera.bottom += bottomDelta;
+            //this.camera.left -= pointerFrac.x * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
+            //this.camera.right += (1 - pointerFrac.x) * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
+            //this.camera.top += pointerFrac.y * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
+            //this.camera.bottom -= (1 - pointerFrac.y) * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
+            // delta > 0 = zoom out, delta < 0 = zoom in
+
+            // this zooms in and out from the centre, not the pointer
+            // need to find a cap for this, i.e. maximum zoom in and zoom out
+            //let XDelta = Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
+            //let YDelta = Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR;
+
+            // do not allow the box to "invert"
+            //if ((this.camera.left - XDelta) > (this.camera.right + XDelta)
+            //    || (this.camera.bottom - YDelta) > (this.camera.top + YDelta)) {
+            //    return;
+            //}
+
+            //this.camera.left -= XDelta;
+            //this.camera.right += XDelta;
+            //this.camera.top += YDelta;
+            //this.camera.bottom -= YDelta;
+
+
+
+            //console.log("aspect : " + cameraAspect);
+            //console.log("aspect after resize: " + (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom));
+            //pointerNDC.unproject(this.camera);
+            //pointerNDC.sub(this.camera.position);
+
+            // the perspective version wont work with the orthographic
+            //this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(delta < 0 ? ZOOM_FACTOR : -ZOOM_FACTOR));
+            //var curZoom = this.camera.zoom;
+            //this.camera.zoom = curZoom + Math.sign(delta) * 0.1;
+            this.camera.updateProjectionMatrix();
         });
 
         this.input.regGetRotationCallback(() => {
@@ -927,17 +1055,36 @@ class Brain3DApp implements Application, Loopable {
                         // Need to edit geometries to "slice" them in half
                         // Each face is represented by a group 9 values (3 vertices * 3 dimensions). Move to other side if any face touches the right side (i.e. x > 0).
                         var attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position")
-                        var leftPositions = Array.prototype.slice.call(attribute.array);
+                        var oldPositions = Array.prototype.slice.call(attribute.array);
+                        var leftPositions = [];
                         var rightPositions = [];
                         const FACE_CHUNK = 9;
                         const VERT_CHUNK = 3;
-                        let i = leftPositions.length - VERT_CHUNK;      // Start from last x position
-                        while (i -= VERT_CHUNK) {
-                            if (leftPositions[i] > 0) {
-                                // Move whole face to other geometry
-                                var faceStart = Math.floor(i / FACE_CHUNK) * FACE_CHUNK;
-                                rightPositions.push(...leftPositions.splice(faceStart, FACE_CHUNK));
-                                i = faceStart;
+                        for (var faceIDX = 0; faceIDX < oldPositions.length; faceIDX += FACE_CHUNK) {
+                            if (oldPositions[faceIDX] > 0 || oldPositions[faceIDX + 3] > 0 || oldPositions[faceIDX + 6] > 0) {
+                                rightPositions.push(
+                                    oldPositions[faceIDX],
+                                    oldPositions[faceIDX + 1],
+                                    oldPositions[faceIDX + 2],
+                                    oldPositions[faceIDX + 3],
+                                    oldPositions[faceIDX + 4],
+                                    oldPositions[faceIDX + 5],
+                                    oldPositions[faceIDX + 6],
+                                    oldPositions[faceIDX + 7],
+                                    oldPositions[faceIDX + 8]
+                                );
+                            } else {
+                                leftPositions.push(
+                                    oldPositions[faceIDX],
+                                    oldPositions[faceIDX + 1],
+                                    oldPositions[faceIDX + 2],
+                                    oldPositions[faceIDX + 3],
+                                    oldPositions[faceIDX + 4],
+                                    oldPositions[faceIDX + 5],
+                                    oldPositions[faceIDX + 6],
+                                    oldPositions[faceIDX + 7],
+                                    oldPositions[faceIDX + 8]
+                                );
                             }
                         }
 
@@ -1841,36 +1988,543 @@ class Brain3DApp implements Application, Loopable {
         this.needUpdate = true;
     }
 
-    /* Called when the size of the view port is changed*/
-    resize(width: number, height: number) {
+    /* Called when the size of the view port is changed */
+    /* action: 'resize', set the borders of the camera by the viewport and move 3d surfaces to be at the same proportional location */
+    /* the remaining action values are for zooming in/out for a screenshot
+    /* action: 'screenshotzoomstart', we are zooming in for a screenshot, account for changes in aspect ratio, save the original camera limits
+    /* action: 'screenshotzoomend', restore the saved limits from 'screenshotzoomstart'
+    /* If zooming is true, set the borders of the camera to zoom on the existing borders */
+    resize(width: number, height: number, action: string) {
+        if (this.canvasGraph) {
+            if (this.canvasGraph.cy && (action == 'screenshotzoomstart' || action == 'resize')) {
+                
+                this.canvasGraphPanAndZoomBeforeScreenShotZoom = {
+                    zoom: this.canvasGraph.cy.zoom(),
+                    pan: this.canvasGraph.cy.pan(),
+                    BBox: this.commonData.graph2DBoundingBox
+                    //BBox: this.canvasGraph.cy.elements().renderedBoundingBox()
+                };
+                this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre = {
+                    x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.x1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                    y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.y1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                }
+            }
+        };
         // Resize the renderer
         this.renderer.setSize(width, height - sliderSpace);
-        this.currentViewWidth = width;
 
+        if (this.canvasGraph) {
+            if (this.canvasGraph.cy) {
+                this.canvasGraph.cy.container;
+            }
+        }
+        // Resize the svg canvas
         this.svg
             .attr("width", width)
             .attr("height", height - sliderSpace);
 
         // Calculate the aspect ratio
-        var aspect = width / (height - sliderSpace);
-        this.camera.aspect = aspect;
+        //var aspect = width / (height - sliderSpace);
+        //this.camera.aspect = aspect;
 
-        // Calculate the FOVs
-        var verticalFov = Math.atan(height / window.outerHeight); // Scale the vertical fov with the vertical height of the window (up to 45 degrees)
-        var horizontalFov = verticalFov * aspect;
+        //// Calculate the FOVs
+        //var verticalFov = Math.atan(height / window.outerHeight); // Scale the vertical fov with the vertical height of the window (up to 45 degrees)
+        //var horizontalFov = verticalFov * aspect;
 
-        this.defaultFov = verticalFov * 180 / Math.PI;
+        //this.defaultFov = verticalFov * 180 / Math.PI;
+        //console.log(this.defaultFov * this.fovZoomRatio);
+        //console.log({
+        //    defaultFov: this.defaultFov,
+        //    fovZoomRatio: this.fovZoomRatio
+        //});
+        //this.camera.fov = this.defaultFov * this.fovZoomRatio;
+        //this.camera.updateProjectionMatrix();
 
-        this.camera.fov = this.defaultFov * this.fovZoomRatio;
+
+        // get the proportions of the objects in the viewport
+        var brainContainerPosition = new THREE.Vector3();
+        var brainViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+
+        var colaObjectPosition = new THREE.Vector3();
+        var colaObjectViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+        var brainBBox;
+        if (this.brainContainer) {
+            brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
+            this.brainContainer.getWorldPosition(brainContainerPosition);
+
+            brainViewportProp = {
+                xFrac: (brainContainerPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+                yFrac: (brainContainerPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+            };
+        }
+
+        //this.canvasGraph.cy.zoom()
+
+        if (this.colaObject) {
+            this.colaObject.getWorldPosition(colaObjectPosition);
+            colaObjectViewportProp = {
+                xFrac: (colaObjectPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+                yFrac: (colaObjectPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+            }
+        }
+
+        var brain2DScreenBox;
+        if (this.brainSurface && this.camera) {
+            brain2DScreenBox = CommonUtilities.computeScreenSpaceBoundingBox(this.brainSurface.children[0], this.camera);
+            brain2DScreenBox.minNorm = brain2DScreenBox.min;
+            brain2DScreenBox.maxNorm = brain2DScreenBox.max;
+            brain2DScreenBox.min = {
+                x: ((brain2DScreenBox.min.x + 1) / 2 * this.jDiv.width()),
+                y: ((brain2DScreenBox.min.y + 1) / 2 * this.jDiv.height())
+            };
+            brain2DScreenBox.max = {
+                x: ((brain2DScreenBox.max.x + 1) / 2) * this.jDiv.width(),
+                y: ((brain2DScreenBox.max.y + 1) / 2) * this.jDiv.height()
+            };
+            brain2DScreenBox.w = brain2DScreenBox.max.x - brain2DScreenBox.min.x;
+            brain2DScreenBox.h = brain2DScreenBox.max.y - brain2DScreenBox.min.y;
+            brain2DScreenBox.centreX = brain2DScreenBox.min.x + brain2DScreenBox.w / 2;
+            brain2DScreenBox.centreY = brain2DScreenBox.min.y + brain2DScreenBox.h / 2;
+            brain2DScreenBox.aspect = brain2DScreenBox.w / brain2DScreenBox.h;
+        }
+
+        //if (this.canvasGraph) {
+        //    if (this.canvasGraph.cy) {
+        //        console.log(this.renderer.getSize());
+        //        let BBox = this.canvasGraph.cy.elements().renderedBoundingBox();
+        //        console.log(BBox);
+        //        console.log(this.canvasGraph.cy.zoom());
+        //        console.log(this.canvasGraph.cy.pan());
+        //    }
+        //}
+
+
+        var oldCanvasAspectRatio = this.oldWidth / this.oldHeight;
+        //var oldCameraAspectRatio = (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom);
+        var newCanvasAspectRatio = width / (height - sliderSpace);
+        var oldPixelHeight = (this.camera.top - this.camera.bottom) / this.oldHeight;
+        var oldPixelWidth = (this.camera.right - this.camera.left) / this.oldWidth;
+        
+        var canvasGraphPanAndZoomAtScreenShotZoom;
+        switch (action) {
+            case "resize":
+            case "resizestart":
+                
+               if (this.brainContainer) {
+                    this.camera.position.set(0, 0, brainBBox.max.z + 50);
+                } else {
+                    this.camera.position.set(0, 0, 200);
+                }
+
+                // move the circular graph with the change in viewport size
+                if (this.circularGraph) {
+                    let translation = this.circularGraph.d3Zoom.translate();
+                    this.circularGraph.d3Zoom.translate([translation[0] - (this.oldWidth - width), translation[1] - (this.oldHeight - height)]);
+                    this.circularGraph.svgAllElements.attr("transform", "translate(" + translation[0] + "," + translation[1] + ")scale(" + this.d3Zoom.scale() + ")");
+                }
+
+                // set the camera borders according to the viewport size
+
+                if (action == 'resizestart') {
+                    //    this.camera.right = width / 2 / 4;
+                    //    this.camera.top = (height - sliderSpace) / 2 / 4;
+                    //    this.camera.bottom = -(height - sliderSpace) / 2 / 4;
+                    //    this.camera.left = -width / 2 / 4;
+                    ////} else {
+
+                    this.camera.right = width / 8;
+                    this.camera.top = (height - sliderSpace) / 8;
+                    this.camera.bottom = -(height - sliderSpace) / 8;
+                    this.camera.left = -width / 8;
+                    this.originalCameraBox = {
+                        right: this.camera.right,
+                        left: this.camera.left,
+                        bottom: this.camera.bottom,
+                        top: this.camera.top
+                    };
+                    this.originalCameraPosition = this.camera.position.clone();
+                    
+                } else {
+                    this.camera.zoom = this.camera.zoom * (width / this.oldWidth);
+                }
+
+                let pixelHeight = (this.camera.top - this.camera.bottom) / (height - sliderSpace);
+                let pixelWidth = (this.camera.right - this.camera.left) / width;
+                
+                //// needs adjustment for pixel spacing change
+
+                
+                //console.log(this.originalCameraPosition);
+                // update the positions of the 3d surface objects to be at the same proportions in the new viewport
+                
+                if (this.brainContainer) {
+                    brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
+                    
+                    let originalBrainContainerScale = this.brainContainer.scale;
+                    let newBrainContainerPosition = {
+                        x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                        y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                        z: 0
+                    };
+                    //newBrainContainerPosition.x = this.camera.left;
+                    console.log('setting brain container');
+                    this.brainContainer.position.set(newBrainContainerPosition.x, newBrainContainerPosition.y, newBrainContainerPosition.z);
+
+
+                    //if (action == 'resize') {
+                    //    this.brainContainer.scale.set(originalBrainContainerScale.x / (pixelWidth / oldPixelWidth),
+                    //        originalBrainContainerScale.y / ((oldPixelHeight) / (pixelHeight)),
+                    //        originalBrainContainerScale.z);
+
+                    //}
+
+                    //console.log(this.brainContainer.position);
+
+                }
+                //console.log(this.colaObject);
+                
+
+                if (this.colaObject) {
+                    var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
+                    
+                    this.colaObject.position.set(
+                        this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac,
+                        this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac,
+                        0);
+                }
+                //console.log(this);
+                //if (this.circularGraph) {
+                    //console.log(this.circularGraph);
+                    
+                    ////var curTransform = d3.zoomTransform(this.circularGraph.svg.node());
+                    //this.svgAllElements.attr
+                    //    console.log({
+                    //        width: width,
+                    //        this.oldWidth: this.oldWidth,
+                    //        height: height,
+                    //        this.oldHeight: this.oldHeight
+                    //    });
+
+                    //    this.circularGraph.d3Zoom.translateBy(
+                    //        this.circularGraph.svg,
+                    //        width - this.oldWidth,
+                    //        height - this.oldHeight
+                    //    );
+                    
+
+                    //this.svg.call(
+                    //    this.d3Zoom.transform,
+                    //    d3.zoomIdentity.translate(width, height).scale(1)
+                //}
+
+                //
+                // 
+                //
+
+                
+
+                // find the zoom required to fit the brain into the screen size
+
+
+                break;
+            case "screenshotzoomstart":
+                
+             
+                //if (this.canvasGraph) {
+                //    if (this.canvasGraph.cy) {
+                //        canvasGraphPanAndZoomAtScreenShotZoom = {
+                //            zoom: this.canvasGraph.cy.zoom(),
+                //            pan: this.canvasGraph.cy.pan(),
+                //            BBox: this.canvasGraph.cy.elements().renderedBoundingBox()
+                //        };
+                //        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox);
+
+                //    }
+                //}
+
+                this.cameraBeforeScreenshotZoom = {
+                    left: this.camera.left,
+                    right: this.camera.right,
+                    top: this.camera.top,
+                    bottom: this.camera.bottom,
+                    zoom: this.camera.zoom
+                };
+
+                
+                //console.log({
+                //    oldCanvasAspectRatio: oldCanvasAspectRatio,
+                //    newCanvasAspectRatio: newCanvasAspectRatio
+                //});
+
+                // move the centre of the object so that it is in the same place in the resized window
+
+                //let brainObjectNewCentreInPixels = {
+                //   x: brainViewportProp.xFrac * width,
+                //   y: brainViewportProp.yFrac * (height - sliderSpace)
+                //};
+                //this.camera.left = 0;
+                //this.camera.top = 0;
+                //this.camera.right = width;
+                //this.camera.bottom = -(height - sliderSpace); // + pixel spacing in world coordinates needed to put the object at the same proportions;
+
+
+//                brainObjectNewCentreInPixels
+
+  //              var cameraYCentre = (this.camera.top + this.camera.bottom) / 2;
+    //            this.camera.bottom = cameraYCentre - (cameraYCentre - this.camera.bottom) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+      //          this.camera.top = cameraYCentre + (this.camera.top - cameraYCentre) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+
+
+
+                //this.camera.left = -width / 8;
+
+                //    let brainObjectCentreInPixels =
+                //    let brainObjectCentreInCoords = {
+                //        x: (this.camera.right - this.camera.left)  brain2DScreenBox.centreX,
+
+                //    }
+
+                //newBrain2DScreenBox.w = (brain2DScreenBox.max.x - brain2DScreenBox.min.x) ;
+                //brain2DScreenBox.h = brain2DScreenBox.max.y - brain2DScreenBox.min.y;
+                //brain2DScreenBox.centreX = brain2DScreenBox.min.x + brain2DScreenBox.w / 2;
+                //brain2DScreenBox.centreY = brain2DScreenBox.min.y + brain2DScreenBox.h / 2;
+                //brain2DScreenBox.aspect = brain2DScreenBox.w / brain2DScreenBox.h;
+
+                //this.camera.right = width / 8;
+                //this.camera.top = (height - sliderSpace) / 8;
+                //this.camera.bottom = -(height - sliderSpace) / 8;
+                //this.camera.left = -width / 8;
+                // width needs to be
+
+                // needs to be
+                //this.camera.left = space for the object + buffer for unused
+
+
+                //if (width < this.jDiv.width()) {
+
+                //}
+
+                //if (height < this.jDiv.height()) {
+
+                //}
+
+                //this.camera.left
+                //brainViewportProp
+                //this.brainContainer.position
+
+                //brainViewportProp.xFrac
+                //brainViewportProp.yFrac
+
+                //brain2DScreenBox.centreX = brain2DScreenBox.min.x + brain2DScreenBox.w / 2;
+                //brain2DScreenBox.centreY = brain2DScreenBox.min.y + brain2DScreenBox.h / 2;
+
+                //this.camera.zoom = this.camera.zoom * (width / this.oldWidth);
+
+                //this.camera.right = (this.camera.right - this.camera.left) * (width / this.oldWidth);
+                //this.camera.bottom = (this.camera.top - this.camera.bottom) / this.camera.zoom * (width / this.oldWidth * height / this.oldHeight);
+
+
+                if (newCanvasAspectRatio > oldCanvasAspectRatio) {
+                //    // new canvas is wider, need to expand the left and right borders of the camera
+                //    // multiply the distance between the left and right borders from the centre by
+                //    // the increase in the aspect ratio
+                    var cameraXCentre = (this.camera.right + this.camera.left) / 2;
+                    //this.camera.left = cameraXCentre - (cameraXCentre - this.camera.left) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                    this.camera.right = cameraXCentre + (this.camera.right - cameraXCentre) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                } else {
+                //    // new canvas is taller, need to expand the top and bottom borders of the camera
+                //    // divide the distance between the left and right borders from the centre by
+                //    // the increase in the aspect ratio
+                    var cameraYCentre = (this.camera.top + this.camera.bottom) / 2;
+                    this.camera.bottom = cameraYCentre - (cameraYCentre - this.camera.bottom) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                    //this.camera.top = cameraYCentre + (this.camera.top - cameraYCentre) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+
+                }
+
+                let newBrainContainerPosition = {
+                    x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                    y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                    z: 0
+                };
+                //newBrainContainerPosition.x = this.camera.left;
+                //this.brainContainer.position.set(newBrainContainerPosition.x, newBrainContainerPosition.y, newBrainContainerPosition.z);
+                // resize so that the brain is in 
+
+                
+                //cy.zoom(cy.zoom() * ((container.offsetHeight * 0.75) / cyBBox.h));
+                //cy.pan(this.canvasGraphPanAndZoomBeforeScreenShotZoom )
+                if (this.brainContainer) {
+                    this.brainContainer.position.set(
+                        this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                        this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                        0);
+                }
+                if (this.colaObject) {
+                    var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
+                    this.colaObject.position.set(
+                        this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac,
+                        this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac,
+                        0);
+                    this.colaObject.position.needsUpdate = true;
+                }
+                //this.colaObject.update();
+                console.log(this.canvasGraph);
+                if (this.canvasGraph) {
+                    if (this.canvasGraph.cy) {
+                        canvasGraphPanAndZoomAtScreenShotZoom = {
+                            zoom: this.canvasGraph.cy.zoom(),
+                            pan: this.canvasGraph.cy.pan(),
+                            BBox: this.canvasGraph.cy.elements().renderedBoundingBox()
+                        };
+                        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox);
+                        canvasGraphPanAndZoomAtScreenShotZoom.centre = {
+                            x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.x1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                            y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.y1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                        };
+
+
+                        let newCentre = {
+                            x: canvasGraphPanAndZoomAtScreenShotZoom.centre.x / this.oldWidth * width,
+                            y: canvasGraphPanAndZoomAtScreenShotZoom.centre.y / this.oldHeight * height
+                        }
+                        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox);
+                        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre);
+                        //console.log({
+                        //    x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x / this.oldWidth * width - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                        //    y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y / this.oldHeight * (height - sliderSpace) - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                        //});
+                        //this.canvasGraph.cy.pan({
+                        //    x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x / this.oldWidth * width - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                        //    y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y / this.oldHeight * (height - sliderSpace) - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                        //});
+                        //console.log(width);
+                        //console.log(this.oldWidth);
+                        if (newCanvasAspectRatio > oldCanvasAspectRatio) {
+                            //    // new canvas is wider, need to expand the left and right borders of the camera
+                            //    // multiply the distance between the left and right borders from the centre by
+                            //    // the increase in the aspect ratio
+                            var cameraXCentre = (this.camera.right + this.camera.left) / 2;
+                            //this.camera.left = cameraXCentre - (cameraXCentre - this.camera.left) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                            this.camera.right = cameraXCentre + (this.camera.right - cameraXCentre) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                        } else {
+                            //    // new canvas is taller, need to expand the top and bottom borders of the camera
+                            //    // divide the distance between the left and right borders from the centre by
+                            //    // the increase in the aspect ratio
+                            var cameraYCentre = (this.camera.top + this.camera.bottom) / 2;
+                            this.camera.bottom = cameraYCentre - (cameraYCentre - this.camera.bottom) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                            //this.camera.top = cameraYCentre + (this.camera.top - cameraYCentre) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+
+                        }
+
+                        this.canvasGraph.cy.zoom({
+                            level: this.canvasGraph.cy.zoom() * (width / this.oldWidth),
+                            renderedPosition: {
+                                x: 0,
+                                y: 0
+                            }
+                        });
+                        let cyBBox = this.canvasGraph.cy.elements().renderedBoundingBox();
+                        //console.log(cyBBox);
+                        //console.log(width);
+                        //console.log(height);
+                        if (cyBBox.x2 > width) {
+                            this.canvasGraph.cy.panBy({
+                                x: width - cyBBox.x2,
+                                y: 0
+                            })
+                        };
+                        if (cyBBox.y2 > height) {
+                            this.canvasGraph.cy.panBy({
+                                x: 0,
+                                y: height - cyBBox.y2
+                            })
+                        };
+
+                        //let l = this.canvasGraph.cy.renderedExtent();
+                        //console.log(this.canvasGraph.cy.renderedExtent());
+                        //console.log(this.graph2dContainer);
+                        //let t = this.renderer.getSize();
+                        //console.log(t);
+                        //this.canvasGraph.cy.invalidateSize();
+                        //console.log(this.renderer);
+                        console.log(this.graph2dContainer.container);
+                        this.graph2dContainerWidthHeightBeforeResize = {
+                            width: $(this.graph2dContainer).css("width"),
+                            height: $(this.graph2dContainer).css("height")
+                            //width: this.renderer.domElement.parentElement.width,
+                            //height: this.renderer.domElement.parentElement.height
+
+                        };
+                        $(this.graph2dContainer).css({width: width + "px", height: height + "px"});
+                        //this.renderer.domElement.width = width;
+                        //this.renderer.domElement.height = height;
+                        //this.renderer.domElement.parentElement.width = width;
+                        //this.renderer.domElement.parentElement.height = height;
+
+                        this.canvasGraph.cy.resize();
+                        //this.canvasGraph.cy.panBy({
+                        //    x: -(canvasGraphPanAndZoomAtScreenShotZoom.centre.x - newCentre.x),
+                        //    y: -(canvasGraphPanAndZoomAtScreenShotZoom.centre.y - newCentre.y)
+                        //});
+                        //console.log(this.canvasGraph.cy.zoom());
+                        //console.log(this.canvasGraph.cy.pan());
+                        //let BBox = this.canvasGraph.cy.elements().renderedBoundingBox();
+
+                        //this.canvasGraph.cy.zoom(
+                        //    {
+                        //        level: this.canvasGraph.cy.zoom(),
+                        //        renderedPosition: {
+                        //            x: BBox.x1 + BBox.w / 2,
+                        //            y: BBox.y1 + BBox.w / 2
+                        //        }
+                        //    });
+                        //console.log()
+                        //console.log(this.canvasGraph.cy.zoom());
+                        //console.log(this.canvasGraph.cy.pan());
+                    }
+                }
+                break;
+            case "screenshotzoomend":
+                this.camera.left = this.cameraBeforeScreenshotZoom.left;
+                this.camera.right = this.cameraBeforeScreenshotZoom.right;
+                this.camera.top = this.cameraBeforeScreenshotZoom.top;
+                this.camera.bottom = this.cameraBeforeScreenshotZoom.bottom;
+                this.camera.zoom = this.cameraBeforeScreenshotZoom.zoom;
+                // restore the zoom of the 2d
+                if (this.canvasGraph) {
+                    if (this.canvasGraph.cy) {
+
+                        this.canvasGraph.cy.pan(this.canvasGraphPanAndZoomBeforeScreenShotZoom.pan);
+                        this.canvasGraph.cy.zoom(this.canvasGraphPanAndZoomBeforeScreenShotZoom.zoom);
+                        $(this.graph2dContainer).css({
+                            width: this.graph2dContainerWidthHeightBeforeResize.width,
+                            height: this.graph2dContainerWidthHeightBeforeResize.height
+                        });
+                        this.canvasGraph.cy.resize();
+                    }
+                }
+                if (this.brainContainer) {
+                    let newBrainContainerPosition = {
+                        x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                        y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                        z: 0
+                    };
+                    //newBrainContainerPosition.x = this.camera.left;
+                    this.brainContainer.position.set(newBrainContainerPosition.x, newBrainContainerPosition.y, newBrainContainerPosition.z);
+                }
+                
+                break;
+        }
         this.camera.updateProjectionMatrix();
-
-        // Work out how far away the camera needs to be
-        var distanceByH = (widthInCamera / 2) / Math.tan(horizontalFov / 2);
-        var distanceByV = (heightInCamera / 2) / Math.tan(verticalFov / 2);
-
-        // Select the maximum distance of the two
-        this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
-        this.originalCameraPosition = this.camera.position.clone();
+        this.oldHeight = height;
+        this.oldWidth = width;
+        this.commonData.resizing = false;
     }
 
     setDataSet(dataSet: DataSet) {

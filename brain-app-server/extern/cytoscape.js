@@ -7978,7 +7978,7 @@ var corefn = ({
   size: function(){
     var _p = this._private;
     var container = _p.container;
-      console.log(container);
+
     return ( _p.sizeCache = _p.sizeCache || ( container ? {
       width: container.clientWidth,
       height: container.clientHeight

@@ -1188,7 +1188,7 @@ class CircularGraph {
         var txt: string;
         var rgbtext;
         var delta;
-        console.log(color);
+        
         if (bar.isGradientOn) {
             var attr = $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).val();
 

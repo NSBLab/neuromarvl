@@ -36,6 +36,71 @@ class CommonUtilities {
         return true;
     }
 
+    static cytoscapeToModelPosition = (cy, pos) => {
+        const pan = cy.pan();
+        const zoom = cy.zoom();
+        return {
+            x: (pos.x - pan.x) / zoom,
+            y: (pos.y - pan.y) / zoom,
+        };
+    };
+
+    // Convert a model position to a rendered position
+    static cytoscapeToRenderedPosition = (cy, pos) => {
+        const pan = cy.pan();
+        const zoom = cy.zoom();
+        return {
+            x: pos.x * zoom + pan.x,
+            y: pos.y * zoom + pan.y,
+        };
+    };
+
+
+    // compute the bounding box of the brain
+    static computeScreenSpaceBoundingBox(brainModelOrigin, camera) {
+        
+        var vertex = new THREE.Vector3();
+        var min = new THREE.Vector3(1, 1, 1);
+        var max = new THREE.Vector3(-1, -1, -1);
+        brainModelOrigin.traverse(function (child) {
+            if (child instanceof THREE.Mesh) {
+                var attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position")
+                var oldPositions = Array.prototype.slice.call(attribute.array);
+                const FACE_CHUNK = 9;
+                const VERT_CHUNK = 3;
+                for (var faceIDX = 0; faceIDX < oldPositions.length; faceIDX += FACE_CHUNK) {
+
+                    var vertexWorldCoord = vertex.copy(new THREE.Vector3(oldPositions[faceIDX], oldPositions[faceIDX + 1], oldPositions[faceIDX + 2])).applyMatrix4(brainModelOrigin.matrixWorld);
+                    var vertexScreenSpace = vertexWorldCoord.project(camera);
+                    min.min(vertexScreenSpace);
+                    max.max(vertexScreenSpace);
+
+                    vertexWorldCoord = vertex.copy(new THREE.Vector3(oldPositions[faceIDX + 3], oldPositions[faceIDX + 4], oldPositions[faceIDX + 5])).applyMatrix4(brainModelOrigin.matrixWorld);
+                    vertexScreenSpace = vertexWorldCoord.project(camera);
+                    min.min(vertexScreenSpace);
+                    max.max(vertexScreenSpace);
+
+                    vertexWorldCoord = vertex.copy(new THREE.Vector3(oldPositions[faceIDX + 6], oldPositions[faceIDX + 7], oldPositions[faceIDX + 8])).applyMatrix4(brainModelOrigin.matrixWorld);
+                    vertexScreenSpace = vertexWorldCoord.project(camera);
+                    min.min(vertexScreenSpace);
+                    max.max(vertexScreenSpace);
+                }
+            }
+        })
+        return new THREE.Box2(new THREE.Vector2(min.x, min.y), new THREE.Vector2(max.x, max.y));
+        //return null;
+    }
+
+    static sign(value: number) {
+        console.log(value);
+        if (value < 0) {
+            return -1;
+        } else if (value > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
     static getDistinctValues(values: number[]) {
         var flags = [], distincts = [], l = values.length;
         for (var i = 0; i < l; i++) {

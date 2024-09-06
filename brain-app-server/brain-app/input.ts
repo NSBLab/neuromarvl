@@ -351,7 +351,6 @@ class InputTargetManager {
         }, false);
 
         var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel";
-            var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);
 
         document.addEventListener(mousewheelevt, (event) => {
             var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);

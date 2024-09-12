@@ -2108,8 +2108,8 @@ class Brain3DApp implements Application, Loopable {
         var oldCanvasAspectRatio = this.oldWidth / this.oldHeight;
         //var oldCameraAspectRatio = (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom);
         var newCanvasAspectRatio = width / (height - sliderSpace);
-        var oldPixelHeight = (this.camera.top - this.camera.bottom) / this.oldHeight;
-        var oldPixelWidth = (this.camera.right - this.camera.left) / this.oldWidth;
+        //var oldPixelHeight = (this.camera.top - this.camera.bottom) / this.oldHeight;
+        //var oldPixelWidth = (this.camera.right - this.camera.left) / this.oldWidth;
         
         var canvasGraphPanAndZoomAtScreenShotZoom;
         switch (action) {
@@ -2132,12 +2132,6 @@ class Brain3DApp implements Application, Loopable {
                 // set the camera borders according to the viewport size
 
 
-                //    this.camera.right = width / 2 / 4;
-                //    this.camera.top = (height - sliderSpace) / 2 / 4;
-                //    this.camera.bottom = -(height - sliderSpace) / 2 / 4;
-                //    this.camera.left = -width / 2 / 4;
-                ////} else {
-
                 this.camera.right = width / 8;
                 this.camera.top = (height - sliderSpace) / 8;
                 this.camera.bottom = -(height - sliderSpace) / 8;
@@ -2154,8 +2148,8 @@ class Brain3DApp implements Application, Loopable {
                 this.originalCameraPosition = this.camera.position.clone();
                 
 
-                let pixelHeight = (this.camera.top - this.camera.bottom) / (height - sliderSpace);
-                let pixelWidth = (this.camera.right - this.camera.left) / width;
+                //let pixelHeight = (this.camera.top - this.camera.bottom) / (height - sliderSpace);
+                //let pixelWidth = (this.camera.right - this.camera.left) / width;
                 
                 //// needs adjustment for pixel spacing change
 
@@ -2166,14 +2160,14 @@ class Brain3DApp implements Application, Loopable {
                 if (this.brainContainer) {
                     brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
                     
-                    let originalBrainContainerScale = this.brainContainer.scale;
+                    //let originalBrainContainerScale = this.brainContainer.scale;
                     let newBrainContainerPosition = {
                         x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
                         y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
                         z: 0
                     };
                     //newBrainContainerPosition.x = this.camera.left;
-                    console.log('setting brain container');
+                    //console.log('setting brain container');
                     this.brainContainer.position.set(newBrainContainerPosition.x, newBrainContainerPosition.y, newBrainContainerPosition.z);
 
 

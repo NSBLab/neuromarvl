@@ -2131,28 +2131,28 @@ class Brain3DApp implements Application, Loopable {
 
                 // set the camera borders according to the viewport size
 
-                if (action == 'resizestart') {
-                    //    this.camera.right = width / 2 / 4;
-                    //    this.camera.top = (height - sliderSpace) / 2 / 4;
-                    //    this.camera.bottom = -(height - sliderSpace) / 2 / 4;
-                    //    this.camera.left = -width / 2 / 4;
-                    ////} else {
 
-                    this.camera.right = width / 8;
-                    this.camera.top = (height - sliderSpace) / 8;
-                    this.camera.bottom = -(height - sliderSpace) / 8;
-                    this.camera.left = -width / 8;
-                    this.originalCameraBox = {
-                        right: this.camera.right,
-                        left: this.camera.left,
-                        bottom: this.camera.bottom,
-                        top: this.camera.top
-                    };
-                    this.originalCameraPosition = this.camera.position.clone();
+                //    this.camera.right = width / 2 / 4;
+                //    this.camera.top = (height - sliderSpace) / 2 / 4;
+                //    this.camera.bottom = -(height - sliderSpace) / 2 / 4;
+                //    this.camera.left = -width / 2 / 4;
+                ////} else {
+
+                this.camera.right = width / 8;
+                this.camera.top = (height - sliderSpace) / 8;
+                this.camera.bottom = -(height - sliderSpace) / 8;
+                this.camera.left = -width / 8;
                     
-                } else {
-                    this.camera.zoom = this.camera.zoom * (width / this.oldWidth);
-                }
+                this.originalCameraBox = {
+                    right: this.camera.right,
+                    left: this.camera.left,
+                    bottom: this.camera.bottom,
+                    top: this.camera.top
+                };
+
+                //this.camera.zoom = this.camera.zoom * (width / this.oldWidth);
+                this.originalCameraPosition = this.camera.position.clone();
+                
 
                 let pixelHeight = (this.camera.top - this.camera.bottom) / (height - sliderSpace);
                 let pixelWidth = (this.camera.right - this.camera.left) / width;

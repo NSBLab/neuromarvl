@@ -641,7 +641,6 @@ class Brain3DApp implements Application, Loopable {
             var pixelHeight = (this.camera.top - this.camera.bottom) / SZ.height;
             var pixelWidth = (this.camera.right - this.camera.left) / SZ.width;
 
-            console.log(this.isControllingGraphOnly);
             if (this.isControllingGraphOnly) {
                 this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
                 return;
@@ -2125,34 +2124,31 @@ class Brain3DApp implements Application, Loopable {
                 // move the circular graph with the change in viewport size
                 if (this.circularGraph) {
                     let translation = this.circularGraph.d3Zoom.translate();
-                    this.circularGraph.d3Zoom.translate([translation[0] - (this.oldWidth - width), translation[1] - (this.oldHeight - height)]);
-                    this.circularGraph.svgAllElements.attr("transform", "translate(" + translation[0] + "," + translation[1] + ")scale(" + this.d3Zoom.scale() + ")");
+
+                    this.circularGraph.d3Zoom.translate([translation[0] / this.oldWidth * width, translation[1] / this.oldHeight * height]);
+
+                    this.circularGraph.svgAllElements.attr("transform", "translate(" + translation[0] + "," + translation[1] + ")scale(" + this.d3Zoom.scale() * (width / this.oldWidth) + ")");
                 }
 
                 // set the camera borders according to the viewport size
 
-
-                this.camera.right = width / 8;
-                this.camera.top = (height - sliderSpace) / 8;
-                this.camera.bottom = -(height - sliderSpace) / 8;
-                this.camera.left = -width / 8;
+                if (action == 'resizestart') {
+                    this.camera.right = width / 8;
+                    this.camera.top = (height - sliderSpace) / 8;
+                    this.camera.bottom = -(height - sliderSpace) / 8;
+                    this.camera.left = -width / 8;
                     
-                this.originalCameraBox = {
-                    right: this.camera.right,
-                    left: this.camera.left,
-                    bottom: this.camera.bottom,
-                    top: this.camera.top
-                };
-
-                //this.camera.zoom = this.camera.zoom * (width / this.oldWidth);
+                    this.originalCameraBox = {
+                        right: this.camera.right,
+                        left: this.camera.left,
+                        bottom: this.camera.bottom,
+                        top: this.camera.top
+                    };
+                } else {
+                    this.camera.right = this.camera.left + (this.camera.right - this.camera.left) * width / this.oldWidth;
+                    this.camera.top = this.camera.bottom + (this.camera.top - this.camera.bottom) * height / this.oldHeight;
+                }               
                 this.originalCameraPosition = this.camera.position.clone();
-                
-
-                //let pixelHeight = (this.camera.top - this.camera.bottom) / (height - sliderSpace);
-                //let pixelWidth = (this.camera.right - this.camera.left) / width;
-                
-                //// needs adjustment for pixel spacing change
-
                 
                 //console.log(this.originalCameraPosition);
                 // update the positions of the 3d surface objects to be at the same proportions in the new viewport

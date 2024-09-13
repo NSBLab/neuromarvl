@@ -641,17 +641,18 @@ class Brain3DApp implements Application, Loopable {
             var pixelHeight = (this.camera.top - this.camera.bottom) / SZ.height;
             var pixelWidth = (this.camera.right - this.camera.left) / SZ.width;
 
-            if (this.isControllingGraphOnly) {
-                this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
-                return;
-            }
             var pointer = this.input.localPointerPosition();
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(pointer, this.camera);
 
             var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
 
-            if (!inBoundingSphere) { return; }
+            if (!inBoundingSphere) {
+                if (this.networkType == '3d') {
+                    this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
+                    return;
+                }
+             }
 
             // right button: rotation
             if (mode == 3) {
@@ -708,6 +709,7 @@ class Brain3DApp implements Application, Loopable {
         });
 
         this.input.regMouseLeftClickCallback((x: number, y: number) => {
+            console.log("regMouseLeftClickCallback");
             var oldSelectedNodeID = this.commonData.selectedNode;
             this.commonData.selectedNode = -1;
 
@@ -2692,11 +2694,13 @@ class Brain3DApp implements Application, Loopable {
     }
 
     getBoundingSphereUnderPointer(pointer) {
-        if ((this.networkType == '2d') || (this.networkType == 'circular')) {
+        
+        if ((this.networkType == '2d') || (this.networkType == 'circular') || (this.networkType == '3d')) {
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(pointer, this.camera);
             
             var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
+            
             if (this.prevInBoundingSphere !== inBoundingSphere) {
                 if (inBoundingSphere) {
                     this.isControllingGraphOnly = false;

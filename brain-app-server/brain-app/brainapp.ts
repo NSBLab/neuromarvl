@@ -463,7 +463,7 @@ class NeuroMarvl {
         if (this.saveFileObj.surfaceSettings) {
             this.initSurfaceSettings();
         }
-
+        
         this.selectView(TL_VIEW);
     }
 
@@ -512,7 +512,6 @@ class NeuroMarvl {
                     this.setEdgeColor();
                     this.setEdgeSize();
                     this.applicationsInstances[0].update(0);
-
                     fnExportFunctionAndContinue();
                 });
             } else {
@@ -1291,7 +1290,7 @@ class NeuroMarvl {
         // we need to let the browser render into the new sized canvas
         requestAnimationFrame(() => {
             var newSource = this.getSource(viewport, styles);
-            
+
             // Export all svg Graph on the page
             if (fileType === "svg") {
                 this.downloadSVG(newSource, filename);
@@ -1986,6 +1985,11 @@ class NeuroMarvl {
     }
 
     initSurfaceSettings = () => {
+        if (this.saveFileObj.surfaceSettings.color) {
+
+            $("#input-surface-color").colorpicker("setValue", this.saveFileObj.surfaceSettings.color);
+            this.setBrainSurfaceColor(this.saveFileObj.surfaceSettings.color);
+        }
         if (this.saveFileObj.surfaceSettings.opacity) {
             $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').setValue(this.saveFileObj.surfaceSettings.opacity);
             this.setSurfaceOpacity();
@@ -2189,6 +2193,7 @@ class NeuroMarvl {
     // new THREE.Mesh() objects by the application wishing to use the model.
     loadBrainModel = (model: string, callback) => {
         let file = (model === 'ch2') && 'BrainMesh_Ch2withCerebellum.obj'
+            || (model === 'ch2nocerebellum') && 'BrainMesh_Ch2.obj'
             || (model === 'icbm') && 'BrainMesh_ICBM152.obj'
             ;
         if (!file) {

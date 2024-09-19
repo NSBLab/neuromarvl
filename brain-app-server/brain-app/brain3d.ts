@@ -800,6 +800,7 @@ class Brain3DApp implements Application, Loopable {
             
             this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
             this.colaObject.rotation.set(0, 0, 0);
+            this.saveBrainRotation();
         });
 
         /* Interact with mouse wheel will zoom in and out the 3D Model */

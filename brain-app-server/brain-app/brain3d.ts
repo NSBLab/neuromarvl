@@ -766,6 +766,8 @@ class Brain3DApp implements Application, Loopable {
                 else if (this.networkType == "2d") {
                     this.svgNeedsUpdate = true;
                 }
+                this.physioGraph.update();
+                this.colaGraph.update();
             }
         });
 
@@ -2800,6 +2802,7 @@ class Brain3DApp implements Application, Loopable {
                         this.selectedNodeID = -1;
                     }
                 }
+                this.needUpdate = true;
             }
 
             if (this.needUpdate || this.isAnimationOn) {

@@ -92,7 +92,6 @@ class CommonUtilities {
     }
 
     static sign(value: number) {
-        console.log(value);
         if (value < 0) {
             return -1;
         } else if (value > 0) {

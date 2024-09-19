@@ -40,6 +40,7 @@ interface Application {
     setBrainMode(brainMode);
     setSurfaceOpacity(opacity);
     setSurfaceColor(color: string);
+    setSurfaceRotation(quat);
 
     // Node Attributes
     setNodeDefaultSizeColor();
@@ -1994,6 +1995,12 @@ class NeuroMarvl {
             $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').setValue(this.saveFileObj.surfaceSettings.opacity);
             this.setSurfaceOpacity();
         }
+        if (this.saveFileObj.surfaceSettings.rotation) {
+            this.setBrainSurfaceRotation(this.saveFileObj.surfaceSettings.rotation);
+    }
+
+
+
     }
 
     /**

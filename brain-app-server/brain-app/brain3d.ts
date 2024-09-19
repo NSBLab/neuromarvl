@@ -919,6 +919,10 @@ class Brain3DApp implements Application, Loopable {
     }
 
 
+    saveBrainRotation() {
+        this.saveFileObj.surfaceSettings.rotation = this.brainObject.quaternion.clone();
+    }
+
     setBrainMode(mode) {
         this.brainSurfaceMode = mode;
         let model = this.brainModelOrigin;

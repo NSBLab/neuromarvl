@@ -671,6 +671,7 @@ class Brain3DApp implements Application, Loopable {
                     quatY.setFromAxisAngle(axisY, dy / pixelAngleRatio); // axis must be normalised, angle in radians
                     this.brainObject.quaternion.multiplyQuaternions(quatY, this.brainObject.quaternion);
                     this.colaObject.quaternion.multiplyQuaternions(quatY, this.colaObject.quaternion);
+                    this.saveBrainRotation();
                 }
                 else {
                     this.mouse.dx = dx;
@@ -792,7 +793,7 @@ class Brain3DApp implements Application, Loopable {
             //this.fovZoomRatio = 1;
             //this.camera.fov = this.defaultFov;
             this.camera.updateProjectionMatrix();
-            
+            this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
             this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
             this.brainContainer.lookAt(this.camera.position);
             this.brainObject.rotation.set(0, 0, 0);

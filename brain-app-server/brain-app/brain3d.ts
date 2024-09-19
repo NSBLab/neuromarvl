@@ -652,6 +652,7 @@ class Brain3DApp implements Application, Loopable {
                     this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
                     return;
                 }
+                return;
              }
 
             // right button: rotation

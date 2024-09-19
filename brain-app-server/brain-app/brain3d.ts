@@ -1172,6 +1172,8 @@ class Brain3DApp implements Application, Loopable {
             object.material.needsUpdate = true;
         }
     }
+    }
+    setColaSurfacePosition(pos) {
 
     setSurfaceColor(color: string) {
         for (let object of this.brainSurface.children) {
@@ -1179,6 +1181,30 @@ class Brain3DApp implements Application, Loopable {
         }
     }
 
+    setSurfaceRotation(quat) {
+        
+        if (this.brainObject) {
+            this.brainObject.quaternion.set(quat._x, quat._y, quat._z, quat._w);
+        }
+        if (this.colaObject) {
+            this.colaObject.quaternion.set(quat._x, quat._y, quat._z, quat._w);
+        }
+    }
+
+    setBrainSurfacePosition(posFrac) {
+        if (this.brainObject) {
+            this.brainContainer.position.set(
+                this.camera.left + posFrac.x * (this.camera.right - this.camera.left),
+                this.camera.bottom + posFrac.y * (this.camera.top - this.camera.bottom),
+                0);
+    }
+    }
+    setColaSurfacePosition(pos) {
+
+        if (this.colaObject) {
+            this.colaObject.position.set(pos.x, pos.y, pos.z);
+        }
+    }
 
     setEdgeTransitionColor(color: string) {
         if ((!this.physioGraph) || (!this.colaGraph)) return;
@@ -2198,6 +2224,17 @@ class Brain3DApp implements Application, Loopable {
                         this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac,
                         this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac,
                         0);
+                }
+
+                
+
+                if (this.canvasGraph) {
+                    if (this.canvasGraph.cy) {
+                        this.canvasGraph.cy.panBy({
+                            x: width * this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x / this.oldWidth - this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x,
+                            y: height * this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y / this.oldHeight - this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y
+                        })
+                    }
                 }
                 //console.log(this);
                 //if (this.circularGraph) {

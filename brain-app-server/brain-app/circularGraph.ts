@@ -403,6 +403,7 @@ class CircularGraph {
             groups.sort((a, b) => a.children[0].bundleSort[attrBundle] - b.children[0].bundleSort[attrBundle]);
         }
         this.nodes = cluster.nodes(tree);
+        
         if (attrBundle !== "none") {
             // Offset nodes bundled by multivalue attributes into concentric rings
             let offset = radius / 16;
@@ -415,7 +416,7 @@ class CircularGraph {
         }
 
         this.links = packages.imports(this.nodes);
-
+        
         //-------------------------------------------------------------------------------------------
         // update UI
         var links = this.links;
@@ -826,15 +827,14 @@ class CircularGraph {
         ;
 
         this.svgAllElements.attr("transform", "translate(" + width + "," + height + ")");
-
 		// Only set if not already moved
-		// If user moved the circular graph to another position and zoom level, keep it when reloading
+        // If user moved the circular graph to another position and zoom level, keep it when reloading
         
         let translation = this.d3Zoom.translate();
         if (translation[0] == 0 && translation[1] == 0) {
-			this.d3Zoom.scale(1);
-			this.d3Zoom.translate([width, height]);
-		}
+            this.d3Zoom.scale(1);
+            this.d3Zoom.translate([width, height]);
+        }
         translation = this.d3Zoom.translate();
 
         // force the transform onto svgAllElements
@@ -842,9 +842,7 @@ class CircularGraph {
 
         // An alternative solutions to sorting the children while keeping
         // the order of the clusters
-        //console.log(nodeJson);
-        //console.log(packages);
-
+        
         let tree = packages.root(nodeJson);
         //console.log(tree);
         // Tree may have a false root. Remove it.
@@ -1095,12 +1093,11 @@ class CircularGraph {
     }
 
     addAttributeBar() {
+        
         let varMouseOveredSetNodeID = (id) => { this.mouseOveredSetNodeID(id); }
         let varMouseOutedSetNodeID = () => { this.mouseOutedSetNodeID(); }
         let varMouseOveredCircularLayout = (d) => { this.mouseOveredCircularLayout(d); }
         let varMouseOutedCircularLayout = (d) => { this.mouseOutedCircularLayout(d); }
-        let varCircularLayoutAttributeOnChange = (barID: number, val: string) => { this.circularLayoutAttributeOnChange(barID, val); }
-        let varUpdateCircularBarColor = (barID: number, color: string) => { this.updateCircularBarColor(barID, color); }
 
         let id = this.attributeBars.length;
         let bar = {
@@ -1125,6 +1122,7 @@ class CircularGraph {
             .on("mouseover", function (d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.id); })
             .on("mouseout", function (d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); });
 
+        this.addAttributeBarElements(bar);
         // Rearange the menu layout
         //var l = $('#button-circular-layout-histogram-' + this.id).position().left + 5;
         //var t = $('#button-circular-layout-histogram-' + this.id).position().top - $('#div-circular-layout-menu-' + this.id).height() - 15;
@@ -1133,6 +1131,14 @@ class CircularGraph {
 
         //------------------------------------------------------------------------------------------------------------
         // Add control options for new bar
+        
+    }
+
+    addAttributeBarElements(bar) {
+        console.log("addAttributeBarElements");
+        let varCircularLayoutAttributeOnChange = (barID: number, val: string) => { this.circularLayoutAttributeOnChange(barID, val); }
+        let varUpdateCircularBarColor = (barID: number, color: string) => { this.updateCircularBarColor(barID, color); }
+
         $('#div-circular-layout-menu-' + this.id).append('<div id="div-circular-bar' + bar.id + '-' + this.id + '"></div>');
         $('#div-circular-bar' + bar.id + '-' + this.id).append($('<select id="select-circular-layout-attribute-' + bar.id + '-' + this.id + '" class=' + this.circularCSSClass + '></select>')
             .css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' })
@@ -1146,21 +1152,31 @@ class CircularGraph {
                     <span class="input-group-addon"><i></i></span>
                 </div>
                 `)
-        );
+            );
         let $pickerDiv = (<any>$(`#input-circular-layout-bar${bar.id}-color`));
         let customClass = `custom-picker-${bar.id}-${this.id}`;
+        
         $pickerDiv.colorpicker({
             format: "hex",
+            color: bar.color,
             customClass
         });
-        $pickerDiv.on("changeColor", e => varUpdateCircularBarColor(bar.id, (<any>e).color.toHex()));
+        $pickerDiv.on("changeColor", e => {
+            if (!$pickerDiv.data('isFromReset')) {
+                varUpdateCircularBarColor(bar.id, (<any>e).color.toHex());
+            } else {
+                $pickerDiv.removeData('isFromReset');
+            }
+        });
+            
+
+
         $pickerDiv.on("showPicker", e => {
             // May need to adjust if it overflows the window
             let $pickerPalette = $("." + customClass);
             $pickerPalette.removeClass("clip-to-bottom");
             if ($pickerPalette.outerHeight() + $pickerPalette.offset().top > window.innerHeight) $pickerPalette.addClass("clip-to-bottom");
         });
-
 
         $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).empty();
 
@@ -1172,9 +1188,11 @@ class CircularGraph {
         for (var i = 0; i < this.dataSet.attributes.columnNames.length; ++i) {
             var columnName = this.dataSet.attributes.columnNames[i];
             $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');
+            
         }
-    }
+        $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).find("option[value=\"" + bar.attribute + "\"]").prop("selected", true);
 
+    }
     // Differences between update and set circular bar color
     updateCircularBarColor(barID: number, color: string) {
         this.circularBarColorChange = true;
@@ -1219,8 +1237,12 @@ class CircularGraph {
             this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                 .style("fill", color);
         }
-
-
+        //console.trace();
+        //console.log(`#input-circular-layout-bar${bar.id}-color`);
+        // set the color of the colorpicker
+        let pickerDiv = document.getElementById(`input-circular-layout-bar${bar.id}-color`);
+        //console.log(pickerDiv);
+        $(pickerDiv).data('isFromReset', true).colorpicker("setValue", bar.color );
     }
 
     ////////////////////////////////////////////////////////////////
@@ -1456,7 +1478,6 @@ class CircularGraph {
     mouseOveredCircularLayout(d) { // d: contain the node's info 
 
         var selectedID = this.commonData.selectedNode;
-        console.log(selectedID);
         var _this = this;
         // Reseting All nodes source and target
         this.svgAllElements.selectAll(".nodeCircular")

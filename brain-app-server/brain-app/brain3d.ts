@@ -209,7 +209,6 @@ class Brain3DApp implements Application, Loopable {
         };
         var lab = () => {
             this.restart();
-                   
         };
 
         //if (this.commonData.noBranSurface == true) this.surfaceLoaded = true;
@@ -625,6 +624,7 @@ class Brain3DApp implements Application, Loopable {
         this.input.regLeapXCallback((mm: number) => {
             this.brainObject.rotation.set(this.brainObject.rotation.x, this.brainObject.rotation.y, this.brainObject.rotation.z + leapRotationSpeed * mm);
             this.colaObject.rotation.set(this.colaObject.rotation.x, this.colaObject.rotation.y, this.colaObject.rotation.z + leapRotationSpeed * mm);
+
         });
 
         this.input.regLeapYCallback((mm: number) => {
@@ -646,7 +646,6 @@ class Brain3DApp implements Application, Loopable {
             raycaster.setFromCamera(pointer, this.camera);
 
             var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
-
             if (!inBoundingSphere) {
                 if (this.networkType == '3d') {
                     this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
@@ -706,7 +705,6 @@ class Brain3DApp implements Application, Loopable {
                 // why is this causing the brain to rotate?
                 
                 this.brainContainer.position.set(this.brainContainer.position.x + dx * pixelWidth, this.brainContainer.position.y - dy * pixelHeight, this.brainContainer.position.z);
-
             }
         });
 
@@ -755,7 +753,6 @@ class Brain3DApp implements Application, Loopable {
                 // Select the new node
                 this.physioGraph.selectNode(this.commonData.selectedNode, false);
                 this.colaGraph.selectNode(this.commonData.selectedNode, this.ignore3dControl);
-
 
                 var varNodeID = this.commonData.selectedNode;
                 if (this.networkType == "circular") {
@@ -860,6 +857,10 @@ class Brain3DApp implements Application, Loopable {
             this.camera.right += rightDelta;
             this.camera.top += topDelta;
             this.camera.bottom += bottomDelta;
+
+            this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
+            this.saveFileObj.surfaceSettings.brain3DModelDefaultXPosition = this.brain3DModelDefaultXPosition;
+
             //this.camera.left -= pointerFrac.x * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
             //this.camera.right += (1 - pointerFrac.x) * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
             //this.camera.top += pointerFrac.y * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
@@ -1172,8 +1173,6 @@ class Brain3DApp implements Application, Loopable {
             object.material.needsUpdate = true;
         }
     }
-    }
-    setColaSurfacePosition(pos) {
 
     setSurfaceColor(color: string) {
         for (let object of this.brainSurface.children) {
@@ -1197,7 +1196,7 @@ class Brain3DApp implements Application, Loopable {
                 this.camera.left + posFrac.x * (this.camera.right - this.camera.left),
                 this.camera.bottom + posFrac.y * (this.camera.top - this.camera.bottom),
                 0);
-    }
+        }
     }
     setColaSurfacePosition(pos) {
 
@@ -1290,6 +1289,7 @@ class Brain3DApp implements Application, Loopable {
     }
 
     initShowNetwork(app: SaveApp) {
+        console.log("initShowNetwork()");
         if (app.showingTopologyNetwork) {
             $(`#select-network-type-${this.id}-${app.networkType}`).addClass("active");
 
@@ -1305,7 +1305,7 @@ class Brain3DApp implements Application, Loopable {
                     for (var bar in app.circularAttributeBars) {
                         this.circularGraph.addAttributeBar();
                     }
-
+                    
                     for (var barIndex in app.circularAttributeBars) {
                         $('#select-circular-layout-attribute-' + app.circularAttributeBars[barIndex].id + '-' + this.id).val(app.circularAttributeBars[barIndex].attribute);
                         $('#input-circular-layout-bar' + app.circularAttributeBars[barIndex].id + '-color').val(app.circularAttributeBars[barIndex].color.substring(1));
@@ -1364,9 +1364,14 @@ class Brain3DApp implements Application, Loopable {
         this.networkType = type;
 
         if (type === "circular" && this.circularGraph) {
+            
             this.circularGraph.setupOptionMenuUI(); // add options button to the page
             this.svg.attr("visibility", "visible");
             $(this.graph2dContainer).hide();
+            for (var bar in this.circularGraph.attributeBars) {
+                this.circularGraph.addAttributeBarElements(this.circularGraph.attributeBars[bar]);
+            }
+            
         } 
         else {
             // hide options button
@@ -2049,11 +2054,6 @@ class Brain3DApp implements Application, Loopable {
         // Resize the renderer
         this.renderer.setSize(width, height - sliderSpace);
 
-        if (this.canvasGraph) {
-            if (this.canvasGraph.cy) {
-                this.canvasGraph.cy.container;
-            }
-        }
         // Resize the svg canvas
         this.svg
             .attr("width", width)
@@ -2093,7 +2093,7 @@ class Brain3DApp implements Application, Loopable {
         if (this.brainContainer) {
             brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
             this.brainContainer.getWorldPosition(brainContainerPosition);
-
+            
             brainViewportProp = {
                 xFrac: (brainContainerPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
                 yFrac: (brainContainerPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
@@ -2269,7 +2269,12 @@ class Brain3DApp implements Application, Loopable {
 
                 // find the zoom required to fit the brain into the screen size
 
-
+                this.saveFileObj.camera = {
+                    left: this.camera.left,
+                    right: this.camera.right,
+                    top: this.camera.top,
+                    bottom: this.camera.bottom
+                }
                 break;
             case "screenshotzoomstart":
                 
@@ -2412,7 +2417,7 @@ class Brain3DApp implements Application, Loopable {
                     this.colaObject.position.needsUpdate = true;
                 }
                 //this.colaObject.update();
-                console.log(this.canvasGraph);
+                
                 if (this.canvasGraph) {
                     if (this.canvasGraph.cy) {
                         canvasGraphPanAndZoomAtScreenShotZoom = {

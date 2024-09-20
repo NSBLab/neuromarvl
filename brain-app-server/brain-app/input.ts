@@ -252,7 +252,7 @@ class InputTargetManager {
             }
 
             this.contextMenuColorChanged = false;
-            this.mouseDownMode = event.which;
+            this.mouseDownMode = event.button;
 
             var viewID = this.mouseLocationCallback(event.clientX, event.clientY);
 
@@ -375,7 +375,6 @@ class InputTargetManager {
                     if (callback) callback(realDelta);
                 }
             }
-
         }, false);
 
         document.addEventListener('mousemove', (event) => {            
@@ -417,7 +416,7 @@ class InputTargetManager {
             // somehow nodeName property is missing from typescript EventTarget object
             if ((<Element>evt.target).nodeName == 'BODY') {
                 //evt.preventDefault(); // Don't do browser built-in search with key press
-                var k = this.translateKeycode(evt.keyCode);
+                var k = evt.key; //this.translateKeycode(evt.key);
 
                 if (!this.keyboardKey[k]) {
                     this.keyboardKey[k] = true;
@@ -438,7 +437,7 @@ class InputTargetManager {
         document.addEventListener('keyup', (evt) => {
             // somehow nodeName property is missing from typescript EventTarget object
             if ((<Element>evt.target).nodeName == 'BODY') {
-                var k = this.translateKeycode(evt.keyCode);
+                var k = evt.key;// this.translateKeycode(evt.keyCode);
                 this.keyboardKey[k] = false;
                 //this.keyboardKeyReleased[k] = true;
                 // Make the callbacks for the active input target

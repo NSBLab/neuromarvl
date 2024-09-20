@@ -655,7 +655,7 @@ class Brain3DApp implements Application, Loopable {
              }
 
             // right button: rotation
-            if (mode == 3) {
+            if (mode == 2) {
                 if (this.autoRotation == false) {
                     var pixelAngleRatio = 50;
 
@@ -678,7 +678,7 @@ class Brain3DApp implements Application, Loopable {
                 }
             }
             // left button: pan
-            else if (mode == 1) {
+            else if (mode == 0) {
                 var pixelDistanceRatio = 1.6; // with: defaultCameraFov = 25; defaultViewWidth = 800;
                 var defaultCameraFov = 25
                 var defaultViewWidth = 800;

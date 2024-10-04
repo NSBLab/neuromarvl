@@ -1118,8 +1118,6 @@ class CircularGraph {
 
         this.attributeBars.forEach(function (bar) {
             if (bar.attribute !== 'none') {
-                console.log("here");
-                console.log(bar);
                 this.svgAllElements.selectAll(".rectLegend[barID='" + bar.id + "']")
                     .data([bar])
                     .enter()
@@ -1142,7 +1140,6 @@ class CircularGraph {
                     .attr("barID", function (d) { return d.id; })
                     .attr("y", legendHeight / 2 + count * legendHeight + 5)
                     .text(function (d) { return d.attribute; });
-                    //.text(function (d) { return d.attribute; });
                 count++;
             }
         }, this);

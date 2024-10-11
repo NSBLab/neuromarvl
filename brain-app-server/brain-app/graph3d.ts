@@ -412,6 +412,7 @@ class Graph3D {
     setEdgeDirectionGradient() {
         var startRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionStartColor, 1.0);
         var endRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionEndColor, 1.0);
+
         for (var i = 0; i < this.edgeList.length; i++) {
             var edge = this.edgeList[i];
             edge.uniforms.startColor.value = new THREE.Vector4(startRGB.r / 255, startRGB.g / 255, startRGB.b / 255, 1.0);
@@ -598,7 +599,9 @@ class Graph3D {
     setNodesColor(colorArray: { color: number, portion: number }[][]) {
         if (!colorArray) return;
         if (colorArray.length != this.nodeMeshes.length) {
-            throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
+            alert("ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match")
+            return;
+            //throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
         }
         this.nodeCurrentColor = colorArray.map(a => this.averageColor(a)); // Use average color
 

@@ -3,3 +3,10 @@ C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\bin\brain-
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\bin\brain-app-server.pdb
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Release\brain-app-server.dll
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Release\brain-app-server.pdb
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\bin\brain-app-server.dll.config
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\bin\brain-app-server.dll
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\bin\brain-app-server.pdb
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.AssemblyReference.cache
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.CoreCompileInputs.cache
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.dll
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.pdb

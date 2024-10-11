@@ -4,7 +4,7 @@
     <title>Brain Data Viewer</title>
 
     <link rel="stylesheet" type="text/css" href="extern/dc.css" />
-  
+
     <!-- Latest compiled and minified CSS -->
     <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">-->
     <link rel="stylesheet" href="extern/bootstrap-3.3.7-dist/css/bootstrap.min.css" />
@@ -14,8 +14,14 @@
     <link rel="stylesheet" href="extern/jquery-ui-1.10.4.custom/css/sunny/jquery-ui-1.10.4.custom.min.css" />
 
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <!-- <script>var exports = {};</script>-->
 </head>
 <body onload="defaultFunction()">
+    <div id="file-save-dialog" title="Save Configuration">
+        <div>Enter Filename</div>
+        <input type="text" id="file-save-name" />
+
+    </div>
     <div id="splashPage" class="overlay overlay-scale">
         <div id="content">
             <button id="overlay-close" type="button" class="overlay-close">Close</button>
@@ -26,8 +32,8 @@
             <div id="credit" align="center">
                 <p style="font-size:150%; color: #2c3e50;">Developed by:</p>
                 <p style="font-size:150%; color: #2c3e50;">Tim Dwyer, Alex Fornito</p>
-                <p style="font-size:150%; color:#2c3e50;">Thanh Nhan Pham, Mingzheng Shi, Nicholas Smith and James Manley</p>
-                <p style="font-size:150%; color: #2c3e50;">Monash University, 2015</p>
+                <p style="font-size:150%; color:#2c3e50;">Thanh Nhan Pham, Mingzheng Shi, Nicholas Smith, James Manley and Matthias Klapperstueck</p>
+                <p style="font-size:150%; color: #2c3e50;">Monash University, 2017</p>
             </div>
 
             <div class="subheading">
@@ -46,7 +52,7 @@
 
             </div>
 
-           
+
 
             <div class="row">
                 <a class="thumbnail" href="?example=d598e6ef-f38b-4895-a22b-aa1fddc0cde3_58.178.234.18">
@@ -73,16 +79,15 @@
                 </div>
                 <div class="thumbnail" style="height: 150px;">
                     <div style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
-                        <p style="font-size:120%"><strong>Batch Mode</strong></p>
-
-                        Allow neuroscientist to rapidly apply the current configuration to multiple different datasets. The generated visualisations will be downloaded to the local machine.
+                        <p style="font-size:120%"><strong>Flexible, interactive visualizations</strong></p>
+                        Visualize your network data using different anatomical and topological projections, and interrogate these projections to understand the properties of individual nodes and edges.
                     </div>
                 </div>
                 <div class="thumbnail" style="height: 150px;">
                     <div style="background-color: #fff; padding: 3px; position: relative; height: 100%; overflow:hidden;">
                         <p style="font-size:120%"><strong>Export visualisations</strong></p>
 
-                        Visualisations can be exported into SVG format for further editing.
+                        Visualisations can be exported into JPEG or SVG file formats for further editing.
                     </div>
 
                 </div>
@@ -93,14 +98,14 @@
             <br />
 
             <div id="logos" class="row">
-                <img src="extern/splashPage/images/BMH.jpg" width="438" height="130" class="pull-left"/>
-                <img src="extern/splashPage/images/marvl.png" class="pull-right" />
+                <img src="extern/splashPage/images/lab-bmh-rgb-flat-colour-master.png" width="438" height="130" class="pull-left" />
+                <img src="extern/splashPage/images/IALab-logo.jpg" class="pull-right" />
             </div>
         </div>
     </div>
 
     <div id="control-panel-bottom">
-        <div id ="control-panel-bottom-close" class="btn btn-primary" style="height: 50%; width: 100%;" data-toggle="tooltip" data-placement="top" title="Show introduction with example links">Splash Page</div>
+        <div id="control-panel-bottom-close" class="btn btn-primary" style="height: 50%; width: 100%;" data-toggle="tooltip" data-placement="top" title="Show introduction with example links">Splash Page</div>
         <div class="btn-group btn-group-justified bg-info" style="height: 50%; width: 100%;">
             <div id="button-export-svg" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="Download visualisation as an image file">
                 <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
@@ -131,12 +136,13 @@
         </ul>
         <div class="tab-content" style="height: 100%; ">
             <div id="tab-1" class="tab-pane active">
-                <br/>
+                <br />
                 <a href="#" style="display: block; text-align: right"><span class="badge" data-toggle="modal" data-target="#modal-help-model">?</span></a>
                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Set the 3D brain model to a preset option, or upload a new model geometry file in Wavefront OBJ (.obj) format">Model</label>
                 <select id="select-brain3d-model" class="form-control input-sm">
                     <option value="icbm">ICBM152</option>
                     <option value="ch2">CH2</option>
+                    <option value="ch2nocerebellum">CH2 no cerebellum</option>
                     <option value="upload">Upload</option>
                     <option value="none">None</option>
                 </select>
@@ -148,13 +154,13 @@
                         <span class="input-group-addon"><i></i></span>
                     </div>
                 </p>
-                <br/>
+                <br />
                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Adjust brain model surface opacity">Opacity</label>
                 <input id="div-surface-opacity-slider" data-slider-id='surface-opacity-slider' type="text"
                        data-slider-min="0.0" data-slider-max="1" data-slider-step="0.02" data-slider-value="0.5" />
-                <br/>        
-                
-                    
+                <br />
+
+
                 <div id="div-upload-brain-model" style="display:none;">
                     <span class="h3-span">Coordinates: </span><span id="label-model">empty</span>
                     <input id="input-select-model" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" />
@@ -181,7 +187,7 @@
                     </a>
                 </div>
                 <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
-                    
+
                     <div id="div-set-data-tab" class="tab-pane active">
                         <br />
                         <button id="load-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Immediately load default data">Load default data</button>
@@ -206,9 +212,9 @@
                         </div>
                         <br />
                         <br />
-                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Attributes measured for each node. Should comprise N+1 rows and M columns. The first row should contain strings representing column headings (i.e., the name of each attribute). Each column represents a different attribute measured at each node (e.g., degree, clustering, module affiliation, etc.). If column names are not specified in the first row, default attribute labels will be assigned. The order of the rows should correspond to the node ordering in the other input files. 
-                               
-If one of the attributes represents module affiliation for an overlapping module decomposition (i.e., a node can belong to more than one module), the module identities should be separated by pipes. e.g., in the following example, node 1 (first row) belongs to modules 1, 2, 5 and 6; node 2 (second row) to modules 2, 3, and 4; and node 3 (third row) to modules 4 and 5 with a stronger affiliation to module 5.  
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Attributes measured for each node. Should comprise N+1 rows and M columns. The first row should contain strings representing column headings (i.e., the name of each attribute). Each column represents a different attribute measured at each node (e.g., degree, clustering, module affiliation, etc.). If column names are not specified in the first row, default attribute labels will be assigned. The order of the rows should correspond to the node ordering in the other input files.
+
+If one of the attributes represents module affiliation for an overlapping module decomposition (i.e., a node can belong to more than one module), the module identities should be separated by pipes. e.g., in the following example, node 1 (first row) belongs to modules 1, 2, 5 and 6; node 2 (second row) to modules 2, 3, and 4; and node 3 (third row) to modules 4 and 5 with a stronger affiliation to module 5.
 
 1|1|0|0|1|1
 0|1|1|1|0|0
@@ -236,9 +242,16 @@ R Amygdala ">Node labels (optional)</label>
                         <br />
                     </div>
                     <div id="div-batching-tab" class="tab-pane">
-                        <br/>
+                        <br />
+                        <div id="batching-tooltip" class="ui-visible-tooltip">
+                            <p>Batch mode allows you to apply a given display setting to multiple networks. </p>
+                            <p>
+                                Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. Each matrix must have a corresponding attributes file, with the same dimensions and column headings as the first attribute file. You can select multiple files at once, and correspondence between matrix and attribute files is established by loading them in the same order. The app will then generate these visualisations and save them as separate files to your desktop.
+                                <!--Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.-->
+                            </p>
+                        </div>
                         <label class="control-label" data-toggle="tooltip" data-placement="right" title="Batch mode allows you to apply a given display setting to multiple networks. First, you can select one dataset and generate a particular visualisation. Then you use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.">Connectivity matrices</label>
-                        <input id="select-matrices-batching" style="display:none;" type="file" multiple/>
+                        <input id="select-matrices-batching" style="display:none;" type="file" multiple />
                         <div id="div-batching-tab" class="tab-pane">
                             <div class="input-group input-group-sm">
                                 <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="matrices-batching-status"
@@ -249,20 +262,20 @@ R Amygdala ">Node labels (optional)</label>
                         <br />
                         <br />
                         <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select a corresponding attribute file for the connectivity matrices. There should be one attribute file for each matrix. They should be listed in the same order as the matrices.">Node attributes</label>
-                        <input id="select-attrs-batching" style="display:none;" type="file" multiple/>
+                        <input id="select-attrs-batching" style="display:none;" type="file" multiple />
                         <div class="input-group input-group-sm">
                             <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="attrs-batching-status"
                                  data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
                             <button id="button-select-attrs-batching" class="form-control btn-default">Attribute files</button>
                         </div>
-                        <br/>
+                        <br />
                         <button id="btn-start-batching" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="right" title="Create batch images...">Batch</button>
                     </div>
 
                 </div>
 
             </div>
-            <div id="tab-3" class="tab-pane" style="height: 100%;" >
+            <div id="tab-3" class="tab-pane" style="height: 100%;">
                 <br />
                 <div class="btn-group btn-group-justified" data-toggle="btns">
                     <a class="btn btn-sm btn-primary active" href="#div-node-attribute-tab" data-toggle="tab">
@@ -297,7 +310,7 @@ R Amygdala ">Node labels (optional)</label>
                                    data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="[0.5,1]" />
                         </div>
                         <div id="div-node-color-mode" style="display:none;" data-toggle="tooltip" data-placement="right" title="Toggle continuous or discrete colouring">
-                            <input type="checkbox" id="checkbox-node-color-continuous" style="width: 12px;"> 
+                            <input type="checkbox" id="checkbox-node-color-continuous" style="width: 12px;">
                             <strong>Treat as continuous</strong>
                         </div>
                         <div id="div-node-color-pickers-discrete" style="display:none; margin-top: 20px; margin-left: 20px;">
@@ -305,12 +318,12 @@ R Amygdala ">Node labels (optional)</label>
                                 <label class="control-label" style="display: inline-block;">Key</label>
                                 <select id="select-node-key" class="form-control input-sm" style="width: 80px; display: inline-block;"></select>
                                 <div id="input-node-color" class="input-group colorpicker-component">
-                                    <input type="text" value="ffff00" class="form-control"/>
+                                    <input type="text" value="ffff00" class="form-control" />
                                     <span class="input-group-addon"><i></i></span>
                                 </div>
                             </p>
                         </div>
-                        
+
                         <div id="div-node-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
                             <p style="margin-bottom: 0;">
                                 <label class="control-label" style="display: inline-block;">Min</label>
@@ -336,7 +349,7 @@ R Amygdala ">Node labels (optional)</label>
                     <div id="div-edge-attribute-tab" class="tab-pane">
                         <div id="div-edge-size" style="margin-left: 0px; margin-bottom: 10px;" data-toggle="tooltip" data-placement="right" title="Adjust edge thickness">
                             <p><strong>Edge size</strong></p>
-                            <input id="div-edge-size-slider" data-slider-id='edge-size-slider' type="text" 
+                            <input id="div-edge-size-slider" data-slider-id='edge-size-slider' type="text"
                                    data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="1" />
                             <label id="label_edge_size"></label>
                         </div>
@@ -344,7 +357,7 @@ R Amygdala ">Node labels (optional)</label>
                         <p data-toggle="tooltip" data-placement="right" title="Toggle thickness proportional to edge weight">
                             <input type="checkbox" id="checkbox-thickness-by-weight" style="width: 12px;"> <strong>Thickness by weight</strong>
                         </p>
-                        
+
                         <p style="margin-top: 5px; margin-bottom: 0;">
                             <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set a visual indicator of edge direction. Only appropriate for directed networks.">
                                 <label for="select-edge-direction">Edge direction</label>
@@ -512,7 +525,7 @@ R Amygdala ">Node labels (optional)</label>
 
 
 
-   <!-- Page structure -->
+    <!-- Page structure -->
     <div id="outer-view-panel">
         <div id="view-panel">
             <div id="view-top-left" class="view"></div>
@@ -530,9 +543,8 @@ R Amygdala ">Node labels (optional)</label>
         </div>
         <div id="div-context-menu-color-picker" style="visibility:hidden;">
             color:
-            <div id="input-context-menu-node-color" class="input-group colorpicker-component" 
-                 style="width: 12em; background-color: #feeebd; border: 1px solid grey; "
-            >
+            <div id="input-context-menu-node-color" class="input-group colorpicker-component"
+                 style="width: 12em; background-color: #feeebd; border: 1px solid grey; ">
                 <input type="text" value="ffff00" class="form-control" />
                 <span class="input-group-addon"><i></i></span>
             </div>
@@ -616,7 +628,7 @@ R Amygdala ">Node labels (optional)</label>
                 <div class="modal-body">
                     <p>The model used to represent the brain surface can changed to a preset model or from a custom model file uploaded by the user.</p>
                     <p>To use a custom model, select the "Upload" option, specify the file to use with the "Choose File" button, and finally press "Upload" to transfer and apply the new model.</p>
-                    <p>The model must be in <a href="http://paulbourke.net/dataformats/obj/" target="_blank">Wavefront OBJ</a> (.obj) format. Some 3D modelling software such as <a href="http://www.autodesk.com/products/3ds-max/overview", target="_blank">3ds Max</a> can import and export to this format.</p>
+                    <p>The model must be in <a href="http://paulbourke.net/dataformats/obj/" target="_blank">Wavefront OBJ</a> (.obj) format. Some 3D modelling software such as <a href="http://www.autodesk.com/products/3ds-max/overview" , target="_blank">3ds Max</a> can import and export to this format.</p>
                     <br />
                     <a id="download-example-model" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Download an example model file, to get an example of the format..." href="examples/graphdata/BrainMesh_ICBM152.obj">Get example model</a>
                 </div>
@@ -639,11 +651,11 @@ R Amygdala ">Node labels (optional)</label>
                         <div id="progressBar" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
                             <span class="sr-only">20% Complete</span>
                         </div>
-                       
+
                     </div>
-                    <p id="alertModalMessage"></p> 
+                    <p id="alertModalMessage"></p>
                 </div>
-                
+
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
@@ -656,13 +668,15 @@ R Amygdala ">Node labels (optional)</label>
                     <h4 id="alertModalTitle" class="modal-title">Export Settings</h4>
                 </div>
                 <div class="modal-body">
-                    
+                    <label class="control-label">Filename:</label>
+                    <input type="text" id="select-export-filename" class="form-control">
+                    <br />
                     <label class="control-label">Type:</label>
-                    <select id="select-export-type" class="form-control" >
+                    <select id="select-export-type" class="form-control">
                         <option value="svg">SVG</option>
                         <option value="image">Image</option>
                     </select>
-                    <br/>
+                    <br />
                     <label class="control-label">View Port:</label>
                     <select id="select-export-viewport" class="form-control">
                         <option value="0">Top Left</option>
@@ -670,10 +684,18 @@ R Amygdala ">Node labels (optional)</label>
                         <option value="2">Bottom Left</option>
                         <option value="3">Bottom Right</option>
                     </select>
+                    <br />
+                    <label class="control-label">Quality:</label>
+                    <select id="select-export-resolution" class="form-control">
+                        <option value="1280x720">Low</option>
+                        <option value="1920x1080">Medium</option>
+                        <option value="3840x2160">High</option>
+                        <option value="7680x4320">Best</option>
+                    </select>
 
 
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button id="button-export-submit" type="button" class="btn btn-primary">Export</button>
@@ -685,7 +707,12 @@ R Amygdala ">Node labels (optional)</label>
 
     <div id="divAlerts">
     </div>
-   
+
+
+    <input type="hidden" id="display_settings_mode" name="display_settings_mode" value="top">
+    <input type="hidden" id="display_settings_labels" name="display_settings_labels" value="false">
+    <input type="hidden" id="display_settings_split" name="display_settings_split" value="false">
+    <input type="hidden" id="display_settings_rotation" name="display_settings_rotation" value="false">
 
     <!-- Required scripts -->
 
@@ -694,13 +721,12 @@ R Amygdala ">Node labels (optional)</label>
     <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>-->
     <script src="extern/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
 
-    <script src="extern/three.js"></script>
+    <script src="extern/three-99.js"></script>
     <script src="extern/OBJLoader.js"></script>
     <script src="extern/leap.js"></script>
 
     <!-- Used for resource loading -->
     <script src="extern/d3.v3.js" charset="utf-8"></script>
-    
 
     <script src="extern/extra.js"></script>
     <script src="extern/crossfilter.js"></script>
@@ -708,7 +734,7 @@ R Amygdala ">Node labels (optional)</label>
     <script src="extern/yaml/js-yaml.min.js"></script>
 
     <script src="extern/bootstrap-slider/bootstrap-slider.min.js"></script>
-    <script src="extern/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>
+    <script src="extern/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
     <script src="extern/jquery.ui.touch-punch.min.js"></script>
 
     <script src="extern/numeric-1.2.6.js"></script>
@@ -717,30 +743,31 @@ R Amygdala ">Node labels (optional)</label>
     <script src="extern/cola.v3.min.js"></script>
     <!--<script src="extern/cola.v3.js"></script>-->
     <!--<script src="extern/d3adaptor.js"></script>-->
-
-    <script src="extern/cytoscape.min.js"></script>
+    <script src="extern/cytoscape.min.js"></script>    
     <script src="extern/cytoscape-cola.js"></script>
     <script src="extern/cytoscape-cose-bilkent.js"></script>
 
 
     <!-- The main application script -->
-    <script src="brain-app/input.js"></script> 
+    <script src="brain-app/input.js"></script>
     <script src="brain-app/CommonUtilities.js"></script>
     <script src="brain-app/graph3d.js"></script>
     <script src="brain-app/circularGraph.js"></script>
     <script src="brain-app/graph2d.js"></script>
     <script src="brain-app/brain3d.js"></script>
-    <script src="brain-app/state.js"></script> 
+    <script src="brain-app/state.js"></script>
     <script src="brain-app/brainapp.js"></script>
 
     <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date(); a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
 
-  ga('create', 'UA-86651025-1', 'auto');
-  ga('send', 'pageview');
+        ga('create', 'UA-86651025-1', 'auto');
+        ga('send', 'pageview');
 
     </script>
 

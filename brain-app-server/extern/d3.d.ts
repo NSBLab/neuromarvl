@@ -705,7 +705,7 @@ declare module D3 {
         format(rows: any[]): string;
     }
 
-    export interface Selection extends Selectors, Array<any> {
+    export interface Selection extends Selectors {
         attr: {
             (name: string): string;
             (name: string, value: any): Selection;
@@ -3438,4 +3438,4 @@ declare module D3 {
     }
 }
 
-declare var d3: D3.Base;
+declare var d3: any;

@@ -17,6 +17,9 @@ class CommonData {
     //public edgeColorByNodeTransition = false;
     //public edgeColorByNodeTransitionColor = "#ee2211";
 
+    public graph2DBoundingBox;
+    public resizing: Boolean;
+
     coordCallbacks: Array<() => void> = new Array();
     labelCallbacks: Array<() => void> = new Array();
     surfaceCallbacks: Array<() => void> = new Array();
@@ -289,6 +292,7 @@ class SaveFile {
     surfaceSettings;
     edgeSettings;
     nodeSettings;
+    displaySettings;
 
     // brain apps
     saveApps: SaveApp[];
@@ -302,6 +306,7 @@ class SaveFile {
         this.edgeSettings = (sourceObject && sourceObject.edgeSettings) || {
             colorBy: "none", // node (default), none or weight 
             size: 1, // default
+            thicknessByWeight: false,
             directionMode: "none",
             directionStartColor: "#FF0000",
             directionEndColor: "#0000FF",
@@ -338,8 +343,17 @@ class SaveFile {
         };
 
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
-            opacity: 0.5
+            opacity: 0.5,
+            color: "#000000"
         };
+
+        this.displaySettings = (sourceObject && sourceObject.displaySettings) || {
+            mode: 'Top',
+            labels: false,
+            split: false,
+            rotation:false
+        };
+
         let saveApps = (sourceObject && sourceObject.saveApps) || [];
         this.saveApps = saveApps
             .filter(d => !!d)       // Some save files have null instead of apps

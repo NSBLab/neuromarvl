@@ -2704,6 +2704,7 @@ class Brain3DApp implements Application, Loopable {
         var mean = (box.max.z - box.min.z) / 2;
         var offsetToHead = box.max.z - mean;
 
+        var offsetDistance = 10;
         for (var i = 0; i < this.dataSet.brainCoords[0].length; i++) {
 
             var coord = new THREE.Vector3(this.dataSet.brainCoords[0][i],
@@ -2713,11 +2714,11 @@ class Brain3DApp implements Application, Loopable {
             if (coord.x < 0) { // right
                 coord.applyAxisAngle(zAxis, Math.PI / 2);
                 coord.x = coord.x - offsetToHead;
-                coord.z = coord.z - box.max.z;
+                coord.z = coord.z - box.max.z - offsetDistance;
             } else { // left
                 coord.applyAxisAngle(zAxis, -Math.PI / 2);
                 coord.x = coord.x + offsetToHead;
-                coord.z = coord.z + Math.abs(box.min.z);
+                coord.z = coord.z + Math.abs(box.min.z) + offsetDistance;
             }
 
             newCoords[0].push(coord.x);

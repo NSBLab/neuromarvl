@@ -1,4 +1,5 @@
-﻿/*
+﻿/// <reference path="brain3d.ts" />
+/*
     All classes responsible for the application state, i.e. the "source of truth" go here.
 */
 
@@ -150,7 +151,7 @@ class DataSet {
         var max = this.info.nodeCount * (this.info.nodeCount - 1) / 2;
         if (count > max) count = max;
         if (count > this.sortedSimilarities.length) count = this.sortedSimilarities.length;
-        var threshold = this.sortedSimilarities[count - 1];
+        var threshold = Math.abs(this.sortedSimilarities[count - 1]);
         var adjMatrix: number[][] = Array<Array<number>>(this.info.nodeCount);
 
         for (var i = 0; i < this.info.nodeCount; ++i) {
@@ -162,16 +163,16 @@ class DataSet {
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
 
                 var isSameSide = (this.brainCoords[0][i] * this.brainCoords[0][j] > 0);
-                var val = this.simMatrix[i][j];
-                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+                var val = Math.abs(this.simMatrix[i][j]);
+                if (val >= threshold && val > 0 && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[i][j] = 1;
                 }
                 else {
                     adjMatrix[i][j] = 0;
                 }
 
-                val = this.simMatrix[j][i];
-                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+                val = Math.abs(this.simMatrix[j][i]);
+                if (val >= threshold && val > 0 && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[j][i] = 1;
                 }
                 else {
@@ -186,7 +187,7 @@ class DataSet {
         var max = this.info.nodeCount * (this.info.nodeCount - 1) / 2;
         if (count > max) count = max;
         if (count > this.sortedSimilarities.length) count = this.sortedSimilarities.length;
-        var threshold = this.sortedSimilarities[count - 1];
+        var threshold = Math.abs(this.sortedSimilarities[count - 1]);
         var adjMatrix: number[][] = Array<Array<number>>(this.info.nodeCount);
 
         for (var i = 0; i < this.info.nodeCount; ++i) {
@@ -196,16 +197,16 @@ class DataSet {
         for (var i = 0; i < this.info.nodeCount - 1; ++i) {
 
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
-                var val = this.simMatrix[i][j];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+                var val = Math.abs(this.simMatrix[i][j]);
+                if (val >= threshold && val > 0) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[i][j] = 1;
                 }
                 else {
                     adjMatrix[i][j] = 0;
                 }
 
-                val = this.simMatrix[j][i];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+                val = Math.abs(this.simMatrix[j][i]);
+                if (val >= threshold && val > 0) { // Accept an edge between nodes that are at least as similar as the threshold value
                     adjMatrix[j][i] = 1;
                 }
                 else {
@@ -245,7 +246,7 @@ class DataSet {
                 this.sortedSimilarities.push(value);
             }
         }
-        this.sortedSimilarities.sort(function (a, b) { return b - a; });
+        this.sortedSimilarities.sort(function (a, b) { return Math.abs(b) - Math.abs(a); });
 
         // remove edges with weight === 0
         var index = this.sortedSimilarities.indexOf(0);
@@ -344,7 +345,7 @@ class SaveFile {
 
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
             opacity: 0.5,
-            color: "#000000"
+            color: "#E3E3E3"
         };
 
         this.displaySettings = (sourceObject && sourceObject.displaySettings) || {

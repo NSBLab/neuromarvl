@@ -81,11 +81,25 @@ class CircularGraph {
         var nodeDotBundle = this.svgAllElements.selectAll(".nodeDotCircular").data(new Array());
 
         // Loop through and clear all existing bar.
+        var allBars = this.svgAllElements.selectAll(".rectCircular[barID]").data(new Array());
+        allBars.exit().remove();
+
+        this.svgAllElements.selectAll(".rectLegend").data(new Array()).exit().remove();
+        this.svgAllElements.selectAll(".textLegend").data(new Array()).exit().remove();
+        
+
+        // Loop through and clear all existing bar.
         for (var barIndex in this.attributeBars) {
             var b = this.attributeBars[barIndex];
             var bar = this.svgAllElements.selectAll(".rect" + b.id + "Circular").data(new Array());
             bar.exit().remove();
         }
+
+        //for (var barIndex in this.attributeBars) {
+        //    var b = this.attributeBars[barIndex];
+        //    var bar = this.svgAllElements.selectAll(".rect" + b.id + "Circular").data(new Array());
+        //    bar.exit().remove();
+        //}
 
         nodeDotBundle.exit().remove();
         nodeBundle.exit().remove();
@@ -288,20 +302,21 @@ class CircularGraph {
             console.log("ERROR: colaGraph is NULL");
             return;
         }
+        this.checkIfAttributesMatchOptionMenu();
         // Get all values
         var attrLabel = $('#select-circular-label-' + this.id).val();
         var attrBundle = $('#select-circular-layout-bundle-' + this.id).val();
         var attrSort = $('#select-circular-layout-sort-' + this.id).val();
 
         this.generateCircularData(attrBundle);
-        this.GenerateCircularUI(attrSort, attrBundle);
+        this.createCircularGraph(attrSort, attrBundle);
         this.circularLayoutLabelOnChange(attrLabel);
         this.updateAllAttributeBars();
     }
 
 
     update() {
-        if (!this.colaGraph) {
+        if (!this.colaGraph || !this.svgNodeBundleArray) {
             return;
         }
 
@@ -391,6 +406,7 @@ class CircularGraph {
             groups.sort((a, b) => a.children[0].bundleSort[attrBundle] - b.children[0].bundleSort[attrBundle]);
         }
         this.nodes = cluster.nodes(tree);
+        
         if (attrBundle !== "none") {
             // Offset nodes bundled by multivalue attributes into concentric rings
             let offset = radius / 16;
@@ -403,7 +419,7 @@ class CircularGraph {
         }
 
         this.links = packages.imports(this.nodes);
-
+        
         //-------------------------------------------------------------------------------------------
         // update UI
         var links = this.links;
@@ -415,17 +431,20 @@ class CircularGraph {
         var varDefs = this.svgDefs;
         // use normal color updating style
         var bundledLinks = bundle(links);
-        this.svgAllElements.selectAll(".linkCircular")
-            .data(function () {
-                if (bundledLinks[0][0].bundleByAttribute == "none") {
-                    for (var i = 0; i < bundledLinks.length; i++) {
-                        bundledLinks[i][1].y = 70;
+        
+        if (bundledLinks.length > 0) {
+            this.svgAllElements.selectAll(".linkCircular")
+                .data(function () {
+                    if (bundledLinks[0][0].bundleByAttribute == "none") {
+                        for (var i = 0; i < bundledLinks.length; i++) {
+                            bundledLinks[i][1].y = 70;
+                        }
                     }
-                }
-                return bundledLinks;
-            })
-            .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
-            .style("stroke-opacity", 1);
+                    return bundledLinks;
+                })
+                .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
+                .style("stroke-opacity", 1);
+        }
         this.svgAllElements.selectAll(".linkCircular")
             .style("stroke", function (l) {
                 var id = 'gradient_' + l.source.id + '_' + l.target.id;
@@ -564,17 +583,48 @@ class CircularGraph {
                     .attr("d", dot);
             });
 
-        for (var barIndex in this.attributeBars) {
-            var bar = this.attributeBars[barIndex];
-
-            this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
+        this.attributeBars.forEach(function (bar) {
+            this.svgAllElements.selectAll('.rectCircular[barID="' + bar.id + '"]')
                 .data(this.nodes.filter(function (n) { return !n.children; }));
+        }, this)
+        this.updateAllAttributeBars();
+        this.createHistogramBars();
+    }
+
+    /**
+     * Checks, if the select-option items (e.g. bundle) in the
+     * graph options menu still match the given dataSet.
+     * If not, recreate it to avoid later issues when
+     * items are still in the menu but not in the dataSet
+     */
+    checkIfAttributesMatchOptionMenu() {
+        let menuSelectoptions = <any>$('#select-circular-layout-bundle-' + this.id).children();
+        let dataColumnNames = this.dataSet.attributes.columnNames;
+
+        // substract the 'none' option, which is not in the dataSet
+        if (menuSelectoptions.length - 1 != dataColumnNames.length) {
+            this.setupOptionMenuUI();
+            return;
         }
 
+        // do bidirectional comparison
+        // we expect no double entries, or this won't work
+        let map = {};
+        for (let option of menuSelectoptions) {
+            map[option.getAttribute('value')] = '';
+        }
+        delete map['none'];
+
+        for (let column of dataColumnNames)
+            if (map[column] == undefined) {
+                this.setupOptionMenuUI();
+                break;
+            }
     }
 
     // Generate data array for the graph 
     generateCircularData(bundleByAttribute: string) {
+        
         if (!this.colaGraph) {
             console.log("ERROR: colaGraph is NULL");
             return;
@@ -627,37 +677,41 @@ class CircularGraph {
                 //TODO: this grouping algorithm could be used in all other graph types
                 if (attributes.info[colname].isDiscrete) { // if the attribute is discrete
                     // If the attribute is discrete then grouping is clear for simple values, but for multivalue attributes we get the position of the largest value
-                    if (value.length > 1) {
-                        //Using heaviest position:
-                        //nodeObject['bundle_group_' + colname] = value.indexOf(Math.max(...value));
+                    // value can be null due to data mismatch
+                    if (value != null) {
+                        if (value.length > 1) {
+                            //Using heaviest position:
+                            //nodeObject['bundle_group_' + colname] = value.indexOf(Math.max(...value));
 
-                        // Using base-max numeration (e.g. if max is 7, use octal encoding):
-                        let groupValue = 0;
-                        let i = value.length;
-                        while (i--) {
-                            groupValue += (value[i] * Math.pow(max + 1, i));
-                        }
-                        // Add a bundle sorting value using sum of weighted vectors from module positions on circle
-                        let rev = 2 * Math.PI;
-                        let sortValuePos = value.reduce((sum, d, i) => {
-                            let theta = rev * i / value.length;
-                            return {
-                                x: sum.x + Math.sin(theta) * d,
-                                y: sum.y + Math.cos(theta) * d
+                            // Using base-max numeration (e.g. if max is 7, use octal encoding):
+                            let groupValue = 0;
+                            let i = value.length;
+                            while (i--) {
+                                groupValue += (value[i] * Math.pow(max + 1, i));
                             }
-                        }, {x: 0, y: 0});
-                        let sortValue = Math.atan2(sortValuePos.x, sortValuePos.y);
-                        // Map sortValue from -PI..PI to integers in range 0..attributes.numRecords
-                        sortValue = Math.floor((sortValue < 0 ? sortValue + rev : sortValue) / rev * attributes.numRecords);
-                        nodeObject['bundle_group_' + colname] = groupValue;
-                        nodeObject['bundleSort'][colname] = sortValue;
-                        // Concentric offset is just the number of significant values
-                        nodeObject['bundleHeight'][colname] = value.reduce((acc, d) => d > 0 ? acc + 1 : acc, 0);
-                    }
-                    else {
-                        nodeObject['bundle_group_' + colname] = value[0];
-                        nodeObject['bundleSort'][colname] = value[0];
-                        nodeObject['bundleHeight'][colname] = 1;
+                            // Add a bundle sorting value using sum of weighted vectors from module positions on circle
+                            let rev = 2 * Math.PI;
+                            let sortValuePos = value.reduce((sum, d, i) => {
+                                let theta = rev * i / value.length;
+                                return {
+                                    x: sum.x + Math.sin(theta) * d,
+                                    y: sum.y + Math.cos(theta) * d
+                                }
+                            }, { x: 0, y: 0 });
+                            let sortValue = Math.atan2(sortValuePos.x, sortValuePos.y);
+                            // Map sortValue from -PI..PI to integers in range 0..attributes.numRecords
+                            sortValue = Math.floor((sortValue < 0 ? sortValue + rev : sortValue) / rev * attributes.numRecords);
+                            nodeObject['bundle_group_' + colname] = groupValue;
+                            nodeObject['bundleSort'][colname] = sortValue;
+                            // Concentric offset is just the number of significant values
+                            nodeObject['bundleHeight'][colname] = value.reduce((acc, d) => d > 0 ? acc + 1 : acc, 0);
+                        }
+                        else {
+                            nodeObject['bundle_group_' + colname] = value[0];
+                            nodeObject['bundleSort'][colname] = value[0];
+                            nodeObject['bundleHeight'][colname] = 1;
+                        }
+                        
                     }
                 } else { // if the attribute is continuous
                     // Scale to group attributes 
@@ -733,8 +787,11 @@ class CircularGraph {
         }
     }
 
-    GenerateCircularUI(sortByAttribute: string, bundleByAttribute: string) {
+    createCircularGraph(sortByAttribute: string, bundleByAttribute: string) {
+
         // Based on http://bl.ocks.org/mbostock/1044242
+        if (this.svgNodeBundleArray.length == 0)
+            return;
 
         let attributes = this.dataSet.attributes;
         let edgeSettings = this.saveObj.edgeSettings;
@@ -775,13 +832,24 @@ class CircularGraph {
         ;
 
         this.svgAllElements.attr("transform", "translate(" + width + "," + height + ")");
+		// Only set if not already moved
+        // If user moved the circular graph to another position and zoom level, keep it when reloading
+        
+        let translation = this.d3Zoom.translate();
+        if (translation[0] == 0 && translation[1] == 0) {
+            this.d3Zoom.scale(1);
+            this.d3Zoom.translate([width, height]);
+        }
+        translation = this.d3Zoom.translate();
 
-        this.d3Zoom.scale(1);
-        this.d3Zoom.translate([width, height]);
+        // force the transform onto svgAllElements
+        this.svgAllElements.attr("transform", "translate(" + translation[0] + "," + translation[1] + ")scale(" + this.d3Zoom.scale() + ")");
 
-        // An alternative solutions to sorting the children while keeping 
-        // the order of the clusters 
+        // An alternative solutions to sorting the children while keeping
+        // the order of the clusters
+        
         let tree = packages.root(nodeJson);
+        //console.log(tree);
         // Tree may have a false root. Remove it.
         if (tree.children.length === 1) tree = tree.children[0];
         let groups = tree.children;
@@ -805,6 +873,7 @@ class CircularGraph {
             groups.sort((a, b) => a.children[0].bundleSort[bundleByAttribute] - b.children[0].bundleSort[bundleByAttribute]);
         }
         this.nodes = cluster.nodes(tree);
+        
         if (bundleByAttribute !== "none") {
             // Offset nodes bundled by multivalue attributes into concentric rings
             let offset = radius / 16;
@@ -835,99 +904,104 @@ class CircularGraph {
         var varSvg = this.svg[0];
         var varNS = varSvg[0].namespaceURI;
         var varDefs = this.svgDefs;
+        
         var bundledLinks = bundle(links);
-
-        this.svgAllElements.selectAll(".linkCircular")
-            .data(function () {
-                if (bundledLinks[0][0].bundleByAttribute == "none") {
-                    for (var i = 0; i < bundledLinks.length; i++) {
-                        bundledLinks[i][1].y = 70;
+        //console.log(bundledLinks);
+        //console.log(this.svgAllElements.selectAll(".linkCircular"));
+        if (bundledLinks.length > 0) {
+            this.svgAllElements.selectAll(".linkCircular")
+                .data(function () {
+                    if (bundledLinks[0][0].bundleByAttribute == "none") {
+                        for (var i = 0; i < bundledLinks.length; i++) {
+                            bundledLinks[i][1].y = 70;
+                        }
                     }
-                }
-                return bundledLinks;
-            })
-            .enter()
-            .append("path") // Appending Element
-            .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
-            .attr("class", "linkCircular")
-            .attr("d", function (d) {
-                return line(d);
-            })
-            .style("stroke-opacity", 1)
-            .style("stroke", function (l) {
-                var id = 'gradient_' + l.source.id + '_' + l.target.id;
-                var sourceOpacity = 1, targetOpacity = 1;
+                    return bundledLinks;
+                })
+                .enter()
+                .append("path") // Appending Element
+                .each(function (d) { d.source = d[0], d.target = d[d.length - 1]; })
+                .attr("class", "linkCircular")
+                .attr("d", function (d) {
+                    return line(d);
+                })
+                .style("stroke-opacity", 1)
+                .style("stroke", function (l) {
+                    
+                    var id = 'gradient_' + l.source.id + '_' + l.target.id;
+                    var sourceOpacity = 1, targetOpacity = 1;
 
-                if (edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode != "node") {
-                    return l.color = l.source.linkColors[l.target.id];
-                } else if (l.source.color === l.target.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
-                    return l.color = "#" + l.source.color;
-                }
-
-                if (edgeDirectionMode === "gradient") {
-                    var sourceColor = (String)(edgeSettings.directionStartColor);
-                    var targetColor = (String)(edgeSettings.directionEndColor);
-                } else if (edgeColorMode === "node") {
-                    var sourceColor: string;
-                    var targetColor: string;
-                    if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.color !== l.target.color)) {
-                        sourceColor = String(edgeColorConfig.edgeTransitionColor);
-                        targetColor = String(edgeColorConfig.edgeTransitionColor);
+                    if (edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode != "node") {
+                        return l.color = l.source.linkColors[l.target.id];
+                    } else if (l.source.color === l.target.color && edgeDirectionMode !== "opacity" && edgeDirectionMode !== "gradient" && edgeColorMode === "node") {
+                        return l.color = "#" + l.source.color;
                     }
-                    else {
-                        sourceColor = String(l.source.color);
-                        targetColor = String(l.target.color);
+
+                    if (edgeDirectionMode === "gradient") {
+                        var sourceColor = (String)(edgeSettings.directionStartColor);
+                        var targetColor = (String)(edgeSettings.directionEndColor);
+                    } else if (edgeColorMode === "node") {
+                        var sourceColor: string;
+                        var targetColor: string;
+                        if (edgeColorConfig && edgeColorConfig.useTransitionColor && (l.source.color !== l.target.color)) {
+                            sourceColor = String(edgeColorConfig.edgeTransitionColor);
+                            targetColor = String(edgeColorConfig.edgeTransitionColor);
+                        }
+                        else {
+                            sourceColor = String(l.source.color);
+                            targetColor = String(l.target.color);
+                        }
+                    } else {
+                        var sourceColor = String(l.source.linkColors[l.target.id]);
+                        var targetColor = String(l.source.linkColors[l.target.id]);
                     }
-                } else {
-                    var sourceColor = String(l.source.linkColors[l.target.id]);
-                    var targetColor = String(l.source.linkColors[l.target.id]);
-                }
 
-                if (edgeDirectionMode === "opacity") {
-                    sourceOpacity = 0;
-                    targetOpacity = 1;
-                }
-                var sourceColorRGBA = CommonUtilities.hexToRgb(sourceColor, sourceOpacity).toString();
-                var targetColorRGBA = CommonUtilities.hexToRgb(targetColor, targetOpacity).toString();
-                var stops = [
-                    { offset: '0%', 'stop-color': sourceColorRGBA },
-                    { offset: '100%', 'stop-color': targetColorRGBA }
-                ];
-
-                // Calculate Gradient Direction
-                var start = this.getPointAtLength(0);
-                var end = this.getPointAtLength(this.getTotalLength());
-                var box = this.getBBox();
-                var x1 = ((start.x - box.x) / box.width) * 100 + "%";
-                var x2 = ((end.x - box.x) / box.width) * 100 + "%";
-                var y1 = ((start.y - box.y) / box.height) * 100 + "%";
-                var y2 = ((end.y - box.y) / box.height) * 100 + "%";
-
-                if ($("#" + id)[0]) $("#" + id)[0]["remove"]();
-                var grad = document.createElementNS(varNS, 'linearGradient');
-                grad.setAttribute('id', id);
-                grad.setAttribute('x1', x1);
-                grad.setAttribute('x2', x2);
-                grad.setAttribute('y1', y1);
-                grad.setAttribute('y2', y2);
-
-                for (var i = 0; i < stops.length; i++) {
-                    var attrs = stops[i];
-                    var stop = document.createElementNS(varNS, 'stop');
-                    for (var attr in attrs) {
-                        if (attrs.hasOwnProperty(attr)) stop.setAttribute(attr, attrs[attr]);
+                    if (edgeDirectionMode === "opacity") {
+                        sourceOpacity = 0;
+                        targetOpacity = 1;
                     }
-                    grad.appendChild(stop);
-                }
-                varDefs.appendChild(grad);
+                    var sourceColorRGBA = CommonUtilities.hexToRgb(sourceColor, sourceOpacity).toString();
+                    var targetColorRGBA = CommonUtilities.hexToRgb(targetColor, targetOpacity).toString();
+                    var stops = [
+                        { offset: '0%', 'stop-color': sourceColorRGBA },
+                        { offset: '100%', 'stop-color': targetColorRGBA }
+                    ];
 
-                var gID = 'url(#' + id + ')';
-                l['gradientID'] = gID;
-                l.color = gID;
+                    // Calculate Gradient Direction
+                    var start = this.getPointAtLength(0);
+                    var end = this.getPointAtLength(this.getTotalLength());
+                    var box = this.getBBox();
+                    var x1 = ((start.x - box.x) / box.width) * 100 + "%";
+                    var x2 = ((end.x - box.x) / box.width) * 100 + "%";
+                    var y1 = ((start.y - box.y) / box.height) * 100 + "%";
+                    var y2 = ((end.y - box.y) / box.height) * 100 + "%";
 
-                return l.color;
-            });
+                    if ($("#" + id)[0]) $("#" + id)[0]["remove"]();
+                    var grad = document.createElementNS(varNS, 'linearGradient');
+                    grad.setAttribute('id', id);
+                    grad.setAttribute('x1', x1);
+                    grad.setAttribute('x2', x2);
+                    grad.setAttribute('y1', y1);
+                    grad.setAttribute('y2', y2);
 
+                    for (var i = 0; i < stops.length; i++) {
+                        var attrs = stops[i];
+                        var stop = document.createElementNS(varNS, 'stop');
+                        for (var attr in attrs) {
+                            if (attrs.hasOwnProperty(attr)) stop.setAttribute(attr, attrs[attr]);
+                        }
+                        grad.appendChild(stop);
+                    }
+                    varDefs.appendChild(grad);
+
+                    var gID = 'url(#' + id + ')';
+                    l['gradientID'] = gID;
+                    l.color = gID;
+
+                    return l.color;
+                });
+        }
+        
         // Add Nodes' id to Circular Graph
         this.svgAllElements.selectAll(".nodeCircular")
             .data(this.nodes.filter(function (n) {
@@ -942,7 +1016,7 @@ class CircularGraph {
             .text(function (d) { return d.key; })
             .on("mouseover", function (d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.id); })
             .on("mouseout", function (d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); });
-
+        //console.log(this.svgAllElements.selectAll(".nodeCircular"));
         // Add Nodes' id to Circular Graph
         this.svgAllElements.selectAll(".nodeDotCircular")
             .data(this.nodes.filter(function (n) { return !n.children; }))
@@ -1007,31 +1081,77 @@ class CircularGraph {
                 }
             });
 
-
-        for (var barIndex in this.attributeBars) {
-            var bar = this.attributeBars[barIndex];
-
-            this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
+        
+        this.attributeBars.forEach(function (bar) {
+            console.log(bar);
+            this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                 .data(this.nodes.filter(function (n) { return !n.children; }))
                 .enter()
                 .append("rect")
-                .attr("class", "rect" + bar.id + "Circular")
+                .attr("class", "rectCircular")
+                .attr("barID", bar.id)
                 .on("mouseover", function (d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.id); })
                 .on("mouseout", function (d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); });
-        }
+        }, this);
+
+        this.createHistogramBars();
 
         d3.select(window.frameElement).style("height", diameter + "px");
 
     }
 
+    createHistogramBars() {
+        this.svgAllElements.selectAll(".rectLegend").data(new Array()).exit().remove();
+        this.svgAllElements.selectAll(".textLegend").data(new Array()).exit().remove();
+        var legendHeight = 25;
+        var count = 0;
+        //console.log(this.attributeBars);
+        //this.svgAllElements.selectAll(".textLegend")
+        //    .data(this.attributeBars)
+        //    .enter()
+        //    .append("text")
+        //    .attr("class", 'textLegend')
+        //    .attr("x", 400)
+        //    .attr("y", count * legendHeight)
+        //    .text("Hello");
+
+
+        this.attributeBars.forEach(function (bar) {
+            if (bar.attribute !== 'none') {
+                this.svgAllElements.selectAll(".rectLegend[barID='" + bar.id + "']")
+                    .data([bar])
+                    .enter()
+                    .append("rect")
+                    .attr("class", 'rectLegend')
+                    .attr("x", 400)
+                    .attr("barID", function (d) { return d.id; })
+                    .attr("y", count * legendHeight)
+                    .attr("width", legendHeight)
+                    .attr("height", legendHeight)
+                    .style("fill", function (d) { return d.color; });
+
+                this.svgAllElements.selectAll(".textLegend[barID='" + bar.id + "']")
+                    .data([bar])
+                    .enter()
+                    .append("text")
+                    .attr("class", 'textLegend')
+                    .attr("x", 400)
+                    .attr("dx", legendHeight * 5 / 4)
+                    .attr("barID", function (d) { return d.id; })
+                    .attr("y", legendHeight / 2 + count * legendHeight + 5)
+                    .text(function (d) { return d.attribute; });
+                count++;
+            }
+        }, this);
+    }
+
     addAttributeBar() {
+        
         let varMouseOveredSetNodeID = (id) => { this.mouseOveredSetNodeID(id); }
         let varMouseOutedSetNodeID = () => { this.mouseOutedSetNodeID(); }
         let varMouseOveredCircularLayout = (d) => { this.mouseOveredCircularLayout(d); }
         let varMouseOutedCircularLayout = (d) => { this.mouseOutedCircularLayout(d); }
-        let varCircularLayoutAttributeOnChange = (barID: number, val: string) => { this.circularLayoutAttributeOnChange(barID, val); }
-        let varUpdateCircularBarColor = (barID: number, color: string) => { this.updateCircularBarColor(barID, color); }
-
+        
         let id = this.attributeBars.length;
         let bar = {
             id: id,
@@ -1042,16 +1162,22 @@ class CircularGraph {
 
         this.attributeBars.push(bar);
         this.numBars += 1;
-
+        //console.log(bar);
         // Add New Bar to Circular Graph
-        this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
+        this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
             .data(this.nodes.filter(function (n) {
                 return !n.children;
             }))
             .enter().append("rect")
-            .attr("class", "rect" + bar.id + "Circular")
+            .attr("class", "rectCircular")
+            .attr("barID", bar.id)
             .on("mouseover", function (d) { varMouseOveredCircularLayout(d); varMouseOveredSetNodeID(d.id); })
             .on("mouseout", function (d) { varMouseOutedCircularLayout(d); varMouseOutedSetNodeID(); });
+
+        // need to clear the bars and create them again
+
+        this.createHistogramBars();
+        this.addAttributeBarElements(bar);
 
         // Rearange the menu layout
         //var l = $('#button-circular-layout-histogram-' + this.id).position().left + 5;
@@ -1061,6 +1187,13 @@ class CircularGraph {
 
         //------------------------------------------------------------------------------------------------------------
         // Add control options for new bar
+        
+    }
+
+    addAttributeBarElements(bar) {
+        let varCircularLayoutAttributeOnChange = (barID: number, val: string) => { this.circularLayoutAttributeOnChange(barID, val); }
+        let varUpdateCircularBarColor = (barID: number, color: string) => { this.updateCircularBarColor(barID, color); }
+
         $('#div-circular-layout-menu-' + this.id).append('<div id="div-circular-bar' + bar.id + '-' + this.id + '"></div>');
         $('#div-circular-bar' + bar.id + '-' + this.id).append($('<select id="select-circular-layout-attribute-' + bar.id + '-' + this.id + '" class=' + this.circularCSSClass + '></select>')
             .css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' })
@@ -1074,21 +1207,31 @@ class CircularGraph {
                     <span class="input-group-addon"><i></i></span>
                 </div>
                 `)
-        );
+            );
         let $pickerDiv = (<any>$(`#input-circular-layout-bar${bar.id}-color`));
         let customClass = `custom-picker-${bar.id}-${this.id}`;
+        
         $pickerDiv.colorpicker({
             format: "hex",
+            color: bar.color,
             customClass
         });
-        $pickerDiv.on("changeColor", e => varUpdateCircularBarColor(bar.id, (<any>e).color.toHex()));
+        $pickerDiv.on("changeColor", e => {
+            if (!$pickerDiv.data('isFromReset')) {
+                varUpdateCircularBarColor(bar.id, (<any>e).color.toHex());
+            } else {
+                $pickerDiv.removeData('isFromReset');
+            }
+        });
+            
+
+
         $pickerDiv.on("showPicker", e => {
             // May need to adjust if it overflows the window
             let $pickerPalette = $("." + customClass);
             $pickerPalette.removeClass("clip-to-bottom");
             if ($pickerPalette.outerHeight() + $pickerPalette.offset().top > window.innerHeight) $pickerPalette.addClass("clip-to-bottom");
         });
-
 
         $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).empty();
 
@@ -1100,9 +1243,11 @@ class CircularGraph {
         for (var i = 0; i < this.dataSet.attributes.columnNames.length; ++i) {
             var columnName = this.dataSet.attributes.columnNames[i];
             $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');
+            
         }
-    }
+        $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).find("option[value=\"" + bar.attribute + "\"]").prop("selected", true);
 
+    }
     // Differences between update and set circular bar color
     updateCircularBarColor(barID: number, color: string) {
         this.circularBarColorChange = true;
@@ -1116,12 +1261,11 @@ class CircularGraph {
         var txt: string;
         var rgbtext;
         var delta;
-
+        
         if (bar.isGradientOn) {
             var attr = $('#select-circular-layout-attribute-' + bar.id + '-' + this.id).val();
-
             // Change all color of the first bar
-            this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
+            this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                 .style("fill", function (d) {
 
                     delta = gScale * (1 - d["scale_" + attr]);
@@ -1142,13 +1286,17 @@ class CircularGraph {
 
                     return "#" + txt;
                 });
+        } else {
+            this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
+                .style("fill", bar.color);
         }
-        else {
-            this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
-                .style("fill", color);
-        }
-
-
+        this.createHistogramBars();
+        //console.trace();
+        //console.log(`#input-circular-layout-bar${bar.id}-color`);
+        // set the color of the colorpicker
+        let pickerDiv = document.getElementById(`input-circular-layout-bar${bar.id}-color`);
+        //console.log(pickerDiv);
+        $(pickerDiv).data('isFromReset', true).colorpicker("setValue", bar.color );
     }
 
     ////////////////////////////////////////////////////////////////
@@ -1159,15 +1307,14 @@ class CircularGraph {
         var height = this.BAR_MAX_HEIGHT / this.numBarsActive;
         var count = 0;
         var BAR_MAX_HEIGHT = this.BAR_MAX_HEIGHT;
+        //console.log("updateAllAttributeBars");
 
-        for (var barIndex in this.attributeBars) {
-            var b = this.attributeBars[barIndex];
-
+        this.attributeBars.forEach(function (bar) {
             // check if the bar is active
-            if (b.attribute !== "none") {
+            if (bar.attribute !== "none") {
 
-                this.svgAllElements.selectAll(".rect" + b.id + "Circular")
-                // Change bar location
+                this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
+                    // Change bar location
                     .attr("transform", function (d) {
                         return "rotate(" + (d.x - 90) + ")" +
                             "translate(" + (d.y + 4) + ",  " + ((height * count) - BAR_MAX_HEIGHT / 2) + ")" + (d.x < 180 ? "" : "");
@@ -1175,62 +1322,70 @@ class CircularGraph {
                     }).attr("height", function (d) {
                         return height;
                     }).attr("width", function (d) {
-                        var barWidth = 40 * d["scale_" + b.attribute];
-                        d.barWidths[b.id] = barWidth;
+                        var barWidth = 40 * d["scale_" + bar.attribute];
+                        d.barWidths[bar.id] = barWidth;
+
                         return barWidth;
                     });
 
-                this.updateCircularBarColor(b.id, b.color);
+
+                this.updateCircularBarColor(bar.id, bar.color);
 
                 count++;
+            } else {
+                this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
+                
+                .attr("width", function (d) {
+                    d.barWidths[bar.id] = 0;
+                    return 0;
+                });
             }
-        }
+        }, this);
 
         // move the label
         this.svgAllElements.selectAll(".nodeCircular")
             .attr("transform", function (d) {
+
                 var maxSize = 0;
+
                 for (var widthSize in d.barWidths) {
                     if (maxSize < d.barWidths[widthSize]) {
                         maxSize = d.barWidths[widthSize];
                     }
                 }
-
                 return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 16 + maxSize) + ",0)" + (d.x < 180 ? "" : "rotate(180)");
             });
     }
 
     // Change on Attribute of bar
     circularLayoutAttributeOnChange(barID: number, attr: string) {
-        var bar = this.attributeBars[barID];
+        var curBar = this.attributeBars[barID];
         var height = this.BAR_MAX_HEIGHT / this.numBarsActive;
         var BAR_MAX_HEIGHT = this.BAR_MAX_HEIGHT;
-
+        
         // update number of active bar
-        if (bar.attribute == "none" && attr !== "none") {
+        if (curBar.attribute == "none" && attr !== "none") {
             this.numBarsActive++;
             this.circularBarWidthChange = true;
-        } else if (bar.attribute !== "none" && attr == "none") {
+        } else if (curBar.attribute !== "none" && attr == "none") {
             this.numBarsActive--;
             this.circularBarWidthChange = true;
         }
 
         // update bar attribute
-        bar.attribute = attr;
-
+        curBar.attribute = attr;
+        
         // Update all active bar width 
         var count = 0;
         if (this.circularBarWidthChange) {
             height = this.BAR_MAX_HEIGHT / this.numBarsActive;
 
-            for (var barIndex in this.attributeBars) {
-                var b = this.attributeBars[barIndex];
-
+            this.attributeBars.forEach(function (bar) {
                 // check if the bar is active
-                if (b.attribute !== "none") {
+                if (bar.attribute !== "none") {
 
-                    this.svgAllElements.selectAll(".rect" + b.id + "Circular")
-                    // Change bar location
+                    this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
+                        // Change bar location
                         .attr("transform", function (d) {
                             return "rotate(" + (d.x - 90) + ")" +
                                 "translate(" + (d.y + 4) + ",  " + ((height * count) - BAR_MAX_HEIGHT / 2) + ")" + (d.x < 180 ? "" : "");
@@ -1241,34 +1396,33 @@ class CircularGraph {
 
                     count++;
                 }
-
-            }
+            }, this);
         }
 
         // update bar width (height) value
-        if (bar.attribute !== "none") {
-            this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
+        if (curBar.attribute !== "none") {
+            this.svgAllElements.selectAll(".rectCircular[barID='" + curBar.id + "']")
                 .attr("width", function (d) {
                     var barWidth = 40 * d["scale_" + attr];
-                    d.barWidths[bar.id] = barWidth;
+                    d.barWidths[curBar.id] = barWidth;
                     return barWidth;
                 })
         } else {
-            this.svgAllElements.selectAll(".rect" + bar.id + "Circular")
+            this.svgAllElements.selectAll(".rectCircular[barID='" + curBar.id + "']")
                 .attr("width", function (d) {
-                    d.barWidths[bar.id] = 0;
+                    d.barWidths[curBar.id] = 0;
                     return 0;
                 })
         }
 
         // Update the bar color base on the value in the object
-        this.updateCircularBarColor(bar.id, bar.color);
+        this.updateCircularBarColor(curBar.id, curBar.color);
 
         // move the label
         this.svgAllElements.selectAll(".nodeCircular")
             .attr("transform", function (d) {
                 var maxSize = 0;
-
+                
                 for (var widthSize in d.barWidths) {
 
                     if (maxSize < d.barWidths[widthSize]) {
@@ -1371,15 +1525,13 @@ class CircularGraph {
         var l = $('#button-circular-layout-histogram-' + this.id).position().left + 5;
         //var t = $('#button-circular-layout-histogram-' + this.id).position().top - $('#div-circular-layout-menu-' + this.id).height() - 15;
         let b = $('#button-circular-layout-histogram-' + this.id).outerHeight();
-
-        for (var barIndex in this.attributeBars) {
-            var bar = this.attributeBars[barIndex];
+        this.attributeBars.forEach(function (bar) {
             if ($('#span-circular-layout-bar' + bar.id + '-color-picker').length > 0) {
 
                 // saved in the object for future saving feature
-                //bar.colorPicker = $('#span-circular-layout-bar'+ bar.id +'-color-picker').detach();
+                bar.colorPicker = $('#span-circular-layout-bar' + bar.id + '-color-picker').detach();
             }
-        }
+        });
         $('#div-circular-layout-menu-' + this.id).zIndex(1000);
         $('#div-circular-layout-menu-' + this.id).css({ left: l, bottom: b, height: 'auto' });
         $('#div-circular-layout-menu-' + this.id).fadeToggle('fast');
@@ -1471,12 +1623,10 @@ class CircularGraph {
                 }
             });;
 
-        for (var barIndex in this.attributeBars) {
-            var b = this.attributeBars[barIndex];
-            // check if the bar is active
-            if (b.attribute !== "none") {
+        this.attributeBars.forEach(function (bar) {
+            if (bar.attribute !== "none") {
 
-                this.svgAllElements.selectAll(".rect" + b.id + "Circular")
+                this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                     .style("opacity", function (n) {
                         if (n.target || n.source) {
                             return 1;
@@ -1485,12 +1635,13 @@ class CircularGraph {
                         }
                     });
             }
-        }
+        }, this);
     }
 
     mouseOutedCircularLayout(d) {
         var selectedID = this.commonData.selectedNode;
         var _this = this;
+
         if (selectedID == -1) {
             this.svgAllElements.selectAll(".linkCircular")
                 .style("stroke-width", "1px")
@@ -1512,16 +1663,14 @@ class CircularGraph {
             this.svgAllElements.selectAll(".nodeDotCircular")
                 .style("opacity", 1);
 
-
-            for (var barIndex in this.attributeBars) {
-                var b = this.attributeBars[barIndex];
+            this.attributeBars.forEach(function (bar) {
                 // check if the bar is active
-                if (b.attribute !== "none") {
+                if (bar.attribute !== "none") {
 
-                    this.svgAllElements.selectAll(".rect" + b.id + "Circular")
+                    this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                         .style("opacity", 1);
                 }
-            }
+            }, this);
         } else {
             // Reseting All nodes source and target
             this.svgAllElements.selectAll(".nodeCircular")
@@ -1587,12 +1736,12 @@ class CircularGraph {
                     }
                 });;
 
-            for (var barIndex in this.attributeBars) {
-                var b = this.attributeBars[barIndex];
-                // check if the bar is active
-                if (b.attribute !== "none") {
 
-                    this.svgAllElements.selectAll(".rect" + b.id + "Circular")
+            this.attributeBars.forEach(function (bar) {
+                // check if the bar is active
+                if (bar.attribute !== "none") {
+
+                    this.svgAllElements.selectAll(".rectCircular[barID='" + bar.id + "']")
                         .style("opacity", function (n) {
                             if (n.target || n.source) {
                                 return 1;
@@ -1601,7 +1750,7 @@ class CircularGraph {
                             }
                         });
                 }
-            }
+            }, this);
         }
 
     }

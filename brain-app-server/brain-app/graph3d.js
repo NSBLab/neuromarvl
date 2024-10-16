@@ -581,7 +581,11 @@ var Graph3D = /** @class */ (function () {
                 var edge = (this.edgeMatrix[id][j]) ? this.edgeMatrix[id][j] : this.edgeMatrix[j][id];
                 if (edge) {
                     if (edge.visible) {
+<<<<<<< HEAD
                         edge.multiplyScale(1.0 / 2.0);
+=======
+                        edge.multiplyScale(0.5);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     }
                 }
             }

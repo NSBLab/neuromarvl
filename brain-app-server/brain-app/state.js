@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 /// <reference path="brain3d.ts" />
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
 /*
     All classes responsible for the application state, i.e. the "source of truth" go here.
 */
@@ -10,6 +13,11 @@ var CommonData = /** @class */ (function () {
         this.edgeColorMode = "none";
         this.edgeWeightColorMode = "";
         this.edgeForceContinuous = false;
+<<<<<<< HEAD
+=======
+        //public edgeColorByNodeTransition = false;
+        //public edgeColorByNodeTransitionColor = "#ee2211";
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         this.coordCallbacks = new Array();
         this.labelCallbacks = new Array();
         this.surfaceCallbacks = new Array();
@@ -117,7 +125,11 @@ var DataSet = /** @class */ (function () {
             count = max;
         if (count > this.sortedSimilarities.length)
             count = this.sortedSimilarities.length;
+<<<<<<< HEAD
         var threshold = Math.abs(this.sortedSimilarities[count - 1]);
+=======
+        var threshold = this.sortedSimilarities[count - 1];
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         var adjMatrix = Array(this.info.nodeCount);
         for (var i = 0; i < this.info.nodeCount; ++i) {
             adjMatrix[i] = new Array(this.info.nodeCount);
@@ -125,15 +137,25 @@ var DataSet = /** @class */ (function () {
         for (var i = 0; i < this.info.nodeCount - 1; ++i) {
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
                 var isSameSide = (this.brainCoords[0][i] * this.brainCoords[0][j] > 0);
+<<<<<<< HEAD
                 var val = Math.abs(this.simMatrix[i][j]);
                 if (val >= threshold && val > 0 && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+=======
+                var val = this.simMatrix[i][j];
+                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     adjMatrix[i][j] = 1;
                 }
                 else {
                     adjMatrix[i][j] = 0;
                 }
+<<<<<<< HEAD
                 val = Math.abs(this.simMatrix[j][i]);
                 if (val >= threshold && val > 0 && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+=======
+                val = this.simMatrix[j][i];
+                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     adjMatrix[j][i] = 1;
                 }
                 else {
@@ -150,22 +172,36 @@ var DataSet = /** @class */ (function () {
             count = max;
         if (count > this.sortedSimilarities.length)
             count = this.sortedSimilarities.length;
+<<<<<<< HEAD
         var threshold = Math.abs(this.sortedSimilarities[count - 1]);
+=======
+        var threshold = this.sortedSimilarities[count - 1];
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         var adjMatrix = Array(this.info.nodeCount);
         for (var i = 0; i < this.info.nodeCount; ++i) {
             adjMatrix[i] = new Array(this.info.nodeCount);
         }
         for (var i = 0; i < this.info.nodeCount - 1; ++i) {
             for (var j = i + 1; j < this.info.nodeCount; ++j) {
+<<<<<<< HEAD
                 var val = Math.abs(this.simMatrix[i][j]);
                 if (val >= threshold && val > 0) { // Accept an edge between nodes that are at least as similar as the threshold value
+=======
+                var val = this.simMatrix[i][j];
+                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     adjMatrix[i][j] = 1;
                 }
                 else {
                     adjMatrix[i][j] = 0;
                 }
+<<<<<<< HEAD
                 val = Math.abs(this.simMatrix[j][i]);
                 if (val >= threshold && val > 0) { // Accept an edge between nodes that are at least as similar as the threshold value
+=======
+                val = this.simMatrix[j][i];
+                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     adjMatrix[j][i] = 1;
                 }
                 else {
@@ -198,7 +234,11 @@ var DataSet = /** @class */ (function () {
                 this.sortedSimilarities.push(value);
             }
         }
+<<<<<<< HEAD
         this.sortedSimilarities.sort(function (a, b) { return Math.abs(b) - Math.abs(a); });
+=======
+        this.sortedSimilarities.sort(function (a, b) { return b - a; });
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         // remove edges with weight === 0
         var index = this.sortedSimilarities.indexOf(0);
         this.sortedSimilarities.splice(index, this.sortedSimilarities.length - index);
@@ -276,8 +316,12 @@ var SaveFile = /** @class */ (function () {
             nodeColorContinuousMax: ''
         };
         this.surfaceSettings = (sourceObject && sourceObject.surfaceSettings) || {
+<<<<<<< HEAD
             opacity: 0.5,
             color: "#E3E3E3"
+=======
+            opacity: 0.5
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         };
         this.displaySettings = (sourceObject && sourceObject.displaySettings) || {
             mode: 'Top',

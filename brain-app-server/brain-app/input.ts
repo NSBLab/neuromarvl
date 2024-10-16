@@ -252,7 +252,7 @@ class InputTargetManager {
             }
 
             this.contextMenuColorChanged = false;
-            this.mouseDownMode = event.which;
+            this.mouseDownMode = event.button;
 
             var viewID = this.mouseLocationCallback(event.clientX, event.clientY);
 
@@ -317,7 +317,7 @@ class InputTargetManager {
 
                 // the last attribute is color
                 var color = parseInt(record.color);
-                var hex = color.toString(16);
+                var hex = color.toString(16).replace(/^#+/gm, '');;
                 (<any>$("#input-context-menu-node-color")).colorpicker("setValue", "#" + hex);
 
                 this.rightClickLabelAppended = true;
@@ -350,18 +350,31 @@ class InputTargetManager {
             }
         }, false);
 
-        document.addEventListener('mousewheel', (event) => {
-            var viewID = this.mouseLocationCallback(event.clientX, event.clientY);         
+        var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel";
 
+        document.addEventListener(mousewheelevt, (event) => {
+            var viewID = this.mouseLocationCallback((<WheelEvent>event).clientX, (<WheelEvent>event).clientY);
             if (viewID == this.activeTarget) {
                 var it = this.inputTargets[this.activeTarget];
+                //console.log((<WheelEvent>event));
+
+
                 if (it) {
                     //console.log(event.wheelDelta);
                     var callback = it.mouseWheelCallback;
-                    if (callback) callback(-event.wheelDelta/2000);
+                    var realDelta = 0;
+
+                    if ((<WheelEvent>event).deltaY) {
+                        realDelta = CommonUtilities.sign((<WheelEvent>event).deltaY) * 0.05;
+                    } else if ((<WheelEvent>event).detail) {
+                        realDelta = CommonUtilities.sign((<WheelEvent>event).detail) * 0.05;
+                    }
+                    // in chrome the deltaY values are -100, 100 and the original code divides by 2000, making the values 1 / 20
+                    //if (callback) callback((<WheelEvent>event).deltaY / 2000);
+                    // so we just pass in
+                    if (callback) callback(realDelta);
                 }
             }
-
         }, false);
 
         document.addEventListener('mousemove', (event) => {            
@@ -400,33 +413,39 @@ class InputTargetManager {
         //this.keyboard['keyToggle'] = {};
 
         document.addEventListener('keydown', (evt) => {
-            //evt.preventDefault(); // Don't do browser built-in search with key press
-            var k = this.translateKeycode(evt.keyCode);
+            // somehow nodeName property is missing from typescript EventTarget object
+            if ((<Element>evt.target).nodeName == 'BODY') {
+                //evt.preventDefault(); // Don't do browser built-in search with key press
+                var k = evt.key; //this.translateKeycode(evt.key);
 
-            if (!this.keyboardKey[k]) {
-                this.keyboardKey[k] = true;
-                //this.keyboardKeyToggle[k] = !this.keyboardKeyToggle[k];
-                //this.keyboardKeyPressed[k] = true;
-                // Make the callbacks for the active input target
-                var it = this.inputTargets[this.activeTarget];
-                if (it) {
-                    var callback = it.keyDownCallbacks[k];
-                    if (callback) callback(false);
+                if (!this.keyboardKey[k]) {
+                    this.keyboardKey[k] = true;
+                    //this.keyboardKeyToggle[k] = !this.keyboardKeyToggle[k];
+                    //this.keyboardKeyPressed[k] = true;
+                    // Make the callbacks for the active input target
+                    var it = this.inputTargets[this.activeTarget];
+                    if (it) {
+                        var callback = it.keyDownCallbacks[k];
+                        if (callback) callback(false);
 
-                    if (this.yokingView) varYokingViewAcrossPanels();
+                        if (this.yokingView) varYokingViewAcrossPanels();
+                    }
                 }
             }
         }, false);
 
         document.addEventListener('keyup', (evt) => {
-            var k = this.translateKeycode(evt.keyCode);
-            this.keyboardKey[k] = false;
-            //this.keyboardKeyReleased[k] = true;
-            // Make the callbacks for the active input target
-            var it = this.inputTargets[this.activeTarget];
-            if (it) {
-                var callback = it.keyUpCallbacks[k];
-                if (callback) callback();
+            // somehow nodeName property is missing from typescript EventTarget object
+            if ((<Element>evt.target).nodeName == 'BODY') {
+                var k = evt.key;// this.translateKeycode(evt.keyCode);
+                this.keyboardKey[k] = false;
+                //this.keyboardKeyReleased[k] = true;
+                // Make the callbacks for the active input target
+                var it = this.inputTargets[this.activeTarget];
+                if (it) {
+                    var callback = it.keyUpCallbacks[k];
+                    if (callback) callback();
+                }
             }
         }, false);
     }
@@ -643,7 +662,7 @@ class InputTargetManager {
         this.pointingHandCheckedIn = false;
         //this.grabbingHandCheckedIn = false;
     }
-
+    
     setActiveTarget(index: number) {
         this.activeTarget = index;
     }

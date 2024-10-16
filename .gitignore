@@ -7,12 +7,5 @@ brain-app-server/extern/ts/*.js
 brain-app-server/extern/ts/*.js.map
 brain-app-server/brain-app/save
 
-<<<<<<< Updated upstream
-=======
 brain-app-server/Properties/
-brain-app-server/brain-app/*.js
-brain-app-server/brain-app/*.js.map
-
-
 /packages
->>>>>>> Stashed changes

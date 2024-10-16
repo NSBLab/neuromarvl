@@ -183,7 +183,11 @@ var InputTargetManager = /** @class */ (function () {
                 }
             }
             _this.contextMenuColorChanged = false;
+<<<<<<< HEAD
             _this.mouseDownMode = event.button;
+=======
+            _this.mouseDownMode = event.which;
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             var viewID = _this.mouseLocationCallback(event.clientX, event.clientY);
             if (viewID == _this.activeTarget) {
                 var it = _this.inputTargets[_this.activeTarget];
@@ -235,8 +239,12 @@ var InputTargetManager = /** @class */ (function () {
                 }
                 // the last attribute is color
                 var color = parseInt(record.color);
+<<<<<<< HEAD
                 var hex = color.toString(16).replace(/^#+/gm, '');
                 ;
+=======
+                var hex = color.toString(16);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 $("#input-context-menu-node-color").colorpicker("setValue", "#" + hex);
                 _this.rightClickLabelAppended = true;
             }
@@ -260,6 +268,7 @@ var InputTargetManager = /** @class */ (function () {
                 }
             }
         }, false);
+<<<<<<< HEAD
         var mousewheelevt = (/Firefox/i.test(navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel";
         document.addEventListener(mousewheelevt, function (event) {
             var viewID = _this.mouseLocationCallback(event.clientX, event.clientY);
@@ -281,6 +290,17 @@ var InputTargetManager = /** @class */ (function () {
                     // so we just pass in
                     if (callback)
                         callback(realDelta);
+=======
+        document.addEventListener('mousewheel', function (event) {
+            var viewID = _this.mouseLocationCallback(event.clientX, event.clientY);
+            if (viewID == _this.activeTarget) {
+                var it = _this.inputTargets[_this.activeTarget];
+                if (it) {
+                    //console.log(event.wheelDelta);
+                    var callback = it.mouseWheelCallback;
+                    if (callback)
+                        callback(event.deltaY / 2000);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 }
             }
         }, false);
@@ -320,7 +340,11 @@ var InputTargetManager = /** @class */ (function () {
             // somehow nodeName property is missing from typescript EventTarget object
             if (evt.target.nodeName == 'BODY') {
                 //evt.preventDefault(); // Don't do browser built-in search with key press
+<<<<<<< HEAD
                 var k = evt.key; //this.translateKeycode(evt.key);
+=======
+                var k = _this.translateKeycode(evt.keyCode);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 if (!_this.keyboardKey[k]) {
                     _this.keyboardKey[k] = true;
                     //this.keyboardKeyToggle[k] = !this.keyboardKeyToggle[k];
@@ -340,7 +364,11 @@ var InputTargetManager = /** @class */ (function () {
         document.addEventListener('keyup', function (evt) {
             // somehow nodeName property is missing from typescript EventTarget object
             if (evt.target.nodeName == 'BODY') {
+<<<<<<< HEAD
                 var k = evt.key; // this.translateKeycode(evt.keyCode);
+=======
+                var k = _this.translateKeycode(evt.keyCode);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 _this.keyboardKey[k] = false;
                 //this.keyboardKeyReleased[k] = true;
                 // Make the callbacks for the active input target

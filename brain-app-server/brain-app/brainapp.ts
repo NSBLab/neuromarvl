@@ -30,7 +30,7 @@ interface Application {
     brainSurfaceMode;
 
     setDataSet(dataSet: DataSet);
-    resize(width: number, height: number);
+    resize(width: number, height: number, action: string);
     applyFilter(filteredIDs: number[]);
     showNetwork(switchNetwork);
 
@@ -40,6 +40,7 @@ interface Application {
     setBrainMode(brainMode);
     setSurfaceOpacity(opacity);
     setSurfaceColor(color: string);
+    setSurfaceRotation(quat);
 
     // Node Attributes
     setNodeDefaultSizeColor();
@@ -122,9 +123,9 @@ class NeuroMarvl {
     referenceDataSet = new DataSet();
     commonData = new CommonData();
     brainSurfaceColor: string;
-    saveObj = new SaveFile({});
+    saveFileObj = new SaveFile({});
     loader;     // THREE.ObjLoader
-    apps: Brain3DApp[];
+    applicationsInstances: Brain3DApp[];
 
     pointerImage = new PointerImageImpl;
 
@@ -138,6 +139,10 @@ class NeuroMarvl {
 
     input: InputTargetManager;
 
+    // reference to the export-dialog OK button callback handler
+    // The dialog is also used for the batch download, using another callback
+    // To not loose original reference, we save it in a variable
+    exportCallbackFunction = null;
 
     constructor() {
         this.brainSurfaceColor = "0xe3e3e3";
@@ -146,7 +151,7 @@ class NeuroMarvl {
         let manager = new THREE.LoadingManager();
         this.loader = new (<any>THREE).OBJLoader(manager);
         
-        this.apps = Array<Brain3DApp>();
+        this.applicationsInstances = Array<Brain3DApp>();
 
         // Set up the class that will manage which view should be receiving input
         this.input = new InputTargetManager([TL_VIEW, TR_VIEW, BL_VIEW, BR_VIEW], this.pointerImage);
@@ -218,7 +223,7 @@ class NeuroMarvl {
             var matrixFiles = (<any>$('#select-matrices-batching').get(0)).files;
             var attrFiles = (<any>$('#select-attrs-batching').get(0)).files;
 
-            if (matrixFiles.length === attrFiles.length) {
+            if (matrixFiles.length > 0 && attrFiles.length > 0 && matrixFiles.length === attrFiles.length) {
 
                 // Showing modal 
                 $("#alertModal")["modal"]({
@@ -236,10 +241,48 @@ class NeuroMarvl {
                 var numberOfFiles = attributes.length;
                 var i = 0;
 
-                this.batchProcess(i, numberOfFiles, attributes, matrices);
+                // use the export dialog to also save the batch export
+                let savecallback = this.exportCallbackFunction;
+                $('#button-export-submit').button().unbind('click');
+                let appref = this;
+
+                var savePrevFilename = $('#select-export-filename').val();
+                let batchExportCallback = function () {
+
+                    $("#exportModal")["modal"]('toggle');
+
+                    $('#button-export-submit').button().unbind('click');
+                    $('#button-export-submit').button().click(savecallback);
+
+                    var filename = $('#select-export-filename').val();
+                    if (filename.length == 0)
+                        filename = null;
+
+                    var viewport = $('#select-export-viewport').val();
+                    var type = $('#select-export-type').val();
+                    var strresolution = $('#select-export-resolution').val();
+
+                    strresolution = strresolution.split('x');
+                    var resolution = {
+                        x: parseInt(strresolution[0]),
+                        y: parseInt(strresolution[1])
+                    }
+                    appref.batchProcess(i, numberOfFiles, attributes, matrices, filename, type, resolution);
+
+                    $('#select-export-filename').val(savePrevFilename);
+                }
+                $('#button-export-submit').button().click(batchExportCallback);
+
+                $("#exportModal")["modal"]();
+                
 
             } else {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Number of Files do not match.");
+                if (matrixFiles.length == 0 || attrFiles.length == 0)
+                    confirm("Please add at least 2 connectivity matrix and 2 Node attribute files");
+                else {
+                    confirm("Please load the same number of connectivity matrix and attribute files");
+                }
+                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "No files given or number of Files do not match.");
             }
 
         });
@@ -311,6 +354,7 @@ class NeuroMarvl {
             this.toggleSplashPage();
         };
 
+        // check of URL parameters
         if (query && query.length > 0) {
             this.showLoadingNotification();
 
@@ -331,12 +375,18 @@ class NeuroMarvl {
                         // Ensure that data is not empty
                         if (!data || !data.length) return;
 
-                        this.saveObj = new SaveFile(jQuery.parseJSON(data));
-                        for (var app of this.saveObj.saveApps) {
+                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));                        
+                        for (var app of this.saveFileObj.saveApps) {
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
+
+                                //to fix the model is not loading after save
+                                $('#select-brain3d-model').val(app.surfaceModel);
                             }
                         }
+
+                        // record display settings                        
+                        this.recordDisplaySettings();
                     }
                     else {
                         alert("Loading is: " + status + "\nData: " + data);
@@ -349,6 +399,17 @@ class NeuroMarvl {
         }
     }
 
+    recordDisplaySettings() {
+        // surfaceSettings.color                        
+        var col = this.saveFileObj.surfaceSettings.color;
+        $("#input-surface-color").val(col);
+
+        //set Display Mode
+        $('#display_settings_mode').val(this.saveFileObj.displaySettings.mode);
+        $('#display_settings_labels').val(this.saveFileObj.displaySettings.labels);
+        $('#display_settings_split').val(this.saveFileObj.displaySettings.split);
+        $('#display_settings_rotation').val(this.saveFileObj.displaySettings.rotation);
+    }
 
     /*
         Functions to work with app state
@@ -356,26 +417,27 @@ class NeuroMarvl {
 
     initApp = id => {
         // init edge count
-        var app = this.saveObj.saveApps[id];
-        if (app.surfaceModel) {
-            this.apps[id].initEdgeCountSlider(app);
+        var savedApp = this.saveFileObj.saveApps[id];
+        if (savedApp.surfaceModel) {
+            this.applicationsInstances[id].initEdgeCountSlider(savedApp);
         }
 
         // init cross filter
-        if (this.saveObj.filteredRecords && (this.saveObj.filteredRecords.length > 0)) {
-            this.referenceDataSet.attributes.filteredRecords = this.saveObj.filteredRecords.slice(0);
+        if (this.saveFileObj.filteredRecords && (this.saveFileObj.filteredRecords.length > 0)) {
+            this.referenceDataSet.attributes.filteredRecords = this.saveFileObj.filteredRecords.slice(0);
             this.applyFilterButtonOnClick();
         }
 
+        // set newly created saveFileObj to Brain3D object
+        this.applicationsInstances[id].saveFileObj = this.saveFileObj;
+
         // make sure the app has required graphs created
-        this.apps[id].restart();
+        this.applicationsInstances[id].restart();
 
         // init show network
-        if (app.surfaceModel) {
-            this.apps[id].initShowNetwork(app);
+        if (savedApp.surfaceModel) {
+            this.applicationsInstances[id].initShowNetwork(savedApp);
         }
-
-        this.initDataDependantUI();
 
         this.removeLoadingNotification();
     }
@@ -389,26 +451,26 @@ class NeuroMarvl {
                 //this.initNodeColor();
             }
             else if (this.saveFileObj.nodeSettings.nodeSizeOrColor == "node-color") {
-                //this.initNodeSize();
+                this.initNodeSize();
                 this.initNodeColor();
             }
         }
 
         // init edge size and color.
-        if (this.saveObj.edgeSettings) {
+        if (this.saveFileObj.edgeSettings) {
             this.initEdgeSizeAndColor();
         }
 
         // init Surface Setting
-        if (this.saveObj.surfaceSettings) {
+        if (this.saveFileObj.surfaceSettings) {
             this.initSurfaceSettings();
         }
-
+        
         this.selectView(TL_VIEW);
     }
 
     
-    batchProcess = (i, numberOfFiles, attributes, matrices) => {
+    batchProcess = (i, numberOfFiles, attributes, matrices, filename = null, filetype = "svg", resolution = { x: 1920, y: 1080 }) => {
         document.getElementById("alertModalMessage").innerHTML = "Started load of " + numberOfFiles + " file pairs...";
 
         let gotAttributes = false;
@@ -419,29 +481,48 @@ class NeuroMarvl {
             // Load the new dataset to the app (always use the first viewport - top left);
             this.setDataset(TL_VIEW);
 
+            let appref = this;
+            let fnExportFunctionAndContinue = function () {
+                // Capture and download the visualisation
+                // callback is called, as soon as svg has been downloaded
+                appref.exportSVG(0, filetype, resolution, filename + '_' + (i+1), () => {
+                    // update status
+                    i++;
+                    var percentage = (i / numberOfFiles) * 100;
+                    $("#progressBar").css({
+                        "width": percentage + "%"
+                    });
+                    document.getElementById("alertModalMessage").innerHTML = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
+
+                    if (i < numberOfFiles) {
+                        setTimeout(() => {
+                            appref.batchProcess(i, numberOfFiles, attributes, matrices, filename, filetype, resolution);
+                        }, 0)
+
+                    } else {
+                        $("#alertModal")["modal"]('hide');
+                    }
+                });
+
+                
+            }
+
             // refresh the visualisation with current settings and new data
-            this.apps[0].showNetwork(false, () => {
+            if (this.applicationsInstances[0].networkType != undefined) {
+                this.applicationsInstances[0].showNetwork(false, () => {
+                    this.setNodeSizeOrColor();
+                    this.setEdgeColor();
+                    this.setEdgeSize();
+                    this.applicationsInstances[0].update(0);
+                    fnExportFunctionAndContinue();
+                });
+            } else {
                 this.setNodeSizeOrColor();
                 this.setEdgeColor();
-                this.apps[0].update(0);
-
-                // Capture and download the visualisation
-                this.exportSVG(0, "svg");
-
-                // update status
-                i++;
-                var percentage = (i / numberOfFiles) * 100;
-                $("#progressBar").css({
-                    "width": percentage + "%"
-                });
-                document.getElementById("alertModalMessage").innerHTML = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
-
-                if (i < numberOfFiles) {
-                    this.batchProcess(i, numberOfFiles, attributes, matrices);
-                } else {
-                    $("#alertModal")["modal"]('hide');
-                }
-            });
+                this.setEdgeSize();
+                this.applicationsInstances[0].update(0);
+                fnExportFunctionAndContinue();
+            }
         };
         
         // Load pair of files into dataset
@@ -495,7 +576,7 @@ class NeuroMarvl {
             //loadAttributes(file, dataSet);
             var reader = new FileReader();
             reader.onload = () => {
-                this.parseAttributes(reader.result, this.referenceDataSet);
+                this.parseAttributes(<string>reader.result, this.referenceDataSet);
                 this.referenceDataSet.notifyAttributes();
 
                 // 3. update file status
@@ -552,16 +633,16 @@ class NeuroMarvl {
                 (data, status) => {
                     if (status.toLowerCase() == "success") {
                         if (fileType == TYPE_COORD) {
-                            this.saveObj.serverFileNameCoord = data;
+                            this.saveFileObj.serverFileNameCoord = data;
                         }
                         else if (fileType == TYPE_MATRIX) {
-                            this.saveObj.serverFileNameMatrix = data;
+                            this.saveFileObj.serverFileNameMatrix = data;
                         }
                         else if (fileType == TYPE_ATTR) {
-                            this.saveObj.serverFileNameAttr = data;
+                            this.saveFileObj.serverFileNameAttr = data;
                         }
                         else if (fileType == TYPE_LABEL) {
-                            this.saveObj.serverFileNameLabel = data;
+                            this.saveFileObj.serverFileNameLabel = data;
                         }
                     }
                     else {
@@ -815,12 +896,12 @@ class NeuroMarvl {
             idArray.push(id);
         }
         
-        this.apps.forEach(app => {
+        this.applicationsInstances.forEach(app => {
             app.applyFilter(idArray);
             app.needUpdate = true;
         });
 
-        this.saveObj.filteredRecords = this.referenceDataSet.attributes.filteredRecords;
+        this.saveFileObj.filteredRecords = this.referenceDataSet.attributes.filteredRecords;
     }
 
     setSelectEdgeKeyBackgroundColor = (color: string) => {
@@ -837,7 +918,7 @@ class NeuroMarvl {
 
     setDefaultEdgeDiscretizedValues = () => {
         //Assume data is shared across app
-        var range = this.apps[0].getCurrentEdgeWeightRange();
+        var range = this.applicationsInstances[0].getCurrentEdgeWeightRange();
         var numCategory = Number($('#select-edge-color-number-discretized-category').val());
         var step = (range.max - range.min) / numCategory;
         $('#input-edge-discretized-' + 0 + '-from').val(range.min.toString());
@@ -849,13 +930,13 @@ class NeuroMarvl {
     }
 
     setEdgeDirectionGradient = () => {
-        this.saveObj.edgeSettings.directionStartColor = (<any>$('#input-edge-start-color')).colorpicker("getValue");
-        this.saveObj.edgeSettings.directionEndColor = (<any>$('#input-edge-end-color')).colorpicker("getValue");
+        this.saveFileObj.edgeSettings.directionStartColor = (<any>$('#input-edge-start-color')).colorpicker("getValue");
+        this.saveFileObj.edgeSettings.directionEndColor = (<any>$('#input-edge-end-color')).colorpicker("getValue");
 
-        if (this.apps[0]) this.apps[0].setEdgeDirectionGradient();
-        if (this.apps[1]) this.apps[1].setEdgeDirectionGradient();
-        if (this.apps[2]) this.apps[2].setEdgeDirectionGradient();
-        if (this.apps[3]) this.apps[3].setEdgeDirectionGradient();
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeDirectionGradient();
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeDirectionGradient();
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeDirectionGradient();
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeDirectionGradient();
     }
 
     setEdgeColorByWeight = () => {
@@ -876,11 +957,11 @@ class NeuroMarvl {
             }
 
             // save updated settings 
-            this.saveObj.edgeSettings.colorBy = "weight";
-            this.saveObj.edgeSettings.weight.type = "continuous-discretized";
-            this.saveObj.edgeSettings.weight.discretizedSetting.numCategory = numCategory;
-            this.saveObj.edgeSettings.weight.discretizedSetting.domainArray = domainArray;
-            this.saveObj.edgeSettings.weight.discretizedSetting.colorArray = colorArray;
+            this.saveFileObj.edgeSettings.colorBy = "weight";
+            this.saveFileObj.edgeSettings.weight.type = "continuous-discretized";
+            this.saveFileObj.edgeSettings.weight.discretizedSetting.numCategory = numCategory;
+            this.saveFileObj.edgeSettings.weight.discretizedSetting.domainArray = domainArray;
+            this.saveFileObj.edgeSettings.weight.discretizedSetting.colorArray = colorArray;
 
             // set config
             config["type"] = "continuous-discretized";
@@ -892,10 +973,10 @@ class NeuroMarvl {
             var maxColor = (<any>$('#input-edge-max-color')).colorpicker("getValue");
 
             // save updated settings
-            this.saveObj.edgeSettings.colorBy = "weight";
-            this.saveObj.edgeSettings.weight.type = "continuous-normal";
-            this.saveObj.edgeSettings.weight.continuousSetting.minColor = minColor;
-            this.saveObj.edgeSettings.weight.continuousSetting.maxColor = maxColor;
+            this.saveFileObj.edgeSettings.colorBy = "weight";
+            this.saveFileObj.edgeSettings.weight.type = "continuous-normal";
+            this.saveFileObj.edgeSettings.weight.continuousSetting.minColor = minColor;
+            this.saveFileObj.edgeSettings.weight.continuousSetting.maxColor = maxColor;
 
             // set config
             config["type"] = "continuous-normal";
@@ -917,10 +998,10 @@ class NeuroMarvl {
             }
 
             // save updated settings
-            this.saveObj.edgeSettings.colorBy = "weight";
-            this.saveObj.edgeSettings.weight.type = "discrete";
-            this.saveObj.edgeSettings.weight.discretizedSetting.domainArray = domainArray;
-            this.saveObj.edgeSettings.weight.discretizedSetting.colorArray = colorArray;
+            this.saveFileObj.edgeSettings.colorBy = "weight";
+            this.saveFileObj.edgeSettings.weight.type = "discrete";
+            this.saveFileObj.edgeSettings.weight.discretizedSetting.domainArray = domainArray;
+            this.saveFileObj.edgeSettings.weight.discretizedSetting.colorArray = colorArray;
 
             // set config
             config["type"] = "discrete";
@@ -931,31 +1012,31 @@ class NeuroMarvl {
             console.log("Nothing is visible");
         }
 
-        if (this.apps[0]) this.apps[0].setEdgeColorByWeight(config);
-        if (this.apps[1]) this.apps[1].setEdgeColorByWeight(config);
-        if (this.apps[2]) this.apps[2].setEdgeColorByWeight(config);
-        if (this.apps[3]) this.apps[3].setEdgeColorByWeight(config);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeColorByWeight(config);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeColorByWeight(config);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeColorByWeight(config);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeColorByWeight(config);
 
     }
 
     setEdgeColorByNode = () => {
         // save edge color setting
-        this.saveObj.edgeSettings.colorBy = "node";
+        this.saveFileObj.edgeSettings.colorBy = "node";
 
-        if (this.apps[0]) this.apps[0].setEdgeColorByNode();
-        if (this.apps[1]) this.apps[1].setEdgeColorByNode();
-        if (this.apps[2]) this.apps[2].setEdgeColorByNode();
-        if (this.apps[3]) this.apps[3].setEdgeColorByNode();
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeColorByNode();
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeColorByNode();
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeColorByNode();
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeColorByNode();
     }
 
     setEdgeNoColor = () => {
         // save edge color setting 
-        this.saveObj.edgeSettings.colorBy = "none";
+        this.saveFileObj.edgeSettings.colorBy = "none";
 
-        if (this.apps[0]) this.apps[0].setEdgeNoColor();
-        if (this.apps[1]) this.apps[1].setEdgeNoColor();
-        if (this.apps[2]) this.apps[2].setEdgeNoColor();
-        if (this.apps[3]) this.apps[3].setEdgeNoColor();
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeNoColor();
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeNoColor();
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeNoColor();
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeNoColor();
     }
 
     selectView = view => {
@@ -985,54 +1066,56 @@ class NeuroMarvl {
             var scaleMap = d3.scale.linear().domain([minScale, maxScale]).range([values[0], values[1]]);
             var newScaleArray = scaleArray.map((value: number) => { return scaleMap(value); });
 
-            if (this.apps[0]) this.apps[0].setNodeSize(newScaleArray);
-            if (this.apps[1]) this.apps[1].setNodeSize(newScaleArray);
-            if (this.apps[2]) this.apps[2].setNodeSize(newScaleArray);
-            if (this.apps[3]) this.apps[3].setNodeSize(newScaleArray);
+            if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeSize(newScaleArray);
+            if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeSize(newScaleArray);
+            if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeSize(newScaleArray);
+            if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeSize(newScaleArray);
             
-            this.saveObj.nodeSettings.nodeSizeMin = values[0];
-            this.saveObj.nodeSettings.nodeSizeMax = values[1];
-            this.saveObj.nodeSettings.nodeSizeAttribute = attribute;
+            this.saveFileObj.nodeSettings.nodeSizeMin = values[0];
+            this.saveFileObj.nodeSettings.nodeSizeMax = values[1];
+            this.saveFileObj.nodeSettings.nodeSizeAttribute = attribute;
         }
         else if (sizeOrColor == "node-color") {
             var nodeColorMode = $('#checkbox-node-color-continuous').is(":checked");
-            if (this.referenceDataSet.attributes.info[attribute].isDiscrete && !nodeColorMode) {
-                var keyArray: number[] = [];
-                var colorArray: string[] = [];
+            //this can be null due to data mismatch
+            if ((this.referenceDataSet.attributes.info[attribute] != null) && (this.referenceDataSet.attributes.info[attribute].isDiscrete && !nodeColorMode)) {
+                    var keyArray: number[] = [];
+                    var colorArray: string[] = [];
 
-                var keySelection = <any>document.getElementById('select-node-key');
+                    var keySelection = <any>document.getElementById('select-node-key');
 
-                for (var i = 0; i < keySelection.length; i++) {
-                    //var key = keySelection.options[i].value;
-                    var key = parseInt(keySelection.options[i].value);
-                    var color = keySelection.options[i].style.backgroundColor;
-                    var hex: string = this.colorToHex(color);
-                    keyArray.push(key);
-                    colorArray.push(hex);
-                }
-                this.saveObj.nodeSettings.nodeColorMode = "discrete";
-                this.saveObj.nodeSettings.nodeColorDiscrete = colorArray.slice(0);
-                
-                if (this.apps[0]) this.apps[0].setNodeColorDiscrete(attribute, keyArray, colorArray);
-                if (this.apps[1]) this.apps[1].setNodeColorDiscrete(attribute, keyArray, colorArray);
-                if (this.apps[2]) this.apps[2].setNodeColorDiscrete(attribute, keyArray, colorArray);
-                if (this.apps[3]) this.apps[3].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    for (var i = 0; i < keySelection.length; i++) {
+                        //var key = keySelection.options[i].value;
+                        var key = parseInt(keySelection.options[i].value);
+                        var color = keySelection.options[i].style.backgroundColor;
+                        var hex: string = this.colorToHex(color);
+                        keyArray.push(key);
+                        colorArray.push(hex);
+                    }
+                    this.saveFileObj.nodeSettings.nodeColorMode = "discrete";
+                    this.saveFileObj.nodeSettings.nodeColorDiscrete = colorArray.slice(0);
+
+                    if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeColorDiscrete(attribute, keyArray, colorArray);
+                    if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeColorDiscrete(attribute, keyArray, colorArray);
             }
             else {
-                let minColor = (<any>$('#input-min-color')).colorpicker("getValue");
-                let maxColor = (<any>$('#input-max-color')).colorpicker("getValue");
+                    let minColor = (<any>$('#input-min-color')).colorpicker("getValue");
+                    let maxColor = (<any>$('#input-max-color')).colorpicker("getValue");
 
-                if (this.apps[0]) this.apps[0].setNodeColor(attribute, minColor, maxColor);
-                if (this.apps[1]) this.apps[1].setNodeColor(attribute, minColor, maxColor);
-                if (this.apps[2]) this.apps[2].setNodeColor(attribute, minColor, maxColor);
-                if (this.apps[3]) this.apps[3].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeColor(attribute, minColor, maxColor);
+                    if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeColor(attribute, minColor, maxColor);
 
-                this.saveObj.nodeSettings.nodeColorMode = "continuous";
-                this.saveObj.nodeSettings.nodeColorContinuousMin = minColor;
-                this.saveObj.nodeSettings.nodeColorContinuousMax = maxColor;
-            }
+                    this.saveFileObj.nodeSettings.nodeColorMode = "continuous";
+                    this.saveFileObj.nodeSettings.nodeColorContinuousMin = minColor;
+                    this.saveFileObj.nodeSettings.nodeColorContinuousMax = maxColor;
+                }
 
-            this.saveObj.nodeSettings.nodeColorAttribute = attribute;
+
+            this.saveFileObj.nodeSettings.nodeColorAttribute = attribute;
 
             // Edge will also need updating if they are set to "node"
             if (this.commonData.edgeColorMode === "node") {
@@ -1040,10 +1123,10 @@ class NeuroMarvl {
             }
         }
         else if (sizeOrColor == "node-default") {
-            if (this.apps[0]) this.apps[0].setNodeDefaultSizeColor();
-            if (this.apps[1]) this.apps[1].setNodeDefaultSizeColor();
-            if (this.apps[2]) this.apps[2].setNodeDefaultSizeColor();
-            if (this.apps[3]) this.apps[3].setNodeDefaultSizeColor();
+            if (this.applicationsInstances[0]) this.applicationsInstances[0].setNodeDefaultSizeColor();
+            if (this.applicationsInstances[1]) this.applicationsInstances[1].setNodeDefaultSizeColor();
+            if (this.applicationsInstances[2]) this.applicationsInstances[2].setNodeDefaultSizeColor();
+            if (this.applicationsInstances[3]) this.applicationsInstances[3].setNodeDefaultSizeColor();
 
             // Edge will also need updating if they are set to "node"
             if (this.commonData.edgeColorMode === "node") {
@@ -1051,7 +1134,7 @@ class NeuroMarvl {
             }
         }
 
-        this.saveObj.nodeSettings.nodeSizeOrColor = sizeOrColor;
+        this.saveFileObj.nodeSettings.nodeSizeOrColor = sizeOrColor;
 
     }
 
@@ -1106,7 +1189,7 @@ class NeuroMarvl {
         var file = (<any>$('#input-select-load-file').get(0)).files[0];
         var reader = new FileReader();
         reader.onload = () => {
-            
+
             // Try new JSON settings file,
             // If not present, fall back to old YAML style
             try {
@@ -1119,28 +1202,41 @@ class NeuroMarvl {
             
 
             for (var i = 0; i < 4; i++) {
-                if (!jQuery.isEmptyObject(this.saveObj.saveApps[i])) {
+                if (!jQuery.isEmptyObject(this.saveFileObj.saveApps[i])
+                    && this.saveFileObj.saveApps[i].surfaceModel.length > 0) {
                     this.initApp(i);
+
+                    this.initDataDependantUI();
                 }
             }
         }
         reader.readAsText(file);
     }
 
-    saveSettings = () => {
-        var filename = "brain-model.cfg";
+    saveSettings = (filename) => {
+
+        //$('file-save-dialog').dialog("open");
+        if (typeof filename !== 'string')
+            filename = "brain-model-settings.txt";
+        else if (filename.split('.').length == 1) { // check if a file extension was given
+            filename = filename + '.txt';
+        }
         var body = document.body;
 
-        //Save all the apps
+        //Save all the applicationsInstances
         for (var i = 0; i < 4; i++) {
-            var app = this.saveObj.saveApps[i];
-            if (this.apps[i]) this.apps[i].save(app);
+            var saveAppObject = this.saveFileObj.saveApps[i];
+            if (this.applicationsInstances[i]) this.applicationsInstances[i].save(saveAppObject);
         }
 
-        var configText = this.saveObj.toYaml();
+        /*
+        var configText = this.saveFileObj.toYaml();
 
         var url = window["URL"].createObjectURL(new Blob([configText], { "type": "text\/xml" }));
+        */
+        var configText = JSON.stringify(this.saveFileObj);//.toYaml();
 
+        var url = window["URL"].createObjectURL(new Blob([configText], { "type": "application\/json" }));
         var a = document.createElement("a");
         body.appendChild(a);
         a.setAttribute("download", filename);
@@ -1151,23 +1247,74 @@ class NeuroMarvl {
         setTimeout(() => window["URL"].revokeObjectURL(url), 10);
     }
 
-    exportSVG = (viewport, fileType) => {
+    exportSVG = (viewport, fileType, resolution, filename, callback = null) => {
         var documents = [window.document],
             SVGSources = [];
 
+
         // loop through all active app
-        if (!this.apps[viewport]) return;
+        if (!this.applicationsInstances[viewport]) return;
 
         var styles = this.getStyles(document);
-        var newSource = this.getSource(viewport, styles);
 
-        // Export all svg Graph on the page
-        if (fileType === "svg") {
-            this.downloadSVG(newSource);
-        } else if (fileType === "image") {
-            this.downloadSVGImage(newSource);
+        let canvas = this.applicationsInstances[viewport].getDrawingCanvas();
+        let origWidth = canvas.width;
+        let origHeight = canvas.height;
+
+        this.applicationsInstances[viewport].resize(resolution.x, resolution.x / origWidth * origHeight, 'screenshotzoomstart');
+
+        let prevsvgtransform = this.applicationsInstances[viewport].svgAllElements.attr("transform");
+        if (prevsvgtransform != null) {
+            let zoom = resolution.x / origWidth;
+
+            let tx = 0;
+            let ty = 0;
+            let scale = 1;
+
+
+            let str = prevsvgtransform.split('translate(')[1];
+            str = str.split(')')[0];
+            str = str.split(',');
+            tx = parseFloat(str[0]) * zoom;
+            ty = parseFloat(str[1]) * zoom;
+
+
+            if (prevsvgtransform.indexOf('scale') > 0) {
+                let str = prevsvgtransform.split('scale(')[1];
+                str = str.split(')')[0];
+                scale = parseFloat(str);
+            }
+            scale *= zoom;
+
+            let newtransform = 'translate(' + tx + ',' + ty + ')scale(' + scale + ')';
+            this.applicationsInstances[viewport].svgAllElements.attr("transform", newtransform);
         }
+        // we need to let the browser render into the new sized canvas
+        requestAnimationFrame(() => {
+            var newSource = this.getSource(viewport, styles);
 
+            // Export all svg Graph on the page
+            if (fileType === "svg") {
+                this.downloadSVG(newSource, filename);
+            } else if (fileType === "image") {
+                this.downloadSVGImage(newSource, filename);
+            }
+            
+            requestAnimationFrame(() => {
+                this.applicationsInstances[viewport].resize(
+                    this.applicationsInstances[viewport].jDiv.width(),
+                    this.applicationsInstances[viewport].jDiv.height(),
+                    'screenshotzoomend');
+                if (prevsvgtransform != null)
+                    this.applicationsInstances[viewport].svgAllElements.attr("transform", prevsvgtransform);
+
+                if (callback) callback();
+            });
+            
+            
+        });
+        
+        
     }
 
     getSource = (id, styles) => {
@@ -1179,7 +1326,9 @@ class NeuroMarvl {
             xlink: "http://www.w3.org/1999/xlink",
             svg: "http://www.w3.org/2000/svg"
         };
-        let canvas = this.apps[id].getDrawingCanvas();
+        
+        let canvas = this.applicationsInstances[id].getDrawingCanvas();
+
         let svgGraph = document.getElementById("svgGraph" + id);
         if (svgGraph.getAttribute("visibility") === "hidden") {
             // Not meant to be seen, use a new blank svg
@@ -1211,19 +1360,25 @@ class NeuroMarvl {
         image.removeAttribute('xmlns');
         // 2D canvas
         var canvas2d = <HTMLCanvasElement>$(`#div-graph-${id} div.graph2dContainer canvas[data-id='layer2-node']`).get(0);
-        if (canvas2d && (canvas2d.getAttribute("visibility") !== "hidden") && this.apps[0].canvasGraph.cy) {
+        if (canvas2d && (canvas2d.getAttribute("visibility") !== "hidden") && this.applicationsInstances[0].canvasGraph.cy) {
             var image2d = document.createElement("image");
+            let cy = this.applicationsInstances[0].canvasGraph.cy;
             svg.insertBefore(image2d, svg.firstChild);
             image2d.setAttribute('crossOrigin', 'anonymous');
             image2d.setAttribute('y', '0');
             image2d.setAttribute('x', '0');
             image2d.setAttribute('id', 'brain2D' + id);
-            image2d.setAttribute('xlink:href', this.apps[0].canvasGraph.cy.png({
+            image2d.setAttribute('xlink:href', this.applicationsInstances[0].canvasGraph.cy.png({
                 full: false
             }));
-            image2d.setAttribute('width', canvas2d.width.toString());
-            image2d.setAttribute('height', canvas2d.height.toString());
+            image2d.setAttribute('width', cy._private.sizeCache.width);
+            image2d.setAttribute('height', cy._private.sizeCache.height);
             image2d.removeAttribute('xmlns');
+
+            if (cy._private.sizeCache.width > svg.getAttribute('width')) {
+                svg.setAttribute('width', cy._private.sizeCache.width);
+                svg.setAttribute('height', cy._private.sizeCache.height);
+            }
         }
 
         // insert defs
@@ -1264,8 +1419,9 @@ class NeuroMarvl {
         return svgInfo;
     }
 
-    downloadSVG = source => {
-        var filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    downloadSVG = (source, filename) => {
+        if(filename == null)
+            filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
         var body = document.body;
 
         var url = window["URL"].createObjectURL(new Blob(source.source, { "type": "text\/xml" }));
@@ -1282,25 +1438,39 @@ class NeuroMarvl {
     }
 
 
-    downloadSVGImage = source => {
-        var filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    downloadSVGImage = (source, filename) => {
+        if (filename == null)
+            filename = window.document.title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
 
         // Adapted from https://bl.ocks.org/biovisualize/8187844
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
         let image = new Image();
         let svgBlob = new Blob(source.source, { type: "image/svg+xml;charset=utf-8" });
+
+        
+        let canvas = document.createElement('canvas');
+
         image.onload = () => {
-            canvas.width = image.width;
-            canvas.height = image.height;
+            
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            let context = canvas.getContext('2d');
             context.fillStyle = "#ffffff";
-            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillRect(0, 0, image.width, image.height);
             context.drawImage(image, 0, 0);
 
-            var a = document.createElement("a");
-            a.setAttribute("download", filename + ".jpg");
-            a.setAttribute("href", canvas.toDataURL('image/jpeg', 0.9));
-            a.click();
+            // Visual Studio complains about wrong method signature
+            (<any>canvas).toBlob(function (blob) {
+                let objUrl = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.setAttribute("download", filename + ".png");
+                a.setAttribute("href", objUrl);
+                a.click();
+
+                setTimeout(() => { window["URL"].revokeObjectURL(objUrl), 10 });
+                setTimeout(() => { window["URL"].revokeObjectURL(image.src) }, 10);
+            });
+
         }
         image.src = URL.createObjectURL(svgBlob);
     }
@@ -1368,8 +1538,10 @@ class NeuroMarvl {
 
         var scaleArray: number[];
         var scaleFactor = 1;
-
-        scaleArray = attrArray.map((value) => { return scaleFactor * value[0]; });
+        //this can be null due to data mismatch
+        if (attrArray != null) {
+            scaleArray = attrArray.map((value) => { return scaleFactor * value[0]; });
+        }
 
         return scaleArray;
     }
@@ -1384,8 +1556,8 @@ class NeuroMarvl {
         var scaleArray = this.getNodeScaleArray(attribute);
         if (!scaleArray) return;
         
-        var minScale = this.saveObj.nodeSettings.nodeSizeMin || Math.min.apply(Math, scaleArray);
-        var maxScale = this.saveObj.nodeSettings.nodeSizeMax || Math.max.apply(Math, scaleArray);
+        var minScale = this.saveFileObj.nodeSettings.nodeSizeMin || Math.min.apply(Math, scaleArray);
+        var maxScale = this.saveFileObj.nodeSettings.nodeSizeMax || Math.max.apply(Math, scaleArray);
         var slider = $("#div-node-size-slider")['bootstrapSlider']({
             range: true,
             min: 0.1,
@@ -1460,9 +1632,9 @@ class NeuroMarvl {
 
     setNodeColorInContextMenu = (color: string) => {
         if (color.length === 6) color = "#" + color;
-        if (this.apps[this.input.activeTarget]) {
+        if (this.applicationsInstances[this.input.activeTarget]) {
             if ((this.input.rightClickLabelAppended) && (this.input.selectedNodeID >= 0)) {
-                this.apps[this.input.activeTarget].setANodeColor(this.input.selectedNodeID, color);
+                this.applicationsInstances[this.input.activeTarget].setANodeColor(this.input.selectedNodeID, color);
                 this.input.contextMenuColorChanged = true;
             }
         }
@@ -1487,7 +1659,7 @@ class NeuroMarvl {
                 }
             }
             
-            this.apps.forEach(app => {
+            this.applicationsInstances.forEach(app => {
                 app.highlightSelectedNodes(idArray);
                 app.needUpdate = true;
             });
@@ -1497,16 +1669,16 @@ class NeuroMarvl {
     setBrainMode = (brainMode, view: string) => {
         switch (view) {
             case TL_VIEW:
-                this.apps[0].brainSurfaceMode = brainMode;
+                this.applicationsInstances[0].brainSurfaceMode = brainMode;
                 break;
             case TR_VIEW:
-                this.apps[1].brainSurfaceMode = brainMode;
+                this.applicationsInstances[1].brainSurfaceMode = brainMode;
                 break;
             case BL_VIEW:
-                this.apps[2].brainSurfaceMode = brainMode;
+                this.applicationsInstances[2].brainSurfaceMode = brainMode;
                 break;
             case BR_VIEW:
-                this.apps[3].brainSurfaceMode = brainMode;
+                this.applicationsInstances[3].brainSurfaceMode = brainMode;
                 break;
         }
     }
@@ -1525,40 +1697,47 @@ class NeuroMarvl {
     setBrainModel = (view: string, model: string) => {
         let id = this.viewToId(view);
         this.loadBrainModel(model, object => {
-            this.apps[id].setBrainModelObject(object);
+            this.applicationsInstances[id].setBrainModelObject(object);            
         });
     }
 
     
-    createBrainView = (view: string, model: string, finalCallback?, source?: string, brainSurfaceMode?) => {
+    createBrainView = (viewType: string, model: string, finalCallback?, source?: string, brainSurfaceMode?) => {
         // source is "example", "empty", or "save" (default)
 
-        let id = this.viewToId(view);
+        // each view name has a dedicated Id
+        let viewTypeId = this.viewToId(viewType);
 
         this.loadBrainModel(model, object => {
-            $(view).empty();
+            $(viewType).empty();
+
+            /**
+             * Local function top create new instance of the brainapp
+             */
             let makeBrain = () => {
-                this.apps[id] = new Brain3DApp(
+                this.applicationsInstances[viewTypeId] = new Brain3DApp(
                     {
-                        id,
-                        jDiv: $(view),
+                        id: viewTypeId,
+                        jDiv: $(viewType),
                         brainModelOrigin: object,
                         brainSurfaceMode
                     },
                     this.commonData,
-                    this.input.newTarget(id),
-                    this.saveObj
+                    this.input.newTarget(viewTypeId),
+                    this.saveFileObj
                 );
-                this.apps[id].setDataSet(this.referenceDataSet);
+                // TODO: CHECK if following line is really not necessary
+                // TODOL it's actually been called in the setDataset method
+                //this.applicationsInstances[viewTypeId].setDataSet(this.referenceDataSet);
                 
-                this.setDataset(view);
-                this.initApp(id);
+                this.setDataset(viewType);
+                this.initApp(viewTypeId);
                 if (finalCallback) finalCallback();
             }
 
-            let save = this.saveObj.saveApps[id] = (this.saveObj && this.saveObj.saveApps[id]) || new SaveApp({}); // create a new instance (if an old instance exists)
+            let save = this.saveFileObj.saveApps[viewTypeId] = (this.saveFileObj && this.saveFileObj.saveApps[viewTypeId]) || new SaveApp({}); // create a new instance (if an old instance exists)
             save.surfaceModel = model;
-            save.view = view;
+            save.view = viewType;
 
             $('#button-save-app').button({ disabled: false });
             
@@ -1567,14 +1746,14 @@ class NeuroMarvl {
                 makeBrain();
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Empty dataset is loaded.");
             }
-            else if (this.saveObj.useExampleData()) {
+            else if (this.saveFileObj.useExampleData()) {
                 this.loadExampleData(() => {
                     makeBrain();
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Default example dataset is loaded.");
                 });
             }
             else {
-                this.loadUploadedData(this.saveObj, () => {
+                this.loadUploadedData(this.saveFileObj, () => {
                     makeBrain();
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Uploaded dataset is loaded.");
                 }, source);
@@ -1587,14 +1766,16 @@ class NeuroMarvl {
         let id = this.viewToId(view);
         if (!this.referenceDataSet) {
             // Get a dataset from the default example
-            this.loadExampleData(() => this.apps[id].setDataSet(this.referenceDataSet));
+            this.loadExampleData(() => this.applicationsInstances[id].setDataSet(this.referenceDataSet));
         } else {
-            this.apps[id].setDataSet(this.referenceDataSet);
+            this.applicationsInstances[id].setDataSet(this.referenceDataSet);
         }
     }
 
     setEdgeDirection = () => {
         var value = $('#select-edge-direction').val();
+
+        this.saveFileObj.edgeSettings.directionMode = value;
 
         if (value === "gradient") {
             $("#div-edge-gradient-color-pickers").show();
@@ -1602,10 +1783,10 @@ class NeuroMarvl {
             $("#div-edge-gradient-color-pickers").hide();
         }
 
-        if (this.apps[0]) this.apps[0].setEdgeDirection(value);
-        if (this.apps[1]) this.apps[1].setEdgeDirection(value);
-        if (this.apps[2]) this.apps[2].setEdgeDirection(value);
-        if (this.apps[3]) this.apps[3].setEdgeDirection(value);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeDirection(value);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeDirection(value);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeDirection(value);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeDirection(value);
     }
 
     setEdgeColor = () => {
@@ -1622,7 +1803,7 @@ class NeuroMarvl {
             $("#div-edge-color-pickers").show();
             $("#div-edge-color-by-node-picker").hide();
 
-            // check if discrete for all apps
+            // check if discrete for all applicationsInstances
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Current version of application assumes all view port shares the same dataset");
             if (this.referenceDataSet.info.edgeWeight.type === "continuous" || this.commonData.edgeForceContinuous) {
                 if (this.referenceDataSet.info.edgeWeight.type === "continuous") {
@@ -1690,23 +1871,44 @@ class NeuroMarvl {
 
     setSurfaceOpacity = () => {
         var opacity = $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').getValue();
-        this.saveObj.surfaceSettings.opacity = opacity;
-
-        if (this.apps[0]) this.apps[0].setSurfaceOpacity(opacity);
-        if (this.apps[1]) this.apps[1].setSurfaceOpacity(opacity);
-        if (this.apps[2]) this.apps[2].setSurfaceOpacity(opacity);
-        if (this.apps[3]) this.apps[3].setSurfaceOpacity(opacity);
+        this.saveFileObj.surfaceSettings.opacity = opacity;
+        for (var curAppInstance of this.applicationsInstances)
+            if (curAppInstance != null)
+                curAppInstance.setSurfaceOpacity(opacity);
+        /*
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setSurfaceOpacity(opacity);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setSurfaceOpacity(opacity);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setSurfaceOpacity(opacity);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setSurfaceOpacity(opacity);
+        */
     }
 
     setEdgeSize = () => {
         var edgeSize = $("#div-edge-size-slider")['bootstrapSlider']().data('bootstrapSlider').getValue();
-        this.saveObj.edgeSettings.size = edgeSize;
+
+        this.saveFileObj.edgeSettings.size = edgeSize;
         
-        if (this.apps[0]) this.apps[0].setEdgeSize(edgeSize);
-        if (this.apps[1]) this.apps[1].setEdgeSize(edgeSize);
-        if (this.apps[2]) this.apps[2].setEdgeSize(edgeSize);
-        if (this.apps[3]) this.apps[3].setEdgeSize(edgeSize);
+        for (var curAppInstance of this.applicationsInstances)
+            if (curAppInstance != null)
+                curAppInstance.setEdgeSize(edgeSize);
+        /*
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeSize(edgeSize);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeSize(edgeSize);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeSize(edgeSize);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeSize(edgeSize);
+        */
     }
+
+    setEdgeThicknessByWeight = () => {
+        let isThicknessByWeight = $('#checkbox-thickness-by-weight').is(":checked");
+
+        this.saveFileObj.edgeSettings.thicknessByWeight = isThicknessByWeight;
+
+        for (var curAppInstance of this.applicationsInstances)
+            if (curAppInstance != null)
+                curAppInstance.setEdgeThicknessByWeight(isThicknessByWeight);
+    }
+
 
     // Resizes the views such that the crossroads is located at (x, y) on the screen
     setViewCrossroads = (x, y) => {
@@ -1722,17 +1924,17 @@ class NeuroMarvl {
         $(BR_VIEW).css({ width: rw, height: bh });
 
         // Make callbacks to the application windows
-        if (this.apps[0]) this.apps[0].resize(lw, th);
-        if (this.apps[1]) this.apps[1].resize(rw, th);
-        if (this.apps[2]) this.apps[2].resize(lw, bh);
-        if (this.apps[3]) this.apps[3].resize(rw, bh);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].resize(lw, th, 'resize');
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].resize(rw, th, 'resize');
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].resize(lw, bh, 'resize');
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].resize(rw, bh, 'resize');
     }
 
     // Load the physiological coordinates of each node in the brain
     loadCoordinates = file => {
         var reader = new FileReader();
         reader.onload = () => {
-            this.parseCoordinates(reader.result);
+            this.parseCoordinates(<string>reader.result);
             this.commonData.notifyCoords();
         }
         reader.readAsText(file);
@@ -1773,7 +1975,7 @@ class NeuroMarvl {
     loadLabels = file => {
         let reader = new FileReader();
         reader.onload = () => {
-            this.parseLabels(reader.result);
+            this.parseLabels(<string>reader.result);
             this.commonData.notifyLabels();
         }
         reader.readAsText(file);
@@ -1786,6 +1988,7 @@ class NeuroMarvl {
 
     initSurfaceSettings = () => {
         if (this.saveFileObj.surfaceSettings.color) {
+
             $("#input-surface-color").colorpicker("setValue", this.saveFileObj.surfaceSettings.color);
             this.setBrainSurfaceColor(this.saveFileObj.surfaceSettings.color);
         }
@@ -1795,46 +1998,88 @@ class NeuroMarvl {
         }
         if (this.saveFileObj.surfaceSettings.rotation) {
             this.setBrainSurfaceRotation(this.saveFileObj.surfaceSettings.rotation);
-        }
     }
 
+
+
+    }
+
+    /**
+        inits the UI elements found in 'Edge Attributes' tab with values from the saveFileObject
+        and triggers the drawing processes depending on those attributes
+    */
     initEdgeSizeAndColor = () => {
+        //
+        // Go through the order as UI elements appear in tab
+        //
 
-        $('select-edge-direction').val(this.saveObj.edgeSettings.directionMode);
-        this.setEdgeDirection();
+        // Edge size
+        if (this.saveFileObj.edgeSettings.size != null) {
+            let slider = $("#div-edge-size-slider");
+            let bootstrapslider = slider['bootstrapSlider']();
+            var edgeSizeSliderData = $("#div-edge-size-slider")['bootstrapSlider']().data('bootstrapSlider')
+            edgeSizeSliderData.setValue(this.saveFileObj.edgeSettings.size);
+            this.setEdgeSize();
+        }
 
-        if (this.saveObj.edgeSettings.colorBy === "none") {
+        // Edge thickness by weight
+        if (this.saveFileObj.edgeSettings.thicknessByWeight != null) {
+            let checkbox = $('#checkbox-thickness-by-weight');
+            checkbox.prop('checked', this.saveFileObj.edgeSettings.thicknessByWeight);
+            this.setEdgeThicknessByWeight();
+        }
+
+        // Set Edge Direction and Gradient Colors
+        if (this.saveFileObj.edgeSettings.directionMode != null) {
+            let listedgedir = $('#select-edge-direction');
+            listedgedir.val(this.saveFileObj.edgeSettings.directionMode);
+
+            if (this.saveFileObj.edgeSettings.directionStartColor != null) {
+                
+                (<any>$('#input-edge-start-color')).colorpicker("setValue", this.saveFileObj.edgeSettings.directionStartColor);
+                
+                (<any>$('#input-edge-end-color')).colorpicker("setValue", this.saveFileObj.edgeSettings.directionEndColor);
+            }
+            // this will call edge-direction method in app-instance 
+            // and that will also 
+            // * set the gradient colors if present
+            // * make the colorchooser visible
+            this.setEdgeDirection();
+        }
+
+
+        if (this.saveFileObj.edgeSettings.colorBy === "none") {
             $('#select-edge-color').val("none");
             this.setEdgeColor();
 
-        } else if (this.saveObj.edgeSettings.colorBy === "node") {
+        } else if (this.saveFileObj.edgeSettings.colorBy === "node") {
             $('#select-edge-color').val("node");
             this.setEdgeColor();
 
-        } else if (this.saveObj.edgeSettings.colorBy === "weight") {
+        } else if (this.saveFileObj.edgeSettings.colorBy === "weight") {
             $('#select-edge-color').val("weight");
-            if (this.saveObj.edgeSettings.weight.type === "continuous-discretized") {
+            if (this.saveFileObj.edgeSettings.weight.type === "continuous-discretized") {
                 $('#checkbox-edge-color-discretized').prop('checked', true);
             }
 
             // make all corresponding elements visible
 
-            if (this.saveObj.edgeSettings.weight.type === "discrete") {
-                var setting = this.saveObj.edgeSettings.weight.discreteSetting;
+            if (this.saveFileObj.edgeSettings.weight.type === "discrete") {
+                var setting = this.saveFileObj.edgeSettings.weight.discreteSetting;
                 var keySelection = <any>document.getElementById('select-edge-key');
 
                 for (var i = 0; i < setting.valueArray; i++) {
                     keySelection.options[i].style.backgroundColor = setting.colorArray[i];
                 }
 
-            } else if (this.saveObj.edgeSettings.weight.type === "continuous-normal") {
-                var setting = this.saveObj.edgeSettings.weight.continuousSetting;
+            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-normal") {
+                var setting = this.saveFileObj.edgeSettings.weight.continuousSetting;
                 
                 (<any>$('#input-edge-min-color')).colorpicker("setValue", setting.minColor);
                 (<any>$('#input-edge-max-color')).colorpicker("setValue", setting.maxColor);
 
-            } else if (this.saveObj.edgeSettings.weight.type === "continuous-discretized") {
-                var setting = this.saveObj.edgeSettings.weight.discretizedSetting;
+            } else if (this.saveFileObj.edgeSettings.weight.type === "continuous-discretized") {
+                var setting = this.saveFileObj.edgeSettings.weight.discretizedSetting;
 
                 $('#select-edge-color-number-discretized-category').val(setting.numCategory);
                 for (var i = 0; i < 5; i++) {
@@ -1864,47 +2109,63 @@ class NeuroMarvl {
             
             this.setEdgeColor();
         }
+
+
+        // Set inter-cluster edge coloring
+        if (this.saveFileObj.edgeSettings.edgeColorByNodeTransition != null) {
+
+            if (this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor) {
+                (<any>$("#input-edge-transitional-color")).colorpicker("setValue", this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor);
+                this.setEdgeTransitionColor(this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor);
+            }
+            
+            let checkbox = $('#checkbox-color-transitional-edges');
+            checkbox.prop('checked', this.saveFileObj.edgeSettings.edgeColorByNodeTransition);
+            this.setUseTransitionColor(this.saveFileObj.edgeSettings.edgeColorByNodeTransition);
+            
+        }
+
     }
 
     initNodeSize = () => {
-        if (this.saveObj.nodeSettings.nodeSizeAttribute) {
+        if (this.saveFileObj.nodeSettings.nodeSizeAttribute) {
             $('#select-node-size-color').val("node-size");
-            $('#select-attribute').val(this.saveObj.nodeSettings.nodeSizeAttribute);
+            $('#select-attribute').val(this.saveFileObj.nodeSettings.nodeSizeAttribute);
             
-            $("#div-node-size-slider")['bootstrapSlider']().data('bootstrapSlider').setValue([this.saveObj.nodeSettings.nodeSizeMin, this.saveObj.nodeSettings.nodeSizeMax]);
+            $("#div-node-size-slider")['bootstrapSlider']().data('bootstrapSlider').setValue([this.saveFileObj.nodeSettings.nodeSizeMin, this.saveFileObj.nodeSettings.nodeSizeMax]);
 
-            $("#label_node_size_range").text(this.saveObj.nodeSettings.nodeSizeMin + " - " + this.saveObj.nodeSettings.nodeSizeMax);
+            $("#label_node_size_range").text(this.saveFileObj.nodeSettings.nodeSizeMin + " - " + this.saveFileObj.nodeSettings.nodeSizeMax);
             
             this.selectNodeSizeColorOnChange();
         }
     }
 
     initNodeColor = () => {
-        if (this.saveObj.nodeSettings.nodeColorAttribute) {
+        if (this.saveFileObj.nodeSettings.nodeColorAttribute) {
             $('#select-node-size-color').val("node-color");
-            $('#select-attribute').val(this.saveObj.nodeSettings.nodeColorAttribute);
+            $('#select-attribute').val(this.saveFileObj.nodeSettings.nodeColorAttribute);
 
-            if (this.referenceDataSet.attributes.info[this.saveObj.nodeSettings.nodeColorAttribute].isDiscrete) {
+            if (this.referenceDataSet.attributes.info[this.saveFileObj.nodeSettings.nodeColorAttribute].isDiscrete) {
                 var keySelection = <any>document.getElementById('select-node-key');
 
                 for (var i = 0; i < keySelection.length; i++) {
-                    keySelection.options[i].style.backgroundColor = this.saveObj.nodeSettings.nodeColorDiscrete[i];
+                    keySelection.options[i].style.backgroundColor = this.saveFileObj.nodeSettings.nodeColorDiscrete[i];
                 }
                 
-                (<any>$("#input-node-color")).colorpicker("setValue", this.saveObj.nodeSettings.nodeColorDiscrete[0]);
+                (<any>$("#input-node-color")).colorpicker("setValue", this.saveFileObj.nodeSettings.nodeColorDiscrete[0]);
             }
             else {
 
                 // Due to callback triggered when setting color, we need to temprarily save the values
                 // or they get reset with the standard value from the color picker
-                let tmpMin = this.saveObj.nodeSettings.nodeColorContinuousMin;
-                let tmpMax = this.saveObj.nodeSettings.nodeColorContinuousMax;
+                let tmpMin = this.saveFileObj.nodeSettings.nodeColorContinuousMin;
+                let tmpMax = this.saveFileObj.nodeSettings.nodeColorContinuousMax;
 
                 (<any>$("#input-min-color")).colorpicker("setValue", tmpMin);
                 (<any>$("#input-max-color")).colorpicker("setValue", tmpMax);
 
-                this.saveObj.nodeSettings.nodeColorContinuousMin = tmpMin;
-                this.saveObj.nodeSettings.nodeColorContinuousMax = tmpMax;
+                this.saveFileObj.nodeSettings.nodeColorContinuousMin = tmpMin;
+                this.saveFileObj.nodeSettings.nodeColorContinuousMax = tmpMax;
 
             }
             this.selectNodeSizeColorOnChange();
@@ -1940,6 +2201,7 @@ class NeuroMarvl {
     // new THREE.Mesh() objects by the application wishing to use the model.
     loadBrainModel = (model: string, callback) => {
         let file = (model === 'ch2') && 'BrainMesh_Ch2withCerebellum.obj'
+            || (model === 'ch2nocerebellum') && 'BrainMesh_Ch2.obj'
             || (model === 'icbm') && 'BrainMesh_ICBM152.obj'
             ;
         if (!file) {
@@ -1965,32 +2227,32 @@ class NeuroMarvl {
     }
 
     setBrainSurfaceColor = (color: string) => {
-        this.saveObj.surfaceSettings.color = color;
+        this.saveFileObj.surfaceSettings.color = color;
 
-        if (this.apps[0]) this.apps[0].setSurfaceColor(color);
-        if (this.apps[1]) this.apps[1].setSurfaceColor(color);
-        if (this.apps[2]) this.apps[2].setSurfaceColor(color);
-        if (this.apps[3]) this.apps[3].setSurfaceColor(color);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setSurfaceColor(color);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setSurfaceColor(color);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setSurfaceColor(color);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setSurfaceColor(color);
     }
 
 
     setEdgeTransitionColor = (color: string) => {
-        this.saveObj.edgeSettings.edgeColorByNodeTransitionColor = color;
+        this.saveFileObj.edgeSettings.edgeColorByNodeTransitionColor = color;
 
-        if (this.apps[0]) this.apps[0].setEdgeTransitionColor(color);
-        if (this.apps[1]) this.apps[1].setEdgeTransitionColor(color);
-        if (this.apps[2]) this.apps[2].setEdgeTransitionColor(color);
-        if (this.apps[3]) this.apps[3].setEdgeTransitionColor(color);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setEdgeTransitionColor(color);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setEdgeTransitionColor(color);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setEdgeTransitionColor(color);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setEdgeTransitionColor(color);
     }
 
 
     setUseTransitionColor = (useColor: boolean) => {
-        this.saveObj.edgeSettings.edgeColorByNodeTransition = useColor;
+        this.saveFileObj.edgeSettings.edgeColorByNodeTransition = useColor;
 
-        if (this.apps[0]) this.apps[0].setUseTransitionColor(useColor);
-        if (this.apps[1]) this.apps[1].setUseTransitionColor(useColor);
-        if (this.apps[2]) this.apps[2].setUseTransitionColor(useColor);
-        if (this.apps[3]) this.apps[3].setUseTransitionColor(useColor);
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setUseTransitionColor(useColor);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setUseTransitionColor(useColor);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setUseTransitionColor(useColor);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setUseTransitionColor(useColor);
     }
 
 
@@ -1999,7 +2261,7 @@ class NeuroMarvl {
     loadSimilarityMatrix = (file, dataSet: DataSet, callback?) => {
         var reader = new FileReader();
         reader.onload = () => {
-            this.parseSimilarityMatrix(reader.result, dataSet);
+            this.parseSimilarityMatrix(<string>reader.result, dataSet);
             if (callback) callback();
         };
         reader.readAsText(file);
@@ -2037,7 +2299,7 @@ class NeuroMarvl {
     loadAttributes = (file, dataSet: DataSet, callback?) => {
         var reader = new FileReader();
         reader.onload = () => {
-            this.parseAttributes(reader.result, dataSet);
+            this.parseAttributes(<string>reader.result, dataSet);
             dataSet.notifyAttributes();
             if (callback) callback();
         };
@@ -2225,30 +2487,77 @@ class NeuroMarvl {
             // Parse and upload labels
             this.uploadLabels();
         });
-        
+
         $('#button-load-settings').button().click(() => $("#input-select-load-file").click());
 
         $('#input-select-load-file').on('change', this.loadSettings);
 
-        $('#button-save-settings').button().click(this.saveSettings);
+        $('#button-save-settings').button().click(() => {
+            
+            // set default file name
 
+            $('#file-save-name').val("brain-model-settings.txt");
+
+            let me = this;
+            let dialog = $('#file-save-dialog');
+            let configsavebutton = $('#button-save-settings');
+            dialog.dialog({
+                position: {
+                    my: "bottom",
+                    at: "top",
+                    of: configsavebutton
+                },
+                buttons: {
+
+                    OK: function () {
+                        let filename = $('#file-save-name').val();
+
+                        $(this).dialog('close');
+
+                        me.saveSettings(filename);
+                    }
+                }
+            });
+        });
         $('#button-export-svg').button().click(() => $("#exportModal")["modal"]());
 
-        $('#button-export-submit').button().click(() => {
+        // set default export callback function
+        // others can use the export dialog as well, but have to save this callback first
+        let appref = this;
+        this.exportCallbackFunction = function () {
+            var filename = $('#select-export-filename').val();
+            if (filename.length == 0)
+                filename = null;
+
             var viewport = $('#select-export-viewport').val();
             var type = $('#select-export-type').val();
+            var strresolution = $('#select-export-resolution').val();
 
-            this.exportSVG(parseInt(viewport), type)
-        });
+            strresolution = strresolution.split('x');
+            var resolution = {
+                x: parseInt(strresolution[0]),
+                y: parseInt(strresolution[1])
+            }
+            appref.exportSVG(parseInt(viewport), type, resolution, filename);
+        }
+
+        $('#button-export-submit').button().click(this.exportCallbackFunction);
 
         $('#button-save-app').button().click(() => {
-            //Save all the apps
+            //Save all the applicationsInstances
             for (var i = 0; i < 4; i++) {
-                var app = this.saveObj.saveApps[i];
-                if (this.apps[i]) this.apps[i].save(app);
+                var app = this.saveFileObj.saveApps[i];
+
+                //added to fix surfaceModel not saving issue
+                if (app && app.surfaceModel) app.surfaceModel = $('#select-brain3d-model').val();
+
+                if (this.applicationsInstances[i]) this.applicationsInstances[i].save(app);
             }
 
-            var saveJson = JSON.stringify(this.saveObj);
+            //reload display settings
+            this.reloadDisplay();
+
+            var saveJson = JSON.stringify(this.saveFileObj);
             $.post("brain-app/saveapp.aspx",
                 {
                     save: saveJson
@@ -2277,7 +2586,7 @@ class NeuroMarvl {
                 var reader = new FileReader();
                 reader.onload = () => {
                     let brainModel = this.loader.parse(reader.result);
-                    this.apps[0].setBrainModelObject(brainModel);
+                    this.applicationsInstances[0].setBrainModelObject(brainModel);
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "New brain model uploaded");
                 };
                 reader.onerror = () => {
@@ -2290,7 +2599,7 @@ class NeuroMarvl {
             }
         });
 
-        $('#load-example-data').button().click(() => this.loadExampleData(() => this.apps.forEach(app => app.setDataSet(this.referenceDataSet))));
+        $('#load-example-data').button().click(() => this.loadExampleData(() => this.applicationsInstances.forEach(app => app.setDataSet(this.referenceDataSet))));
 
         $('#button-apply-filter').button().click(this.applyFilterButtonOnClick);
 
@@ -2373,20 +2682,8 @@ class NeuroMarvl {
         });
         */
 
-        $('#checkbox-thickness-by-weight').on('change', () => {
-            if ($('#checkbox-thickness-by-weight').is(":checked")) {
-                if (this.apps[0]) this.apps[0].setEdgeThicknessByWeight(true);
-                if (this.apps[1]) this.apps[1].setEdgeThicknessByWeight(true);
-                if (this.apps[2]) this.apps[2].setEdgeThicknessByWeight(true);
-                if (this.apps[3]) this.apps[3].setEdgeThicknessByWeight(true);
-            }
-            else {
-                if (this.apps[0]) this.apps[0].setEdgeThicknessByWeight(false);
-                if (this.apps[1]) this.apps[1].setEdgeThicknessByWeight(false);
-                if (this.apps[2]) this.apps[2].setEdgeThicknessByWeight(false);
-                if (this.apps[3]) this.apps[3].setEdgeThicknessByWeight(false);
-            }
-        });
+        $('#checkbox-thickness-by-weight').on('change', this.setEdgeThicknessByWeight);
+
 
         $('#checkbox-edge-color-force-continuous').on('change', () => {
             if ($("#checkbox-edge-color-force-continuous").is(":checked")) {
@@ -2421,10 +2718,7 @@ class NeuroMarvl {
             this.setEdgeColorByWeight();
         });
 
-        $('#select-edge-direction').on('change', () => {
-            this.saveObj.edgeSettings.directionMode = $('#select-edge-direction').val();
-            this.setEdgeDirection();
-        });
+        $('#select-edge-direction').on('change', this.setEdgeDirection);
 
         $('#select-edge-color').on('change', () => {
             this.setEdgeColor();
@@ -2525,6 +2819,23 @@ class NeuroMarvl {
             this.viewWidth = newViewWidth;
             this.viewHeight = newViewHeight;
         }, false);
+
+        //set colour after initialise from file----------------------------------------------
+        var color = $("#input-surface-color :input").val()
+        this.saveFileObj.surfaceSettings.color = color;
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setSurfaceColor(color);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setSurfaceColor(color);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setSurfaceColor(color);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setSurfaceColor(color);
+        //-----------------------------------------------------------------------------------
+    }
+
+    //reload the display settings
+    reloadDisplay() {
+        this.saveFileObj.displaySettings.mode = $('#display_settings_mode').val();
+        this.saveFileObj.displaySettings.labels = $('#display_settings_labels').val();
+        this.saveFileObj.displaySettings.split = $('#display_settings_split').val();
+        this.saveFileObj.displaySettings.rotation = $('#display_settings_rotation').val();
     }
 
 }
@@ -2535,8 +2846,8 @@ class NeuroMarvl {
 ///                  On Default                                 //
 //////////////////////////////////////////////////////////////////
 
+var neuroMarvl;
 function defaultFunction() {
-    let neuroMarvl = new NeuroMarvl();
+    neuroMarvl = new NeuroMarvl();
     neuroMarvl.start();
 }
-

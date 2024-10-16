@@ -64,7 +64,11 @@ var Brain3DApp = /** @class */ (function () {
             dy: 0
         };
         // Constants
+<<<<<<< HEAD
         this.nearClip = 0;
+=======
+        this.nearClip = 1;
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         this.farClip = 2000;
         //modeLerpLength: number = 0.6;
         this.modeLerpLength = 0.0; //TODO: Effectively kills the animation. Remove it properly (or fix if easy to do)
@@ -101,6 +105,7 @@ var Brain3DApp = /** @class */ (function () {
         this.setupInput();
         this.setupUserInteraction(this.jDiv);
         // Set up camera
+<<<<<<< HEAD
         this.camera = new THREE.OrthographicCamera(-this.jDiv.width() / 4, // left
         this.jDiv.width() / 4, // right
         this.jDiv.height() / 4, // top
@@ -108,6 +113,10 @@ var Brain3DApp = /** @class */ (function () {
         this.nearClip, this.farClip);
         this.resize(this.jDiv.width(), this.jDiv.height(), 'resizestart');
         this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
+=======
+        this.camera = new THREE.PerspectiveCamera(45, 1, this.nearClip, this.farClip);
+        this.resize(this.jDiv.width(), this.jDiv.height());
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         // Set up scene
         var ambient = new THREE.AmbientLight(0x1f1f1f);
         var directionalLight = new THREE.DirectionalLight(0xffeedd);
@@ -119,12 +128,20 @@ var Brain3DApp = /** @class */ (function () {
         this.brainObject = new THREE.Object3D();
         this.brainContainer = new THREE.Object3D();
         this.brainContainer.add(this.brainObject);
+<<<<<<< HEAD
         this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
         // CA causes the brain to look at the camera
         //this.brainContainer.lookAt(this.camera.position);
         this.scene.add(this.brainContainer);
         this.colaObject = new THREE.Object3D();
         this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
+=======
+        this.brainContainer.position.set(-this.graphOffset, 0, 0);
+        this.brainContainer.lookAt(this.camera.position);
+        this.scene.add(this.brainContainer);
+        this.colaObject = new THREE.Object3D();
+        this.colaObject.position.set(-this.graphOffset, 0, 0);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         this.scene.add(this.colaObject);
         // Register the data callbacks
         var coords = function () {
@@ -145,7 +162,10 @@ var Brain3DApp = /** @class */ (function () {
         this.circularGraph = new CircularGraph(this.id, this.jDiv, this.dataSet, this.svg, this.svgDefs, this.svgAllElements, this.d3Zoom, this.commonData, this.saveFileObj);
         //initialize display
         this.initialiseDisplay();
+<<<<<<< HEAD
         this.resize(this.jDiv.width(), this.jDiv.height(), 'resizestart');
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     }
     Brain3DApp.prototype.initialiseDisplay = function () {
         var displaySettings_mode = $('#display_settings_mode').val();
@@ -198,9 +218,14 @@ var Brain3DApp = /** @class */ (function () {
         }
         var valueArray = a.get(colorAttribute);
         // D3 can scale colours, but needs to use color strings
+<<<<<<< HEAD
         // remove any leading # characters and then append
         var minString = "#" + minColor.toString(16).replace(/^#+/gm, '');
         var maxString = "#" + maxColor.toString(16).replace(/^#+/gm, '');
+=======
+        var minString = "#" + minColor.toString(16);
+        var maxString = "#" + maxColor.toString(16);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         // Continuous has each value mapped with equal proportion
         var i = a.columnNames.indexOf(colorAttribute);
         var singlePortion = (1 / a.info[colorAttribute].numElements) || 0;
@@ -470,6 +495,7 @@ var Brain3DApp = /** @class */ (function () {
             _this.colaObject.rotation.set(_this.colaObject.rotation.x - leapRotationSpeed * mm, _this.colaObject.rotation.y, _this.colaObject.rotation.z);
         });
         this.input.regMouseDragCallback(function (dx, dy, mode) {
+<<<<<<< HEAD
             var SZ = {
                 height: _this.jDiv.height(),
                 width: _this.jDiv.width()
@@ -489,6 +515,12 @@ var Brain3DApp = /** @class */ (function () {
             }
             // right button: rotation
             if (mode == 2) {
+=======
+            if (_this.isControllingGraphOnly)
+                return;
+            // right button: rotation
+            if (mode == 3) {
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 if (_this.autoRotation == false) {
                     var pixelAngleRatio = 50;
                     var quatX = new THREE.Quaternion();
@@ -501,7 +533,10 @@ var Brain3DApp = /** @class */ (function () {
                     quatY.setFromAxisAngle(axisY, dy / pixelAngleRatio); // axis must be normalised, angle in radians
                     _this.brainObject.quaternion.multiplyQuaternions(quatY, _this.brainObject.quaternion);
                     _this.colaObject.quaternion.multiplyQuaternions(quatY, _this.colaObject.quaternion);
+<<<<<<< HEAD
                     _this.saveBrainRotation();
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 }
                 else {
                     _this.mouse.dx = dx;
@@ -509,11 +544,16 @@ var Brain3DApp = /** @class */ (function () {
                 }
             }
             // left button: pan
+<<<<<<< HEAD
             else if (mode == 0) {
+=======
+            else if (mode == 1) {
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 var pixelDistanceRatio = 1.6; // with: defaultCameraFov = 25; defaultViewWidth = 800;
                 var defaultCameraFov = 25;
                 var defaultViewWidth = 800;
                 // move brain model
+<<<<<<< HEAD
                 //perspective camera
                 //pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
                 //pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
@@ -535,6 +575,17 @@ var Brain3DApp = /** @class */ (function () {
         });
         this.input.regMouseLeftClickCallback(function (x, y) {
             console.log("regMouseLeftClickCallback");
+=======
+                pixelDistanceRatio /= (_this.camera.fov / defaultCameraFov);
+                pixelDistanceRatio *= (_this.currentViewWidth / defaultViewWidth);
+                _this.brainContainer.position.set(_this.brainContainer.position.x + dx / pixelDistanceRatio, _this.brainContainer.position.y - dy / pixelDistanceRatio, _this.brainContainer.position.z);
+                _this.colaObject.position.set(_this.colaObject.position.x + dx / pixelDistanceRatio, _this.colaObject.position.y - dy / pixelDistanceRatio, _this.colaObject.position.z);
+                var prevQuaternion = _this.brainContainer.quaternion.clone();
+                _this.brainContainer.lookAt(_this.camera.position);
+            }
+        });
+        this.input.regMouseLeftClickCallback(function (x, y) {
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             var oldSelectedNodeID = _this.commonData.selectedNode;
             _this.commonData.selectedNode = -1;
             // Check if pointer is over 3D Model
@@ -583,8 +634,11 @@ var Brain3DApp = /** @class */ (function () {
                 else if (_this.networkType == "2d") {
                     _this.svgNeedsUpdate = true;
                 }
+<<<<<<< HEAD
                 _this.physioGraph.update();
                 _this.colaGraph.update();
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             }
         });
         this.input.regMouseRightClickCallback(function (x, y) {
@@ -602,6 +656,7 @@ var Brain3DApp = /** @class */ (function () {
         this.input.regMouseDoubleClickCallback(function () {
             if (_this.isControllingGraphOnly)
                 return;
+<<<<<<< HEAD
             //this.fovZoomRatio = 1;
             //this.camera.fov = this.defaultFov;
             _this.camera.updateProjectionMatrix();
@@ -686,6 +741,32 @@ var Brain3DApp = /** @class */ (function () {
             //var curZoom = this.camera.zoom;
             //this.camera.zoom = curZoom + Math.sign(delta) * 0.1;
             _this.camera.updateProjectionMatrix();
+=======
+            _this.fovZoomRatio = 1;
+            _this.camera.fov = _this.defaultFov;
+            _this.camera.updateProjectionMatrix();
+            _this.brainContainer.position.set(-_this.graphOffset, 0, 0);
+            _this.brainContainer.lookAt(_this.camera.position);
+            _this.brainObject.rotation.set(0, 0, 0);
+            _this.colaObject.position.set(_this.graphOffset, 0, 0);
+            _this.colaObject.rotation.set(0, 0, 0);
+        });
+        /* Interact with mouse wheel will zoom in and out the 3D Model */
+        this.input.regMouseWheelCallback(function (delta) {
+            var ZOOM_FACTOR = 10;
+            if (_this.isControllingGraphOnly)
+                return; // 2D Flat Version of the network
+            var pointer = _this.input.localPointerPosition();
+            var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
+            pointerNDC.unproject(_this.camera);
+            pointerNDC.sub(_this.camera.position);
+            if (delta < 0) {
+                _this.camera.position.addVectors(_this.camera.position, pointerNDC.setLength(ZOOM_FACTOR));
+            }
+            else {
+                _this.camera.position.addVectors(_this.camera.position, pointerNDC.setLength(-ZOOM_FACTOR));
+            }
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         });
         this.input.regGetRotationCallback(function () {
             var rotation = [];
@@ -705,9 +786,12 @@ var Brain3DApp = /** @class */ (function () {
         this.brainModelOrigin = modelObject;
         this.setBrainMode(this.brainSurfaceMode);
     };
+<<<<<<< HEAD
     Brain3DApp.prototype.saveBrainRotation = function () {
         this.saveFileObj.surfaceSettings.rotation = this.brainObject.quaternion.clone();
     };
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     Brain3DApp.prototype.setBrainMode = function (mode) {
         this.brainSurfaceMode = mode;
         var model = this.brainModelOrigin;
@@ -842,6 +926,7 @@ var Brain3DApp = /** @class */ (function () {
                         // Need to edit geometries to "slice" them in half
                         // Each face is represented by a group 9 values (3 vertices * 3 dimensions). Move to other side if any face touches the right side (i.e. x > 0).
                         var attribute = child.geometry.getAttribute("position");
+<<<<<<< HEAD
                         var oldPositions = Array.prototype.slice.call(attribute.array);
                         var leftPositions = [];
                         var rightPositions = [];
@@ -853,6 +938,19 @@ var Brain3DApp = /** @class */ (function () {
                             }
                             else {
                                 leftPositions.push(oldPositions[faceIDX], oldPositions[faceIDX + 1], oldPositions[faceIDX + 2], oldPositions[faceIDX + 3], oldPositions[faceIDX + 4], oldPositions[faceIDX + 5], oldPositions[faceIDX + 6], oldPositions[faceIDX + 7], oldPositions[faceIDX + 8]);
+=======
+                        var leftPositions = Array.prototype.slice.call(attribute.array);
+                        var rightPositions = [];
+                        var FACE_CHUNK = 9;
+                        var VERT_CHUNK = 3;
+                        var i = leftPositions.length - VERT_CHUNK; // Start from last x position
+                        while (i -= VERT_CHUNK) {
+                            if (leftPositions[i] > 0) {
+                                // Move whole face to other geometry
+                                var faceStart = Math.floor(i / FACE_CHUNK) * FACE_CHUNK;
+                                rightPositions.push.apply(rightPositions, leftPositions.splice(faceStart, FACE_CHUNK));
+                                i = faceStart;
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                             }
                         }
                         var leftGeometry = new THREE.BufferGeometry;
@@ -910,9 +1008,12 @@ var Brain3DApp = /** @class */ (function () {
         }
         else {
             this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(Number(this.edgeCountSliderValue));
+<<<<<<< HEAD
             // tried to see what it would look like if we included interhemispheric edges in the split mode
             // it wasnt nice
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         }
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
         this.physioGraph.setEdgeVisibilities(this.filteredAdjMatrix);
@@ -930,6 +1031,7 @@ var Brain3DApp = /** @class */ (function () {
             object.material.color.set(color);
         }
     };
+<<<<<<< HEAD
     Brain3DApp.prototype.setSurfaceRotation = function (quat) {
         if (this.brainObject) {
             this.brainObject.quaternion.set(quat._x, quat._y, quat._z, quat._w);
@@ -948,6 +1050,8 @@ var Brain3DApp = /** @class */ (function () {
             this.colaObject.position.set(pos.x, pos.y, pos.z);
         }
     };
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     Brain3DApp.prototype.setEdgeTransitionColor = function (color) {
         if ((!this.physioGraph) || (!this.colaGraph))
             return;
@@ -1020,7 +1124,10 @@ var Brain3DApp = /** @class */ (function () {
         $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", parseInt(app.edgeCount));
     };
     Brain3DApp.prototype.initShowNetwork = function (app) {
+<<<<<<< HEAD
         console.log("initShowNetwork()");
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         if (app.showingTopologyNetwork) {
             $("#select-network-type-".concat(this.id, "-").concat(app.networkType)).addClass("active");
             this.networkTypeOnChange(app.networkType);
@@ -1086,9 +1193,12 @@ var Brain3DApp = /** @class */ (function () {
             this.circularGraph.setupOptionMenuUI(); // add options button to the page
             this.svg.attr("visibility", "visible");
             $(this.graph2dContainer).hide();
+<<<<<<< HEAD
             for (var bar in this.circularGraph.attributeBars) {
                 this.circularGraph.addAttributeBarElements(this.circularGraph.attributeBars[bar]);
             }
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         }
         else {
             // hide options button
@@ -1169,7 +1279,10 @@ var Brain3DApp = /** @class */ (function () {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
         }
         else {
+<<<<<<< HEAD
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(numEdges);
         }
         if (this.physioGraph) {
@@ -1652,6 +1765,7 @@ var Brain3DApp = /** @class */ (function () {
             this.circularGraph.update();
         this.needUpdate = true;
     };
+<<<<<<< HEAD
     /* Called when the size of the view port is changed */
     /* action: 'resize', set the borders of the camera by the viewport and move 3d surfaces to be at the same proportional location */
     /* the remaining action values are for zooming in/out for a screenshot
@@ -1677,10 +1791,18 @@ var Brain3DApp = /** @class */ (function () {
         // Resize the renderer
         this.renderer.setSize(width, height - sliderSpace);
         // Resize the svg canvas
+=======
+    /* Called when the size of the view port is changed*/
+    Brain3DApp.prototype.resize = function (width, height) {
+        // Resize the renderer
+        this.renderer.setSize(width, height - sliderSpace);
+        this.currentViewWidth = width;
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         this.svg
             .attr("width", width)
             .attr("height", height - sliderSpace);
         // Calculate the aspect ratio
+<<<<<<< HEAD
         //var aspect = width / (height - sliderSpace);
         //this.camera.aspect = aspect;
         //// Calculate the FOVs
@@ -2097,6 +2219,22 @@ var Brain3DApp = /** @class */ (function () {
         this.oldHeight = height;
         this.oldWidth = width;
         this.commonData.resizing = false;
+=======
+        var aspect = width / (height - sliderSpace);
+        this.camera.aspect = aspect;
+        // Calculate the FOVs
+        var verticalFov = Math.atan(height / window.outerHeight); // Scale the vertical fov with the vertical height of the window (up to 45 degrees)
+        var horizontalFov = verticalFov * aspect;
+        this.defaultFov = verticalFov * 180 / Math.PI;
+        this.camera.fov = this.defaultFov * this.fovZoomRatio;
+        this.camera.updateProjectionMatrix();
+        // Work out how far away the camera needs to be
+        var distanceByH = (widthInCamera / 2) / Math.tan(horizontalFov / 2);
+        var distanceByV = (heightInCamera / 2) / Math.tan(verticalFov / 2);
+        // Select the maximum distance of the two
+        this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
+        this.originalCameraPosition = this.camera.position.clone();
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     };
     Brain3DApp.prototype.setDataSet = function (dataSet) {
         var _this = this;
@@ -2185,7 +2323,10 @@ var Brain3DApp = /** @class */ (function () {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
         }
         else {
+<<<<<<< HEAD
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(Number(this.edgeCountSliderValue));
         }
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
@@ -2220,18 +2361,29 @@ var Brain3DApp = /** @class */ (function () {
         }
         var mean = (box.max.z - box.min.z) / 2;
         var offsetToHead = box.max.z - mean;
+<<<<<<< HEAD
         var offsetDistance = 10;
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         for (var i = 0; i < this.dataSet.brainCoords[0].length; i++) {
             var coord = new THREE.Vector3(this.dataSet.brainCoords[0][i], this.dataSet.brainCoords[1][i], this.dataSet.brainCoords[2][i]);
             if (coord.x < 0) { // right
                 coord.applyAxisAngle(zAxis, Math.PI / 2);
                 coord.x = coord.x - offsetToHead;
+<<<<<<< HEAD
                 coord.z = coord.z - box.max.z - offsetDistance;
+=======
+                coord.z = coord.z - box.max.z;
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             }
             else { // left
                 coord.applyAxisAngle(zAxis, -Math.PI / 2);
                 coord.x = coord.x + offsetToHead;
+<<<<<<< HEAD
                 coord.z = coord.z + Math.abs(box.min.z) + offsetDistance;
+=======
+                coord.z = coord.z + Math.abs(box.min.z);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             }
             newCoords[0].push(coord.x);
             newCoords[1].push(coord.y);
@@ -2241,7 +2393,11 @@ var Brain3DApp = /** @class */ (function () {
     };
     Brain3DApp.prototype.getBoundingSphereUnderPointer = function (pointer) {
         var _this = this;
+<<<<<<< HEAD
         if ((this.networkType == '2d') || (this.networkType == 'circular') || (this.networkType == '3d')) {
+=======
+        if ((this.networkType == '2d') || (this.networkType == 'circular')) {
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(pointer, this.camera);
             var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
@@ -2337,7 +2493,10 @@ var Brain3DApp = /** @class */ (function () {
                         this.selectedNodeID = -1;
                     }
                 }
+<<<<<<< HEAD
                 this.needUpdate = true;
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             }
             if (this.needUpdate || this.isAnimationOn) {
                 this.physioGraph.update();

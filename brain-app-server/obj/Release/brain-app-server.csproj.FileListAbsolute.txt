@@ -4,6 +4,7 @@ C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\bin\brain-
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\bin\brain-app-server.pdb
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Release\brain-app-server.dll
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Release\brain-app-server.pdb
+<<<<<<< HEAD
 =======
 E:\OneDrive\neuromarvl-new\neuromarvl\brain-app-server\bin\brain-app-server.dll.config
 E:\OneDrive\neuromarvl-new\neuromarvl\brain-app-server\bin\brain-app-server.dll
@@ -20,3 +21,12 @@ C:\OneDrive\neuromarvl-new\neuromarvl\brain-app-server\obj\Release\brain-app-ser
 C:\OneDrive\neuromarvl-new\neuromarvl\brain-app-server\obj\Release\brain-app-server.dll
 C:\OneDrive\neuromarvl-new\neuromarvl\brain-app-server\obj\Release\brain-app-server.pdb
 >>>>>>> Stashed changes
+=======
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\bin\brain-app-server.dll.config
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\bin\brain-app-server.dll
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\bin\brain-app-server.pdb
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.AssemblyReference.cache
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.csproj.CoreCompileInputs.cache
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.dll
+C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\obj\Release\brain-app-server.pdb
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a

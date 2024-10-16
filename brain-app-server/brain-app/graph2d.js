@@ -259,9 +259,13 @@ var Graph2D = /** @class */ (function () {
                 layoutOptions.handleDisconnected = true;
                 layoutOptions.avoidOverlap = true;
                 layoutOptions.nodeSpacing = function (node) { return node.data("radius") * 0.5; };
+<<<<<<< HEAD
                 if (this.layout == 'cola') {
                     layoutOptions.unconstrIter = 15;
                 }
+=======
+                layoutOptions.unconstrIter = 15;
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 layoutOptions.userConstIter = 0;
                 layoutOptions.allConstIter = 5;
                 //layoutOptions.flow = false;
@@ -437,6 +441,7 @@ var Graph2D = /** @class */ (function () {
             cy.zoom(cy.zoom() * 0.6);
         });
         cy.fit();
+<<<<<<< HEAD
         //cy.on("render", e => {
         //    this.commonData.graph2DBoundingBox = cy.elements().renderedBoundingBox();
         //});
@@ -451,6 +456,8 @@ var Graph2D = /** @class */ (function () {
         //cy.on("touchpan", e => {
         //    console.log("touchpan");
         //});
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         if (this.layout === "concentric") {
             // This layout tends to centre near the upper-left corner
             cy.pan({

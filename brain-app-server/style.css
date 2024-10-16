@@ -334,3 +334,35 @@ text {
     user-select: none;
     -webkit-user-select: none;
 }
+
+
+/*
+    File save dialog
+*/
+.ui-widget-content {
+    background: #d9edf7;
+}
+
+.ui-widget-header {
+    background: #c8dce6;
+    color: #444;
+}
+#file-save-dialog input {
+    font-size: 120%;
+}
+
+.ui-dialog-buttonset button {
+    font-size: 120%;
+    font-weight:bold;
+    background-color : #eff5e5;
+    border: 3px solid #aaa;
+    border-radius: 5px;
+}
+
+.ui-visible-tooltip {
+    background-color:#fafafa;
+    border: 1px solid #999;
+    border-radius: 5px;
+    padding:5px;
+    margin-bottom:10px;
+}

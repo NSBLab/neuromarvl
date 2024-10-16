@@ -28,6 +28,7 @@ var CommonUtilities = /** @class */ (function () {
         }
         return true;
     };
+<<<<<<< HEAD
     // compute the bounding box of the brain
     CommonUtilities.computeScreenSpaceBoundingBox = function (brainModelOrigin, camera) {
         var vertex = new THREE.Vector3();
@@ -69,6 +70,8 @@ var CommonUtilities = /** @class */ (function () {
             return 0;
         }
     };
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     CommonUtilities.getDistinctValues = function (values) {
         var flags = [], distincts = [], l = values.length;
         for (var i = 0; i < l; i++) {
@@ -189,6 +192,7 @@ var CommonUtilities = /** @class */ (function () {
         "INFO": -1
     };
     CommonUtilities.alertNumber = 0;
+<<<<<<< HEAD
     CommonUtilities.cytoscapeToModelPosition = function (cy, pos) {
         var pan = cy.pan();
         var zoom = cy.zoom();
@@ -206,6 +210,8 @@ var CommonUtilities = /** @class */ (function () {
             y: pos.y * zoom + pan.y,
         };
     };
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     return CommonUtilities;
 }());
 //# sourceMappingURL=CommonUtilities.js.map

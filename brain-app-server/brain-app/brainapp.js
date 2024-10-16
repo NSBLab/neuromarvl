@@ -288,11 +288,19 @@ var NeuroMarvl = /** @class */ (function () {
             // init the node size and color given the current UI. The UI needs to be redesigned.
             if (_this.saveFileObj.nodeSettings.nodeSizeOrColor && (_this.saveFileObj.nodeSettings.nodeSizeOrColor.length > 0)) {
                 if (_this.saveFileObj.nodeSettings.nodeSizeOrColor == "node-size") {
+<<<<<<< HEAD
                     _this.initNodeSize();
                     //this.initNodeColor();
                 }
                 else if (_this.saveFileObj.nodeSettings.nodeSizeOrColor == "node-color") {
                     //this.initNodeSize();
+=======
+                    _this.initNodeColor();
+                    _this.initNodeSize();
+                }
+                else if (_this.saveFileObj.nodeSettings.nodeSizeOrColor == "node-color") {
+                    _this.initNodeSize();
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     _this.initNodeColor();
                 }
             }
@@ -345,15 +353,21 @@ var NeuroMarvl = /** @class */ (function () {
                     _this.applicationsInstances[0].showNetwork(false, function () {
                         _this.setNodeSizeOrColor();
                         _this.setEdgeColor();
+<<<<<<< HEAD
                         _this.setEdgeSize();
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                         _this.applicationsInstances[0].update(0);
                         fnExportFunctionAndContinue();
                     });
                 }
                 else {
+<<<<<<< HEAD
                     _this.setNodeSizeOrColor();
                     _this.setEdgeColor();
                     _this.setEdgeSize();
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     _this.applicationsInstances[0].update(0);
                     fnExportFunctionAndContinue();
                 }
@@ -1006,7 +1020,11 @@ var NeuroMarvl = /** @class */ (function () {
             var canvas = _this.applicationsInstances[viewport].getDrawingCanvas();
             var origWidth = canvas.width;
             var origHeight = canvas.height;
+<<<<<<< HEAD
             _this.applicationsInstances[viewport].resize(resolution.x, resolution.x / origWidth * origHeight, 'screenshotzoomstart');
+=======
+            _this.applicationsInstances[viewport].resize(resolution.x, resolution.y);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             var prevsvgtransform = _this.applicationsInstances[viewport].svgAllElements.attr("transform");
             if (prevsvgtransform != null) {
                 var zoom = resolution.x / origWidth;
@@ -1038,7 +1056,11 @@ var NeuroMarvl = /** @class */ (function () {
                     _this.downloadSVGImage(newSource, filename);
                 }
                 requestAnimationFrame(function () {
+<<<<<<< HEAD
                     _this.applicationsInstances[viewport].resize(_this.applicationsInstances[viewport].jDiv.width(), _this.applicationsInstances[viewport].jDiv.height(), 'screenshotzoomend');
+=======
+                    _this.applicationsInstances[viewport].resize(_this.applicationsInstances[viewport].jDiv.width(), _this.applicationsInstances[viewport].jDiv.height());
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                     if (prevsvgtransform != null)
                         _this.applicationsInstances[viewport].svgAllElements.attr("transform", prevsvgtransform);
                     if (callback)
@@ -1575,6 +1597,7 @@ var NeuroMarvl = /** @class */ (function () {
             $(BR_VIEW).css({ width: rw, height: bh });
             // Make callbacks to the application windows
             if (_this.applicationsInstances[0])
+<<<<<<< HEAD
                 _this.applicationsInstances[0].resize(lw, th, 'resize');
             if (_this.applicationsInstances[1])
                 _this.applicationsInstances[1].resize(rw, th, 'resize');
@@ -1582,6 +1605,15 @@ var NeuroMarvl = /** @class */ (function () {
                 _this.applicationsInstances[2].resize(lw, bh, 'resize');
             if (_this.applicationsInstances[3])
                 _this.applicationsInstances[3].resize(rw, bh, 'resize');
+=======
+                _this.applicationsInstances[0].resize(lw, th);
+            if (_this.applicationsInstances[1])
+                _this.applicationsInstances[1].resize(rw, th);
+            if (_this.applicationsInstances[2])
+                _this.applicationsInstances[2].resize(lw, bh);
+            if (_this.applicationsInstances[3])
+                _this.applicationsInstances[3].resize(rw, bh);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         };
         // Load the physiological coordinates of each node in the brain
         this.loadCoordinates = function (file) {
@@ -1629,6 +1661,7 @@ var NeuroMarvl = /** @class */ (function () {
             reader.readAsText(file);
         };
         this.parseLabels = function (text) {
+<<<<<<< HEAD
             _this.referenceDataSet.brainLabels = text.replace(/\t|\n|\r/g, ' ').trim().split(/\s+/).map(function (s) { return s.trim(); });
             //this.commonData.notifyLabels();
         };
@@ -1637,13 +1670,22 @@ var NeuroMarvl = /** @class */ (function () {
                 $("#input-surface-color").colorpicker("setValue", _this.saveFileObj.surfaceSettings.color);
                 _this.setBrainSurfaceColor(_this.saveFileObj.surfaceSettings.color);
             }
+=======
+            _this.referenceDataSet.brainLabels = text.replace(/\t|\n|\r/g, ' ').trim().split(' ').map(function (s) { return s.trim(); });
+            //this.commonData.notifyLabels();
+        };
+        this.initSurfaceSettings = function () {
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             if (_this.saveFileObj.surfaceSettings.opacity) {
                 $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').setValue(_this.saveFileObj.surfaceSettings.opacity);
                 _this.setSurfaceOpacity();
             }
+<<<<<<< HEAD
             if (_this.saveFileObj.surfaceSettings.rotation) {
                 _this.setBrainSurfaceRotation(_this.saveFileObj.surfaceSettings.rotation);
             }
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         };
         /**
             inits the UI elements found in 'Edge Attributes' tab with values from the saveFileObject
@@ -1803,7 +1845,10 @@ var NeuroMarvl = /** @class */ (function () {
         // new THREE.Mesh() objects by the application wishing to use the model.
         this.loadBrainModel = function (model, callback) {
             var file = (model === 'ch2') && 'BrainMesh_Ch2withCerebellum.obj'
+<<<<<<< HEAD
                 || (model === 'ch2nocerebellum') && 'BrainMesh_Ch2.obj'
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 || (model === 'icbm') && 'BrainMesh_ICBM152.obj';
             if (!file) {
                 callback();
@@ -1817,6 +1862,7 @@ var NeuroMarvl = /** @class */ (function () {
                 callback(object);
             });
         };
+<<<<<<< HEAD
         this.setBrainSurfaceRotation = function (quat) {
             if (_this.applicationsInstances[0])
                 _this.applicationsInstances[0].setSurfaceRotation(quat);
@@ -1827,6 +1873,8 @@ var NeuroMarvl = /** @class */ (function () {
             if (_this.applicationsInstances[3])
                 _this.applicationsInstances[3].setSurfaceRotation(quat);
         };
+=======
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         this.setBrainSurfaceColor = function (color) {
             _this.saveFileObj.surfaceSettings.color = color;
             if (_this.applicationsInstances[0])
@@ -1881,6 +1929,7 @@ var NeuroMarvl = /** @class */ (function () {
                 }
             });
             // Normalise values to range 0...1, files can have very different value ranges
+<<<<<<< HEAD
             //let max = simMatrix[0][0];
             //let min = simMatrix[0][0];
             //let i = simMatrix.length;
@@ -1894,6 +1943,21 @@ var NeuroMarvl = /** @class */ (function () {
             //}
             //let scale = d3.scale.linear().domain([min, max]).range([0, 1]);
             //simMatrix = simMatrix.map(row => row.map(scale));
+=======
+            var max = simMatrix[0][0];
+            var min = simMatrix[0][0];
+            var i = simMatrix.length;
+            while (i--) {
+                var j = simMatrix[i].length;
+                while (j--) {
+                    var weight = simMatrix[i][j];
+                    max = Math.max(max, weight);
+                    min = Math.min(min, weight);
+                }
+            }
+            var scale = d3.scale.linear().domain([min, max]).range([0, 1]);
+            simMatrix = simMatrix.map(function (row) { return row.map(scale); });
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
             dataSet.setSimMatrix(simMatrix);
         };
         // Load the attributes for the specified dataSet
@@ -2350,7 +2414,11 @@ var NeuroMarvl = /** @class */ (function () {
     NeuroMarvl.prototype.recordDisplaySettings = function () {
         // surfaceSettings.color                        
         var col = this.saveFileObj.surfaceSettings.color;
+<<<<<<< HEAD
         $("#input-surface-color").val(col);
+=======
+        $("#input-surface-color :input").val(col);
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
         //set Display Mode
         $('#display_settings_mode').val(this.saveFileObj.displaySettings.mode);
         $('#display_settings_labels').val(this.saveFileObj.displaySettings.labels);
@@ -2369,9 +2437,14 @@ var NeuroMarvl = /** @class */ (function () {
 //////////////////////////////////////////////////////////////////
 ///                  On Default                                 //
 //////////////////////////////////////////////////////////////////
+<<<<<<< HEAD
 var neuroMarvl;
 function defaultFunction() {
     neuroMarvl = new NeuroMarvl();
+=======
+function defaultFunction() {
+    var neuroMarvl = new NeuroMarvl();
+>>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     neuroMarvl.start();
 }
 //# sourceMappingURL=brainapp.js.map

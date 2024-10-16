@@ -382,13 +382,14 @@ class NeuroMarvl {
 
     initDataDependantUI = () => {
         // init the node size and color given the current UI. The UI needs to be redesigned.
-        if (this.saveObj.nodeSettings.nodeSizeOrColor && (this.saveObj.nodeSettings.nodeSizeOrColor.length > 0)) {
-            if (this.saveObj.nodeSettings.nodeSizeOrColor == "node-size") {
+        if (this.saveFileObj.nodeSettings.nodeSizeOrColor && (this.saveFileObj.nodeSettings.nodeSizeOrColor.length > 0)) {
+            if (this.saveFileObj.nodeSettings.nodeSizeOrColor == "node-size") {
                 this.initNodeColor();
                 this.initNodeSize();
+                //this.initNodeColor();
             }
-            else if (this.saveObj.nodeSettings.nodeSizeOrColor == "node-color") {
-                this.initNodeSize();
+            else if (this.saveFileObj.nodeSettings.nodeSizeOrColor == "node-color") {
+                //this.initNodeSize();
                 this.initNodeColor();
             }
         }
@@ -1105,8 +1106,17 @@ class NeuroMarvl {
         var file = (<any>$('#input-select-load-file').get(0)).files[0];
         var reader = new FileReader();
         reader.onload = () => {
-            this.saveObj = new SaveFile({});
-            this.saveObj.fromYaml(reader.result.toLowerCase());
+            
+            // Try new JSON settings file,
+            // If not present, fall back to old YAML style
+            try {
+                let jsonsettings = JSON.parse(<string>reader.result);
+                this.saveFileObj = new SaveFile(jsonsettings);    
+            } catch (exception) {
+                this.saveFileObj = new SaveFile({});    
+                this.saveFileObj.fromYaml((<string>reader.result).toLowerCase());
+            }
+            
 
             for (var i = 0; i < 4; i++) {
                 if (!jQuery.isEmptyObject(this.saveObj.saveApps[i])) {
@@ -1770,14 +1780,21 @@ class NeuroMarvl {
     }
 
     parseLabels = (text: string) => {
-        this.referenceDataSet.brainLabels = text.replace(/\t|\n|\r/g, ' ').trim().split(' ').map(s => s.trim());
+        this.referenceDataSet.brainLabels = text.replace(/\t|\n|\r/g, ' ').trim().split(/\s+/).map(s => s.trim());
         //this.commonData.notifyLabels();
     }
 
     initSurfaceSettings = () => {
-        if (this.saveObj.surfaceSettings.opacity) {
-            $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').setValue(this.saveObj.surfaceSettings.opacity);
+        if (this.saveFileObj.surfaceSettings.color) {
+            $("#input-surface-color").colorpicker("setValue", this.saveFileObj.surfaceSettings.color);
+            this.setBrainSurfaceColor(this.saveFileObj.surfaceSettings.color);
+        }
+        if (this.saveFileObj.surfaceSettings.opacity) {
+            $("#div-surface-opacity-slider")['bootstrapSlider']().data('bootstrapSlider').setValue(this.saveFileObj.surfaceSettings.opacity);
             this.setSurfaceOpacity();
+        }
+        if (this.saveFileObj.surfaceSettings.rotation) {
+            this.setBrainSurfaceRotation(this.saveFileObj.surfaceSettings.rotation);
         }
     }
 
@@ -1940,6 +1957,12 @@ class NeuroMarvl {
         });
     }
 
+    setBrainSurfaceRotation = (quat) => {
+        if (this.applicationsInstances[0]) this.applicationsInstances[0].setSurfaceRotation(quat);
+        if (this.applicationsInstances[1]) this.applicationsInstances[1].setSurfaceRotation(quat);
+        if (this.applicationsInstances[2]) this.applicationsInstances[2].setSurfaceRotation(quat);
+        if (this.applicationsInstances[3]) this.applicationsInstances[3].setSurfaceRotation(quat);
+    }
 
     setBrainSurfaceColor = (color: string) => {
         this.saveObj.surfaceSettings.color = color;
@@ -1992,19 +2015,19 @@ class NeuroMarvl {
             }
         });
         // Normalise values to range 0...1, files can have very different value ranges
-        let max = simMatrix[0][0];
-        let min = simMatrix[0][0];
-        let i = simMatrix.length;
-        while (i--) {
-            let j = simMatrix[i].length;
-            while (j--) {
-                let weight = simMatrix[i][j];
-                max = Math.max(max, weight);
-                min = Math.min(min, weight);
-            }
-        }
-        let scale = d3.scale.linear().domain([min, max]).range([0, 1]);
-        simMatrix = simMatrix.map(row => row.map(scale));
+        //let max = simMatrix[0][0];
+        //let min = simMatrix[0][0];
+        //let i = simMatrix.length;
+        //while (i--) {
+        //    let j = simMatrix[i].length;
+        //    while (j--) {
+        //        let weight = simMatrix[i][j];
+        //        max = Math.max(max, weight);
+        //        min = Math.min(min, weight);
+        //    }
+        //}
+        //let scale = d3.scale.linear().domain([min, max]).range([0, 1]);
+        //simMatrix = simMatrix.map(row => row.map(scale));
 
         dataSet.setSimMatrix(simMatrix);
     }

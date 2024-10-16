@@ -1,135 +1,96 @@
-﻿
-const RENDER_ORDER_EDGE = 1.1;
-
-class Graph3D {
-    parentObject;
-    rootObject;
-    commonData;
-    saveObj;
-
-    // Nodes
-    nodeMeshes: any[];
-    nodePositions: number[][];
-    nodeInfo: any[];
-    nodeCurrentColor: number[];
-
-    // Edges
-    edgeColorConfig;
-    edgeDirectionMode: string; // none, opacity, arrow, and animation
-    edgeMinColor: string;
-    edgeMaxColor: string;
-    edgeMaxWeight: number = Number.MIN_VALUE;
-    edgeMinWeight: number = Number.MAX_VALUE;
-    edgeMatrix: any[][];
-    edgeList: Edge[] = [];
-    edgeThicknessByWeight: boolean = false;
-    colorMode: string = "none";     // weight, node, none
-    bundlingEdgeList: any[] = [];
-    visible: boolean = true;
-
-
-    filteredNodeIDs: number[] = [];
-
-    // Shared for optimisation
-    _sphereGeometry: THREE.SphereGeometry = new THREE.SphereGeometry(2, 10, 10);
-
-    allLabels: boolean = false;
-    
-    constructor(parentObject, adjMatrix: any[][], nodeColorings: { color: number, portion: number }[][], weightMatrix: any[][], labels: string[], commonData, saveObj) {
+var RENDER_ORDER_EDGE = 1.1;
+var Graph3D = /** @class */ (function () {
+    function Graph3D(parentObject, adjMatrix, nodeColorings, weightMatrix, labels, commonData, saveObj) {
+        var _this = this;
+        this.edgeMaxWeight = Number.MIN_VALUE;
+        this.edgeMinWeight = Number.MAX_VALUE;
+        this.edgeList = [];
+        this.edgeThicknessByWeight = false;
+        this.colorMode = "none"; // weight, node, none
+        this.bundlingEdgeList = [];
+        this.visible = true;
+        this.filteredNodeIDs = [];
+        // Shared for optimisation
+        this._sphereGeometry = new THREE.SphereGeometry(2, 10, 10);
+        this.allLabels = false;
+        this.averageColor = function (colors) {
+            return colors.reduce(function (acc, color) {
+                var threeColor = new THREE.Color(color.color);
+                return acc.add(threeColor.multiplyScalar(color.portion));
+            }, new THREE.Color(0, 0, 0)).getHex();
+        };
         this.parentObject = parentObject;
         this.rootObject = new THREE.Object3D();
         this.commonData = commonData;
         this.saveObj = saveObj;
         this.edgeDirectionMode = "none";
         parentObject.add(this.rootObject);
-
         // Create all the node meshes
         this.nodeMeshes = Array(adjMatrix.length);
         this.nodeInfo = Array.apply(null, Array(adjMatrix.length)).map(function (x, i) {
             return {
                 isSelected: false
             };
-        })
-        
-        this.nodeCurrentColor = nodeColorings.map(a => this.averageColor(a)); // Use average color for base, used generally and when restoring from highlights
-
+        });
+        this.nodeCurrentColor = nodeColorings.map(function (a) { return _this.averageColor(a); }); // Use average color for base, used generally and when restoring from highlights
         for (var i = 0; i < adjMatrix.length; ++i) {
             //TODO: Originally using spheres, but can switch to sprites for pie chart representations
-            var nodeObject = this.nodeMeshes[i] = new THREE.Mesh(
-                this._sphereGeometry,
-                new THREE.MeshLambertMaterial({
-                    color: this.nodeCurrentColor[i],
-                    transparent: true,       // Not actually transparent, but need this or three.js will render it before the brain surface
-                    depthWrite: false,
-                    depthTest: false
-                })
-            );
+            var nodeObject = this.nodeMeshes[i] = new THREE.Mesh(this._sphereGeometry, new THREE.MeshLambertMaterial({
+                color: this.nodeCurrentColor[i],
+                transparent: true, // Not actually transparent, but need this or three.js will render it before the brain surface
+                depthWrite: false,
+                depthTest: false
+            }));
             nodeObject.renderOrder = RENDER_ORDER_EDGE; // Draw at the same level as edges
-            
             var label = (!!labels && labels[i]) || "";
             this.nodeInfo[i]["label"] = this.createNodeLabel(label, 6);
-
             // User data, which will be useful for other graphs using this graph as a basis
             nodeObject.userData.hasVisibleEdges = true;
             nodeObject.userData.id = i;
             nodeObject.userData.colors = nodeColorings[i];
             nodeObject.userData.filtered = false;
             nodeObject.userData.highlighted = false;
-
             this.rootObject.add(nodeObject);
-            
             this.filteredNodeIDs.push(i);
         }
-
         // Create all the edges
         var len = adjMatrix.length;
         for (var i = 0; i < len - 1; ++i) {
             adjMatrix[i][i] = null;
             for (var j = i + 1; j < len; ++j) {
-
                 if (adjMatrix[i][j] === 1 || adjMatrix[j][i] === 1) {
-
                     if (this.edgeMinWeight > weightMatrix[i][j]) {
                         this.edgeMinWeight = weightMatrix[i][j];
-                    } else if (this.edgeMinWeight > weightMatrix[j][i]) {
+                    }
+                    else if (this.edgeMinWeight > weightMatrix[j][i]) {
                         this.edgeMinWeight = weightMatrix[j][i];
                     }
                     if (this.edgeMaxWeight < weightMatrix[i][j]) {
                         this.edgeMaxWeight = weightMatrix[i][j];
-                    } else if (this.edgeMaxWeight < weightMatrix[j][i]) {
+                    }
+                    else if (this.edgeMaxWeight < weightMatrix[j][i]) {
                         this.edgeMaxWeight = weightMatrix[j][i];
                     }
-
                     if (weightMatrix[i][j] > weightMatrix[j][i]) {
                         this.edgeList.push(adjMatrix[i][j] = new Edge(this, this.nodeMeshes[i], this.nodeMeshes[j], weightMatrix[i][j])); // assume symmetric matrix
                         adjMatrix[j][i] = null;
-                    } else {
+                    }
+                    else {
                         this.edgeList.push(adjMatrix[j][i] = new Edge(this, this.nodeMeshes[j], this.nodeMeshes[i], weightMatrix[j][i])); // assume symmetric matrix
                         adjMatrix[i][j] = null;
                     }
-                } else {
+                }
+                else {
                     adjMatrix[i][j] = null;
                     adjMatrix[j][i] = null;
                 }
-
             }
         }
-        
-        if (len > 0) adjMatrix[len - 1][len - 1] = null;
-
+        if (len > 0)
+            adjMatrix[len - 1][len - 1] = null;
         this.edgeMatrix = adjMatrix;
     }
-
-    
-    averageColor = (colors: { color: number, portion: number }[]) => {
-        return colors.reduce((acc, color) => {
-            let threeColor = new THREE.Color(color.color);
-            return acc.add(threeColor.multiplyScalar(color.portion));
-        }, new THREE.Color(0, 0, 0)).getHex();
-    }
-
-
-    generateSprite(nodeColouring: number) {
+    Graph3D.prototype.generateSprite = function (nodeColouring) {
         // TODO: This isn't currently being used, but could be useful if using sprites for nodes, so multimodule pies are possible
         var canvas = document.createElement('canvas');
         canvas.width = 64;
@@ -142,36 +103,28 @@ class Graph3D {
         gradient.addColorStop(1, 'rgba(0,0,0,0)');
         context.fillStyle = gradient;
         context.fillRect(0, 0, canvas.width, canvas.height);
-
         var texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         var material = new THREE.SpriteMaterial({
             map: texture
         });
         var sprite = new THREE.Sprite(material);
-
-		return sprite;
-    }
-
-
+        return sprite;
+    };
     //////////////////////////////////////////////
     /////// Node's Functions /////////////////////
     //////////////////////////////////////////////
-    createNodeLabel(text: string, fontSize: number) {
+    Graph3D.prototype.createNodeLabel = function (text, fontSize) {
         // draw text on canvas 
         var multiplyScale = 3; // for higher resolution of the label
         var varFontSize = fontSize * multiplyScale;
-
         // 1. create a canvas element
         var canvas = document.createElement('canvas');
-
         var context = canvas.getContext('2d');
         //context.font = "Bold " + varFontSize + "px Arial";
-        
         // Canvas dimensions expected to be a power of 2
         canvas.width = this.nextPowerOf2(context.measureText(text).width * 2);
         canvas.height = this.nextPowerOf2(varFontSize);
-
         context.font = varFontSize + "px Arial";
         //context.miterLimit = 2;
         context.strokeStyle = "rgba(255,255,255,0.5)";
@@ -179,13 +132,11 @@ class Graph3D {
         context.strokeText(text, 0, varFontSize);
         context.fillStyle = "rgba(0,0,0,1)";
         context.fillText(text, 0, varFontSize);
-
         // 2. canvas contents will be used for a texture
-        var texture = new THREE.Texture(canvas)
-	    texture.needsUpdate = true;
-
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
         // 3. map texture to an object
-        var spriteMaterial = new THREE.SpriteMaterial(<any>{
+        var spriteMaterial = new THREE.SpriteMaterial({
             map: texture,
             //depthTest: true,
             depthWrite: false,
@@ -194,11 +145,9 @@ class Graph3D {
         var sprite = new THREE.Sprite(spriteMaterial);
         sprite.scale.set(canvas.width / multiplyScale, canvas.height / multiplyScale, 1);
         sprite.renderOrder = RENDER_ORDER_EDGE;
-
         return sprite;
-    }
-
-    nextPowerOf2(n: number) {
+    };
+    Graph3D.prototype.nextPowerOf2 = function (n) {
         var i = 0;
         var s = 0;
         while (s < n) {
@@ -206,9 +155,8 @@ class Graph3D {
             s = Math.pow(2, i);
         }
         return s;
-    }
-
-    setNodePositions(colaCoords: number[][]) {
+    };
+    Graph3D.prototype.setNodePositions = function (colaCoords) {
         this.nodePositions = colaCoords;
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             var x, y, z;
@@ -218,12 +166,10 @@ class Graph3D {
             this.nodeMeshes[i].position.set(x, y, z);
             this.nodeInfo[i]["label"].position.set(x + 5, y + 5, z);
         }
-    }
-
+    };
     // Lerp between the physio and Cola positions of the nodes
     // 0 <= t <= 1
-    setNodePositionsLerp(colaCoords1: number[][], colaCoords2: number[][], t: number) {
-        
+    Graph3D.prototype.setNodePositionsLerp = function (colaCoords1, colaCoords2, t) {
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             var x, y, z;
             x = colaCoords1[0][i] * (1 - t) + colaCoords2[0][i] * t;
@@ -232,46 +178,44 @@ class Graph3D {
             this.nodeMeshes[i].position.set(x, y, z);
             this.nodeInfo[i]["label"].position.set(x + 5, y + 5, z);
         }
-    }
-
-    setVisible(flag: boolean) {
+    };
+    Graph3D.prototype.setVisible = function (flag) {
         if (flag) {
             if (!this.visible) {
                 this.parentObject.add(this.rootObject);
                 this.visible = true;
             }
-        } else {
+        }
+        else {
             if (this.visible) {
                 this.parentObject.remove(this.rootObject);
                 this.visible = false;
             }
         }
-    }
-
-    isVisible() {
+    };
+    Graph3D.prototype.isVisible = function () {
         return this.visible;
-    }
-
-
-    findNodeConnectivity(filteredAdjMatrix, dissimilarityMatrix, edges?: any[]) {
+    };
+    Graph3D.prototype.findNodeConnectivity = function (filteredAdjMatrix, dissimilarityMatrix, edges) {
         for (var i = 0; i < this.nodeMeshes.length - 1; ++i) {
             for (var j = i + 1; j < this.nodeMeshes.length; ++j) {
                 if (filteredAdjMatrix[i][j] === 1) {
                     if ((this.filteredNodeIDs.indexOf(i) != -1) && (this.filteredNodeIDs.indexOf(j) != -1)) {
-                        if (edges) edges.push({ source: i, target: j, length: dissimilarityMatrix[i][j] });
+                        if (edges)
+                            edges.push({ source: i, target: j, length: dissimilarityMatrix[i][j] });
                     }
-                } else if (filteredAdjMatrix[j][i] === 1) {
+                }
+                else if (filteredAdjMatrix[j][i] === 1) {
                     if ((this.filteredNodeIDs.indexOf(i) != -1) && (this.filteredNodeIDs.indexOf(j) != -1)) {
-                        if (edges) edges.push({ source: j, target: i, length: dissimilarityMatrix[i][j] });
+                        if (edges)
+                            edges.push({ source: j, target: i, length: dissimilarityMatrix[i][j] });
                     }
                 }
             }
         }
-    }
-
-
-    setNodeVisibilities() {
-        let i = this.nodeMeshes.length;
+    };
+    Graph3D.prototype.setNodeVisibilities = function () {
+        var i = this.nodeMeshes.length;
         while (i--) {
             if (this.filteredNodeIDs.indexOf(i) != -1) {
                 this.rootObject.add(this.nodeMeshes[i]);
@@ -282,10 +226,8 @@ class Graph3D {
                 this.nodeMeshes[i].userData.filtered = true;
             }
         }
-    }
-
-
-    highlightSelectedNodes(filteredIDs: number[]) {
+    };
+    Graph3D.prototype.highlightSelectedNodes = function (filteredIDs) {
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             if (filteredIDs.indexOf(i) == -1) {
                 this.nodeMeshes[i].material.color.setHex(this.nodeCurrentColor[i]);
@@ -296,24 +238,22 @@ class Graph3D {
                 this.nodeMeshes[i].userData.highlighted = true;
             }
         }
-
         // Don't forget to keep edges in sync
         if (this.colorMode === "weight" || this.colorMode === "node") {
             // update edges' color map
             this.setEdgeColorConfig(this.colorMode, this.edgeColorConfig);
-        } else {
+        }
+        else {
             this.setEdgeColorConfig(this.colorMode);
         }
-    }
-
-    setDefaultNodeScale() {
+    };
+    Graph3D.prototype.setDefaultNodeScale = function () {
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             this.nodeMeshes[i].scale.set(1, 1, 1);
         }
-    }
-
-    setDefaultNodeColor() {
-        const DEFAULT_COLOR = {
+    };
+    Graph3D.prototype.setDefaultNodeColor = function () {
+        var DEFAULT_COLOR = {
             color: 0xcfcfcf,
             portion: 1
         };
@@ -329,39 +269,41 @@ class Graph3D {
                 edge.isColorChanged = true;
             }
         }
-    }
-
-    setNodesScale(scaleArray: number[]) {
-        if (!scaleArray) return;
-        if (scaleArray.length != this.nodeMeshes.length) return;
-
+    };
+    Graph3D.prototype.setNodesScale = function (scaleArray) {
+        if (!scaleArray)
+            return;
+        if (scaleArray.length != this.nodeMeshes.length)
+            return;
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             var scale = scaleArray[i];
             this.nodeMeshes[i].scale.set(scale, scale, scale);
         }
-    }
-
+    };
     //////////////////////////////////////////////
     /////// Edge's Functions /////////////////////
     //////////////////////////////////////////////
-
-    setEdgeDirection(directionMode) {
-        if (this.edgeDirectionMode === directionMode) return;
-
+    Graph3D.prototype.setEdgeDirection = function (directionMode) {
+        if (this.edgeDirectionMode === directionMode)
+            return;
         // remove old direction mode
         if (this.edgeDirectionMode === "arrow") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 this.edgeList[i].toggleArrow(false);
             }
-        } else if (this.edgeDirectionMode === "animation") {
+        }
+        else if (this.edgeDirectionMode === "animation") {
             for (var i = 0; i < this.edgeList.length; i++) {
-                this.edgeList[i].uniforms.isAnimationOn.value = 0;;
+                this.edgeList[i].uniforms.isAnimationOn.value = 0;
+                ;
             }
-        } else if (this.edgeDirectionMode === "opacity") {
+        }
+        else if (this.edgeDirectionMode === "opacity") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 this.edgeList[i].setOpacity(1, 1);
             }
-        } else if (this.edgeDirectionMode === "gradient") {
+        }
+        else if (this.edgeDirectionMode === "gradient") {
             // return to current edge color settings
             for (var i = 0; i < this.edgeList.length; i++) {
                 this.edgeList[i].directionMode = directionMode;
@@ -369,7 +311,6 @@ class Graph3D {
             }
         }
         this.edgeDirectionMode = directionMode;
-
         // Apply new direction mode
         if (directionMode === "arrow") {
             for (var i = 0; i < this.edgeList.length; i++) {
@@ -377,28 +318,30 @@ class Graph3D {
                 this.edgeList[i].toggleArrow(true);
                 this.edgeList[i].updateColor();
             }
-        } else if (directionMode === "animation") {
+        }
+        else if (directionMode === "animation") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 this.edgeList[i].directionMode = directionMode;
                 this.edgeList[i].uniforms.isAnimationOn.value = 1;
                 this.edgeList[i].updateColor();
             }
-        } else if (directionMode === "opacity") {
+        }
+        else if (directionMode === "opacity") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 this.edgeList[i].directionMode = directionMode;
-                this.edgeList[i].setOpacity(-0.5, 1);;
+                this.edgeList[i].setOpacity(-0.5, 1);
+                ;
                 this.edgeList[i].updateColor();
             }
-        } else if (directionMode === "gradient") {
+        }
+        else if (directionMode === "gradient") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 this.edgeList[i].directionMode = directionMode;
                 this.edgeList[i].updateColor();
             }
         }
-    }
-
-    setEdgeOpacity(opacity: number) {
-
+    };
+    Graph3D.prototype.setEdgeOpacity = function (opacity) {
         for (var i = 0; i < this.edgeList.length; i++) {
             var edge = this.edgeList[i];
             edge.uniforms.endOpacity.value = opacity;
@@ -407,9 +350,8 @@ class Graph3D {
             }
             edge.isColorChanged = true;
         }
-    }
-
-    setEdgeDirectionGradient() {
+    };
+    Graph3D.prototype.setEdgeDirectionGradient = function () {
         var startRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionStartColor, 1.0);
         var endRGB = CommonUtilities.hexToRgb(this.saveObj.edgeSettings.directionEndColor, 1.0);
         for (var i = 0; i < this.edgeList.length; i++) {
@@ -417,90 +359,79 @@ class Graph3D {
             edge.uniforms.startColor.value = new THREE.Vector4(startRGB.r / 255, startRGB.g / 255, startRGB.b / 255, 1.0);
             edge.uniforms.endColor.value = new THREE.Vector4(endRGB.r / 255, endRGB.g / 255, endRGB.b / 255, 1.0);
         }
-    }
-
-    setEdgeColorConfig(colorMode: string, config?) {
+    };
+    Graph3D.prototype.setEdgeColorConfig = function (colorMode, config) {
         this.colorMode = colorMode;
         this.edgeColorConfig = config;
-
         if (colorMode === "weight") {
             if (config.type === "continuous-normal") {
                 this.edgeMinColor = config.minColor;
                 this.edgeMaxColor = config.maxColor;
-
                 var func = d3.scale.linear()
                     .domain([this.edgeMinWeight, this.edgeMaxWeight])
                     .range([config.minColor, config.maxColor]);
-
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
                     edge.colorMode = colorMode;
                     edge.colorMapFunction = func;
                     edge.isColorChanged = true;
                 }
-
-            } else if (config.type === "discrete") {
+            }
+            else if (config.type === "discrete") {
                 var func = d3.scale.ordinal()
                     .domain(config.valueArray)
                     .range(config.colorArray);
-
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
                     edge.colorMode = colorMode;
                     edge.colorMapFunction = func;
                     edge.isColorChanged = true;
                 }
-            } else if (config.type === "continuous-discretized") {
+            }
+            else if (config.type === "continuous-discretized") {
                 var colorArray = config.colorArray.slice(0);
                 var domainArray = config.domainArray.slice(0);
                 colorArray.unshift("#000000");
                 colorArray.push("#000000");
-                domainArray[domainArray.length - 1] += 0.00000001
-
+                domainArray[domainArray.length - 1] += 0.00000001;
                 var func = d3.scale.threshold()
                     .domain(domainArray)
                     .range(colorArray);
-
-
                 for (var i = 0; i < this.edgeList.length; i++) {
                     var edge = this.edgeList[i];
                     edge.colorMode = colorMode;
                     edge.colorMapFunction = func;
                     edge.isColorChanged = true;
                 }
-
             }
-        } else if (colorMode === "node") {
+        }
+        else if (colorMode === "node") {
             for (var i = 0; i < this.edgeList.length; i++) {
                 var edge = this.edgeList[i];
-
                 if (config && config.useTransitionColor) {
-                    let transitionColor = parseInt(config.edgeTransitionColor.substring(1), 16);
+                    var transitionColor = parseInt(config.edgeTransitionColor.substring(1), 16);
                     edge.colorMode = "node-transitioning";
                     edge.transitionColor = transitionColor;
                 }
                 else {
                     edge.colorMode = colorMode;
                 }
-
                 edge.isColorChanged = true;
             }
-        } else {        // (colorMode === "none")
+        }
+        else { // (colorMode === "none")
             for (var i = 0; i < this.edgeList.length; i++) {
                 var edge = this.edgeList[i];
                 edge.colorMode = colorMode;
                 edge.isColorChanged = true;
             }
         }
-    }
-
-
-    setEdgeVisibilities(visMatrix: number[][]) {
+    };
+    Graph3D.prototype.setEdgeVisibilities = function (visMatrix) {
         var len = visMatrix.length;
         // reset minWeight and maxWeight values of the edges
         this.edgeMaxWeight = Number.MIN_VALUE;
         this.edgeMinWeight = Number.MAX_VALUE;
-
         // reset node's hasVisibleEdges flag
         for (var i = 0; i < len - 1; ++i) {
             this.nodeMeshes[i].userData.hasVisibleEdges = false;
@@ -512,15 +443,16 @@ class Graph3D {
                     var edge = (this.edgeMatrix[i][j]) ? this.edgeMatrix[i][j] : this.edgeMatrix[j][i];
                     if ((this.filteredNodeIDs.indexOf(i) == -1) || (this.filteredNodeIDs.indexOf(j) == -1)) {
                         edge.setVisible(false);
-                    } else if (visMatrix[i][j] === 1 || visMatrix[j][i] === 1) {
+                    }
+                    else if (visMatrix[i][j] === 1 || visMatrix[j][i] === 1) {
                         this.nodeMeshes[i].userData.hasVisibleEdges = true;
                         this.nodeMeshes[j].userData.hasVisibleEdges = true;
                         edge.setVisible(true);
-                    } else {
+                    }
+                    else {
                         edge.setVisible(false);
                     }
                 }
-
                 // update minWeight and maxWeight
                 if (edge && (visMatrix[i][j] === 1 || visMatrix[j][i] === 1)) {
                     if (this.edgeMinWeight > edge.getWeight()) {
@@ -532,44 +464,38 @@ class Graph3D {
                 }
             }
         }
-
         if (this.colorMode === "weight" || this.colorMode === "node") {
             // update edges' color map
             this.setEdgeColorConfig(this.colorMode, this.edgeColorConfig);
-        } else {
+        }
+        else {
             this.setEdgeColorConfig(this.colorMode);
         }
-    }
-
-    addBundlingEdge(line) {
-        (<any>line).isBundlingEdge = true;
+    };
+    Graph3D.prototype.addBundlingEdge = function (line) {
+        line.isBundlingEdge = true;
         this.bundlingEdgeList.push(line);
         this.rootObject.add(line);
-    }
-
-    removeAllBundlingEdges() {
+    };
+    Graph3D.prototype.removeAllBundlingEdges = function () {
         for (var i = 0; i < this.bundlingEdgeList.length; ++i) {
             this.rootObject.remove(this.bundlingEdgeList[i]);
         }
-
         // remove all elements in the list
         this.bundlingEdgeList.splice(0, this.bundlingEdgeList.length);
-    }
-
-    removeAllEdges() {
+    };
+    Graph3D.prototype.removeAllEdges = function () {
         for (var i = 0; i < this.edgeList.length; i++) {
             var e = this.edgeList[i];
             if (e.visible) {
                 e.setVisible(false);
             }
         }
-    }
-
+    };
     //////////////////////////////////////////////
     /////// Label's Functions ////////////////////
     //////////////////////////////////////////////
-
-    showAllLabels(ignore3dControl: boolean) {
+    Graph3D.prototype.showAllLabels = function (ignore3dControl) {
         this.hideAllLabels();
         for (var i = 0; i < this.nodeInfo.length; ++i) {
             if (this.nodeInfo[i]["label"]) {
@@ -578,35 +504,33 @@ class Graph3D {
                 }
             }
         }
-    }
-
-    hideAllLabels() {
+    };
+    Graph3D.prototype.hideAllLabels = function () {
         for (var i = 0; i < this.nodeInfo.length; ++i) {
             if (this.nodeInfo[i]["label"]) {
                 this.rootObject.remove(this.nodeInfo[i]["label"]);
             }
         }
-    }
-
-
-    setEdgeScale(scale: number) {
+    };
+    Graph3D.prototype.setEdgeScale = function (scale) {
         this.edgeList.forEach(function (edge) {
             edge.setScale(scale);
         });
-    }
-
-    setNodesColor(colorArray: { color: number, portion: number }[][]) {
-        if (!colorArray) return;
+    };
+    Graph3D.prototype.setNodesColor = function (colorArray) {
+        var _this = this;
+        if (!colorArray)
+            return;
         if (colorArray.length != this.nodeMeshes.length) {
-            throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
+            alert("ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match");
+            return;
+            //throw "ERROR: ColorArray (" + colorArray.length + ") and NodeMeshes (" + this.nodeMeshes.length + ") do not match";
         }
-        this.nodeCurrentColor = colorArray.map(a => this.averageColor(a)); // Use average color
-
+        this.nodeCurrentColor = colorArray.map(function (a) { return _this.averageColor(a); }); // Use average color
         for (var i = 0; i < this.nodeMeshes.length; ++i) {
             this.nodeMeshes[i].material.color.set(this.nodeCurrentColor[i]);
             this.nodeMeshes[i].userData.colors = colorArray[i];
         }
-
         // Also reset edge color if set to node
         if (this.colorMode === "node") {
             for (var i = 0; i < this.edgeList.length; i++) {
@@ -614,62 +538,45 @@ class Graph3D {
                 edge.isColorChanged = true;
             }
         }
-
-    }
-
-    getNodeColor(id: number) {
+    };
+    Graph3D.prototype.getNodeColor = function (id) {
         return this.nodeMeshes[id].material.color.getHex();
-    }
-
-    setNodeColor(id: number, color: number) {
+    };
+    Graph3D.prototype.setNodeColor = function (id, color) {
         this.nodeMeshes[id].material.color.setHex(color);
-    }
-
-
-    selectNode(id: number, ignore3dControl: boolean) {
-
+    };
+    Graph3D.prototype.selectNode = function (id, ignore3dControl) {
         if (!this.nodeInfo[id].isSelected) {
             this.nodeInfo[id].isSelected = true;
             var x = this.nodeMeshes[id].scale.x;
             var y = this.nodeMeshes[id].scale.y;
             var z = this.nodeMeshes[id].scale.z;
-
             this.nodeMeshes[id].scale.set(2 * x, 2 * y, 2 * z);
-
             if (this.allLabels == false) {
                 if (!ignore3dControl) {
                     this.rootObject.add(this.nodeInfo[id]["label"]);
                 }
             }
-
-            
             for (var j = 0; j < this.edgeMatrix.length; ++j) {
                 var edge = (this.edgeMatrix[id][j]) ? this.edgeMatrix[id][j] : this.edgeMatrix[j][id];
-                
                 if (edge) {
-                    
                     if (edge.visible) {
                         edge.multiplyScale(2);
                     }
                 }
             }
         }
-    }
-
-    deselectNode(id: number) {
+    };
+    Graph3D.prototype.deselectNode = function (id) {
         if (this.nodeInfo[id].isSelected && this.commonData.selectedNode != id) {
             this.nodeInfo[id].isSelected = false;
-
             var x = this.nodeMeshes[id].scale.x;
             var y = this.nodeMeshes[id].scale.y;
             var z = this.nodeMeshes[id].scale.z;
-
             this.nodeMeshes[id].scale.set(0.5 * x, 0.5 * y, 0.5 * z);
-
             if (this.allLabels == false) {
                 this.rootObject.remove(this.nodeInfo[id]["label"]);
             }
-
             for (var j = 0; j < this.edgeMatrix.length; ++j) {
                 var edge = (this.edgeMatrix[id][j]) ? this.edgeMatrix[id][j] : this.edgeMatrix[j][id];
                 if (edge) {
@@ -679,72 +586,32 @@ class Graph3D {
                 }
             }
         }
-    }
-
-
-
-    update() {
+    };
+    Graph3D.prototype.update = function () {
         var weightEdges = this.edgeThicknessByWeight;
-        this.edgeList.forEach(edge => {
+        this.edgeList.forEach(function (edge) {
             edge.update(weightEdges);
         });
-    }
-
+    };
     // Remove self from the scene so that the object can be GC'ed
-    destroy() {
+    Graph3D.prototype.destroy = function () {
         this.parentObject.remove(this.rootObject);
-    }
-}
-
-class Edge {
-    shape;
-    geometry;
-    cone;
-    pointer;
-    visible: boolean = true;
-
-    sourceNode;
-    targetNode;
-    parentObject;
-    saveObj;
-
-    // Time control
-    timeTracker;
-
-    // unit shape
-    unitRadius = 0.5;
-    unitLength = 2;
-
-    // edge's width
-    baseScale = 1;
-    scaleWeight = 0.5 * this.baseScale;
-    scaleNoWeight = this.baseScale;
-
-    directionMode: string; // none, animation, arrow, opacity
-
-    // Edge's color
-    colorMode: string; // none, weight, node, node-transitioning
-    color: string;
-    canvas;
-    isColorChanged: boolean = false;
-
-    transitionColor = 0xee2211;
-
-
-    // by weight
-    colorMapFunction;
-    // by node
-    //sourceColor: string;
-    //targetColor: string;
-
-    //Shaders
-    uniforms;
-    vertexShader;
-
-    fragmentShader;
-
-    
-    constructor(graph, sourceNode, targetNode, private weight) {
+    };
+    return Graph3D;
+}());
+var Edge = /** @class */ (function () {
+    function Edge(graph, sourceNode, targetNode, weight) {
+        this.weight = weight;
+        this.visible = true;
+        // unit shape
+        this.unitRadius = 0.5;
+        this.unitLength = 2;
+        // edge's width
+        this.baseScale = 1;
+        this.scaleWeight = 0.5 * this.baseScale;
+        this.scaleNoWeight = this.baseScale;
+        this.isColorChanged = false;
+        this.transitionColor = 0xee2211;
         this.timeTracker = new Date().getMilliseconds();
         this.parentObject = graph.rootObject;
         this.saveObj = graph.saveObj;
@@ -763,75 +630,66 @@ class Edge {
             startOpacity: { type: "f", value: 0.95 },
             endOpacity: { type: "f", value: 0.95 }
         };
-
         this.vertexShader =
-        "uniform int isAnimationOn;" +
-        "uniform float startOpacity, endOpacity, timeTracker;" +
-        "uniform vec3 startPos, endPos;" +
-        "uniform vec4 startColor, endColor;" +
-        "varying vec3 vPosition;" +
-        "void main() {" +
-        "	vec4 tmp = modelMatrix * vec4(position,1.0);" +
-        "   vPosition = position;" +
-        "	gl_Position = 	projectionMatrix *" +
-        "			modelViewMatrix *" +
-        " 			vec4(position, 1.0);" +
-        "}";
-
+            "uniform int isAnimationOn;" +
+                "uniform float startOpacity, endOpacity, timeTracker;" +
+                "uniform vec3 startPos, endPos;" +
+                "uniform vec4 startColor, endColor;" +
+                "varying vec3 vPosition;" +
+                "void main() {" +
+                "	vec4 tmp = modelMatrix * vec4(position,1.0);" +
+                "   vPosition = position;" +
+                "	gl_Position = 	projectionMatrix *" +
+                "			modelViewMatrix *" +
+                " 			vec4(position, 1.0);" +
+                "}";
         this.fragmentShader =
-        "uniform int isAnimationOn;" +
-        "uniform float startOpacity, endOpacity, timeTracker;" +
-        "uniform vec3 startPos, endPos;" +
-        "uniform vec4 startColor, endColor;" +
-        "varying vec3 vPosition;" +
-        "void main() {" +
-        "   vec3 hilightPoint = startPos +( (endPos - startPos)  * timeTracker);" +
-        "	float distance2End = distance(vPosition, endPos);" +
-        "	float distance2Start = distance(vPosition, startPos);" +
-        " 	float sum = distance2End + distance2Start;" +
-        "   vec4 color;" +
-        "   if( isAnimationOn == 1 &&  distance(hilightPoint,vPosition) < distance(startPos, endPos) * 0.3){" +
-        "       color = vec4(1, 0, 0, 1);" +
-        "   }else{" +
-        "	    color = vec4( startColor.x * (distance2Start/sum) + endColor.x * (distance2End/sum)," +
-        " 				startColor.y * (distance2Start/sum) + endColor.y * (distance2End/sum)," +
-        "				startColor.z * (distance2Start/sum) + endColor.z * (distance2End/sum)," +
-        "				startOpacity * (distance2Start/sum) + endOpacity * (distance2End/sum)" +
-        "			);" +
-        "   }" +
-        "	gl_FragColor = color;" + //R G B A
-        "}";
-
+            "uniform int isAnimationOn;" +
+                "uniform float startOpacity, endOpacity, timeTracker;" +
+                "uniform vec3 startPos, endPos;" +
+                "uniform vec4 startColor, endColor;" +
+                "varying vec3 vPosition;" +
+                "void main() {" +
+                "   vec3 hilightPoint = startPos +( (endPos - startPos)  * timeTracker);" +
+                "	float distance2End = distance(vPosition, endPos);" +
+                "	float distance2Start = distance(vPosition, startPos);" +
+                " 	float sum = distance2End + distance2Start;" +
+                "   vec4 color;" +
+                "   if( isAnimationOn == 1 &&  distance(hilightPoint,vPosition) < distance(startPos, endPos) * 0.3){" +
+                "       color = vec4(1, 0, 0, 1);" +
+                "   }else{" +
+                "	    color = vec4( startColor.x * (distance2Start/sum) + endColor.x * (distance2End/sum)," +
+                " 				startColor.y * (distance2Start/sum) + endColor.y * (distance2End/sum)," +
+                "				startColor.z * (distance2Start/sum) + endColor.z * (distance2End/sum)," +
+                "				startOpacity * (distance2Start/sum) + endOpacity * (distance2End/sum)" +
+                "			);" +
+                "   }" +
+                "	gl_FragColor = color;" + //R G B A
+                "}";
         this.initializeCylinder();
-        (<any>this.shape).isEdge = true; // A flag to identify the edge
+        this.shape.isEdge = true; // A flag to identify the edge
         this.parentObject.add(this.shape);
-
         var w = (Math.ceil(weight * 10) - 6) * 0.5; // the edge scale is not proportional to edge weight
-        if (w < 0) w = 0;
+        if (w < 0)
+            w = 0;
         this.scaleWeight += w;
     }
-
-    getWeight() {
+    Edge.prototype.getWeight = function () {
         return this.weight;
-    }
-
-    toggleArrow(show: boolean) {
+    };
+    Edge.prototype.toggleArrow = function (show) {
         this.pointer.visible = show;
-    }
-
-
-    initializeCylinder() {        
+    };
+    Edge.prototype.initializeCylinder = function () {
         this.geometry = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius, this.unitLength, 12);
         this.cone = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius * 3, this.unitLength / 5, 12);
         // Material 
         // using local positions 
         this.uniforms.startPos.value = new THREE.Vector3(0, this.unitLength / 2, 0);
         this.uniforms.endPos.value = new THREE.Vector3(0, -this.unitLength / 2, 0);
-
         this.uniforms.startColor.value = new THREE.Vector4(1.0, 0, 0, 1.0);
         this.uniforms.endColor.value = new THREE.Vector4(0, 0, 1.0, 1.0);
-
-        var material = new THREE.ShaderMaterial(<any>{
+        var material = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: this.vertexShader,
             fragmentShader: this.fragmentShader,
@@ -847,25 +705,18 @@ class Edge {
         this.pointer.position.set(0, this.unitLength * 2 / 5, 0);
         this.pointer.visible = false;
         this.shape.add(this.pointer);
-
-    }
-
-    initializeLine() {
+    };
+    Edge.prototype.initializeLine = function () {
         this.geometry = new THREE.Geometry();
-        this.geometry.vertices.push(
-            new THREE.Vector3(0, this.unitLength / 2, 0),
-            new THREE.Vector3(0, -this.unitLength / 2, 0)
-            );
+        this.geometry.vertices.push(new THREE.Vector3(0, this.unitLength / 2, 0), new THREE.Vector3(0, -this.unitLength / 2, 0));
         this.cone = new THREE.CylinderGeometry(this.unitRadius, this.unitRadius * 3, this.unitLength / 5, 12);
         // Material 
         // using local positions 
         this.uniforms.startPos.value = new THREE.Vector3(0, this.unitLength / 2, 0);
         this.uniforms.endPos.value = new THREE.Vector3(0, -this.unitLength / 2, 0);
-
         this.uniforms.startColor.value = new THREE.Vector4(1.0, 0, 0, 1.0);
         this.uniforms.endColor.value = new THREE.Vector4(0, 0, 1.0, 1.0);
-
-        var material = new THREE.ShaderMaterial(<any>{
+        var material = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: this.vertexShader,
             fragmentShader: this.fragmentShader,
@@ -880,152 +731,126 @@ class Edge {
         this.pointer.position.set(0, this.unitLength * 2 / 5, 0);
         this.pointer.visible = false;
         this.shape.add(this.pointer);
-
-    }
-
-    setOpacity(startOpacity, endOpacity) {
+    };
+    Edge.prototype.setOpacity = function (startOpacity, endOpacity) {
         this.uniforms.startOpacity.value = startOpacity;
         this.uniforms.endOpacity.value = endOpacity;
-    }
-
-    updateColor() {
+    };
+    Edge.prototype.updateColor = function () {
         this.isColorChanged = false;
-
         // Overwriter current color setting if directionMode is gradient
         if (this.directionMode === "gradient") {
-            let edgeSettings = this.saveObj.edgeSettings;
-            if (!edgeSettings.directionStartColor) edgeSettings.directionStartColor = "#ff0000";
-            if (!edgeSettings.directionEndColor) edgeSettings.directionEndColor = "#0000ff";
+            var edgeSettings = this.saveObj.edgeSettings;
+            if (!edgeSettings.directionStartColor)
+                edgeSettings.directionStartColor = "#ff0000";
+            if (!edgeSettings.directionEndColor)
+                edgeSettings.directionEndColor = "#0000ff";
             var startRGB = CommonUtilities.hexToRgb(edgeSettings.directionStartColor, 1.0);
             var endRGB = CommonUtilities.hexToRgb(edgeSettings.directionEndColor, 1.0);
-            this.uniforms.startColor.value = new THREE.Vector4(
-                startRGB.r / 255,
-                startRGB.g / 255,
-                startRGB.b / 255, 1.0);
-            this.uniforms.endColor.value = new THREE.Vector4(
-                endRGB.r / 255,
-                endRGB.g / 255,
-                endRGB.b / 255, 1.0);
+            this.uniforms.startColor.value = new THREE.Vector4(startRGB.r / 255, startRGB.g / 255, startRGB.b / 255, 1.0);
+            this.uniforms.endColor.value = new THREE.Vector4(endRGB.r / 255, endRGB.g / 255, endRGB.b / 255, 1.0);
             return;
         }
-
         if (this.colorMode === "weight" || this.colorMode === "none") {
             var color = new THREE.Color(this.color);
             this.uniforms.startColor.value = new THREE.Vector4(color.r, color.g, color.b, 1.0);
             this.uniforms.endColor.value = new THREE.Vector4(color.r, color.g, color.b, 1.0);
-
         }
         else if (this.colorMode === "node") {
             var sourceColor = new THREE.Color("#" + this.sourceNode.material.color.getHexString());
             var targetColor = new THREE.Color("#" + this.targetNode.material.color.getHexString());
-
             this.uniforms.startColor.value = new THREE.Vector4(sourceColor.r, sourceColor.g, sourceColor.b, 1.0);
             this.uniforms.endColor.value = new THREE.Vector4(targetColor.r, targetColor.g, targetColor.b, 1.0);
         }
         else if (this.colorMode === "node-transitioning") {
-            let sourceColor;
-            let targetColor;
+            var sourceColor_1;
+            var targetColor_1;
             if (this.sourceNode.material.color.getHex() === this.targetNode.material.color.getHex()) {
-                sourceColor = new THREE.Color(this.sourceNode.material.color.getHex());
-                targetColor = new THREE.Color(this.targetNode.material.color.getHex());
+                sourceColor_1 = new THREE.Color(this.sourceNode.material.color.getHex());
+                targetColor_1 = new THREE.Color(this.targetNode.material.color.getHex());
             }
             else {
-                sourceColor = new THREE.Color(this.transitionColor);
-                targetColor = new THREE.Color(this.transitionColor);
+                sourceColor_1 = new THREE.Color(this.transitionColor);
+                targetColor_1 = new THREE.Color(this.transitionColor);
             }
-
-            this.uniforms.startColor.value = new THREE.Vector4(sourceColor.r, sourceColor.g, sourceColor.b, 1.0);
-            this.uniforms.endColor.value = new THREE.Vector4(targetColor.r, targetColor.g, targetColor.b, 1.0);
+            this.uniforms.startColor.value = new THREE.Vector4(sourceColor_1.r, sourceColor_1.g, sourceColor_1.b, 1.0);
+            this.uniforms.endColor.value = new THREE.Vector4(targetColor_1.r, targetColor_1.g, targetColor_1.b, 1.0);
         }
-    }
-
-    getColor() {
+    };
+    Edge.prototype.getColor = function () {
         return this.color;
-    }
-
-    setScale(scale: number) {
+    };
+    Edge.prototype.setScale = function (scale) {
         this.baseScale = scale;
-
         this.scaleNoWeight = this.baseScale;
-
         this.scaleWeight = this.baseScale * 0.5;
         var w = (Math.ceil(this.weight * 10) - 6) * 0.5; // the edge scale is not proportional to edge weight
-        if (w < 0) w = 0;
+        if (w < 0)
+            w = 0;
         this.scaleWeight += w;
-    }
-
-    multiplyScale(s: number) {
+    };
+    Edge.prototype.multiplyScale = function (s) {
         this.scaleWeight *= s;
         this.scaleNoWeight *= s;
-    }
-
-    setVisible(flag: boolean) {
+    };
+    Edge.prototype.setVisible = function (flag) {
         if (flag) {
             if (!this.visible) {
                 this.parentObject.add(this.shape);
                 this.visible = true;
             }
-        } else {
+        }
+        else {
             if (this.visible) {
                 this.parentObject.remove(this.shape);
                 this.visible = false;
             }
         }
-    }
-
-    update(weightEdges: boolean) {
+    };
+    Edge.prototype.update = function (weightEdges) {
         // update animation time
         this.timeTracker = new Date().getMilliseconds();
         this.uniforms.timeTracker.value = this.timeTracker / 1000;
-
         this.geometry.verticesNeedUpdate = true;
         var scale = 1;
-
         /* update width of the edge */
         if (weightEdges) {
             scale = this.scaleWeight;
-        } else {
+        }
+        else {
             scale = this.scaleNoWeight;
         }
-
         /* draw the cylinder? (check the code again) */
         var a = this.sourceNode.position, b = this.targetNode.position;
         var m = new THREE.Vector3();
-    
         m.addVectors(a, b).divideScalar(2);
         this.shape.position.set(m.x, m.y, m.z);
-        var origVec = new THREE.Vector3(0, 1, 0);         //vector of cylinder
+        var origVec = new THREE.Vector3(0, 1, 0); //vector of cylinder
         var targetVec = new THREE.Vector3();
         targetVec.subVectors(b, a);
-     
         var length = targetVec.length();
-
         //if (length === 0) {
         //    this.parentObject.remove(this.shape);
         //    return;
         //}
-
         this.shape.scale.set(scale, length / this.unitLength, scale);
         targetVec.normalize();
-     
         var angle = Math.acos(origVec.dot(targetVec));
-     
         var axis = new THREE.Vector3();
         axis.crossVectors(origVec, targetVec);
         axis.normalize();
-        
         this.shape.quaternion.setFromAxisAngle(axis, angle);
-
         /* update color of the edge */
         if (this.isColorChanged) {
             if (this.colorMode === "weight") {
                 this.color = this.colorMapFunction(this.weight);
-            } else {
+            }
+            else {
                 this.color = "#cfcfcf";
             }
-
             this.updateColor();
         }
-
-    }
-}
+    };
+    return Edge;
+}());
+//# sourceMappingURL=graph3d.js.map

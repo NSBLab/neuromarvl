@@ -165,3 +165,146 @@ blockquote:after {
   position: absolute;
 }
 
+<<<<<<< Updated upstream
+=======
+.linkCircular {
+    stroke: steelblue;
+    stroke-opacity: .4;
+    fill: none;
+}
+.rectLegend {
+    font: 11px, Arial, sans-serif;
+}
+.textLegend {
+    font: 25px, Arial, sans-serif;
+}
+
+.rect1Circular {
+    fill: #d3d3d3;
+}
+
+.rect2Circular {
+    fill: #d3d3d3;
+}
+
+.network-type-appended-element-0 {
+    position: relative;
+}
+
+.network-type-appended-element-1 {
+    position: relative;
+}
+
+.network-type-appended-element-2 {
+    position: relative;
+}
+
+.network-type-appended-element-3 {
+    position: relative;
+}
+
+.status-changed {
+    background-color: #f1c40f;
+}
+
+.status-updated {
+    background-color: #2ecc71;
+}
+
+#ex1Slider .slider-selection {
+	background: #BABABA;
+}
+
+.popup-modal{
+    position: absolute;
+    top:10px;
+    left:50%;
+    width: 200px;
+    z-index: 1000;
+}
+
+.modal-backdrop{
+    opacity: 0.2 !important;
+}
+
+#divAlerts {
+    position: absolute;
+    top: 20px;
+    right: 5%;
+    width: 250px;
+    z-index: 2000;
+}
+
+.alert {
+    margin-bottom: 2px !important;
+}
+
+
+
+
+
+/* Bootstrap overrides */
+.input-group {
+    overflow: hidden !important;
+}
+
+.input-group button span {
+    text-overflow: ellipsis !important;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.clip-to-bottom {
+    top: auto !important;
+    bottom: 0 !important;
+}
+
+input.select-network-type-input {
+    width: 0 !important;
+}
+
+.tooltip-inner {
+    white-space:pre-wrap;
+    text-align: left;
+}
+
+
+/* General fixes */
+
+text {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+
+/*
+    File save dialog
+*/
+.ui-widget-content {
+    background: #d9edf7;
+}
+
+.ui-widget-header {
+    background: #c8dce6;
+    color: #444;
+}
+#file-save-dialog input {
+    font-size: 120%;
+}
+
+.ui-dialog-buttonset button {
+    font-size: 120%;
+    font-weight:bold;
+    background-color : #eff5e5;
+    border: 3px solid #aaa;
+    border-radius: 5px;
+}
+
+.ui-visible-tooltip {
+    background-color:#fafafa;
+    border: 1px solid #999;
+    border-radius: 5px;
+    padding:5px;
+    margin-bottom:10px;
+}
+>>>>>>> Stashed changes

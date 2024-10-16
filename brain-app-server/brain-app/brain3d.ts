@@ -255,8 +255,9 @@ class Brain3DApp implements Application, Loopable {
         let valueArray = a.get(colorAttribute);
 
         // D3 can scale colours, but needs to use color strings
-        let minString = "#" + minColor.toString(16);
-        let maxString = "#" + maxColor.toString(16);
+        // remove any leading # characters and then append
+        let minString = "#" + minColor.toString(16).replace(/^#+/gm, '');
+        let maxString = "#" + maxColor.toString(16).replace(/^#+/gm, '');
         
         // Continuous has each value mapped with equal proportion
         let i = a.columnNames.indexOf(colorAttribute);
@@ -344,8 +345,13 @@ class Brain3DApp implements Application, Loopable {
         var varBrainSurfaceModeOnChange = () => {
             if (this.brainSurfaceMode === 0) {
                 this.brainSurfaceMode = 1;
+
+                //record display settting
+                $('#display_settings_split').val('true');
+                
                 this.setBrainMode(1);
                 if (this.dataSet) {
+                    
                     var newCoords = this.computeMedialViewCoords();
                     this.physioGraph.setNodePositions(newCoords);
                     this.physioGraph.update();
@@ -584,6 +590,22 @@ class Brain3DApp implements Application, Loopable {
         this.input.regMouseDragCallback((dx: number, dy: number, mode: number) => {
             if (this.isControllingGraphOnly) return;
 
+            var pixelHeight = (this.camera.top - this.camera.bottom) / SZ.height;
+            var pixelWidth = (this.camera.right - this.camera.left) / SZ.width;
+
+            var pointer = this.input.localPointerPosition();
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(pointer, this.camera);
+
+            var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
+            if (!inBoundingSphere) {
+                if (this.networkType == '3d') {
+                    this.colaObject.position.set(this.colaObject.position.x + dx * pixelWidth, this.colaObject.position.y - dy * pixelHeight, this.colaObject.position.z);
+                    return;
+                }
+                return;
+             }
+            
             // right button: rotation
             if (mode == 3) {
                 if (this.autoRotation == false) {
@@ -805,7 +827,7 @@ class Brain3DApp implements Application, Loopable {
         this.brainObject.remove(this.brainSurface);
         var clonedObject = new THREE.Object3D();
         var boundingSphereObject = new THREE.Object3D();
-
+        
         let surfaceMaterial = new THREE.MeshLambertMaterial({
             color: 0xcccccc,
             transparent: true,
@@ -971,6 +993,9 @@ class Brain3DApp implements Application, Loopable {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
         } else {
             this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(Number(this.edgeCountSliderValue));
+            // tried to see what it would look like if we included interhemispheric edges in the split mode
+            // it wasnt nice
+            //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
         }
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
         this.physioGraph.setEdgeVisibilities(this.filteredAdjMatrix);
@@ -1231,6 +1256,7 @@ class Brain3DApp implements Application, Loopable {
         if (this.brainSurfaceMode === 0) {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
         } else {
+            //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
             this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(numEdges);
         }
         if (this.physioGraph) {
@@ -1904,6 +1930,7 @@ class Brain3DApp implements Application, Loopable {
         if (this.brainSurfaceMode === 0) {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
         } else {
+            //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
             this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(Number(this.edgeCountSliderValue));
         }
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
@@ -1941,7 +1968,7 @@ class Brain3DApp implements Application, Loopable {
             var coord = new THREE.Vector3(this.dataSet.brainCoords[0][i],
                 this.dataSet.brainCoords[1][i],
                 this.dataSet.brainCoords[2][i]);
-
+            
             if (coord.x < 0) { // right
                 coord.applyAxisAngle(zAxis, Math.PI / 2);
                 coord.x = coord.x - offsetToHead;
@@ -1951,7 +1978,6 @@ class Brain3DApp implements Application, Loopable {
                 coord.x = coord.x + offsetToHead;
                 coord.z = coord.z + Math.abs(box.min.z);
             }
-
             newCoords[0].push(coord.x);
             newCoords[1].push(coord.y);
             newCoords[2].push(coord.z);

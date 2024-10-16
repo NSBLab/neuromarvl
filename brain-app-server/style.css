@@ -231,6 +231,12 @@ h3 {
     stroke-opacity: .4;
     fill: none;
 }
+.rectLegend {
+    font: 11px, Arial, sans-serif;
+}
+.textLegend {
+    font: 25px, Arial, sans-serif;
+}
 
 .rect1Circular {
     fill: #d3d3d3;

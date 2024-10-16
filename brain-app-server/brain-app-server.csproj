@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
+  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -60,6 +61,120 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="brain-app\brain3d.js" />
+    <Content Include="brain-app\brainapp.js" />
+    <Content Include="brain-app\circularGraph.js" />
+    <Content Include="brain-app\CommonUtilities.js" />
+    <Content Include="brain-app\brain3d.js.map" />
+    <Content Include="brain-app\brainapp.js.map" />
+    <Content Include="brain-app\circularGraph.js.map" />
+    <Content Include="brain-app\CommonUtilities.js.map" />
+    <Content Include="brain-app\data\attributes1.txt" />
+    <Content Include="brain-app\data\attributes2.txt" />
+    <Content Include="brain-app\data\coords.txt" />
+    <Content Include="brain-app\data\dataset2\close_attributes.txt" />
+    <Content Include="brain-app\data\dataset2\close_matrix.txt" />
+    <Content Include="brain-app\data\dataset2\core_coords.txt" />
+    <Content Include="brain-app\data\dataset2\subj_id.txt" />
+    <Content Include="brain-app\data\data\1-adj.txt" />
+    <Content Include="brain-app\data\data\1-att.txt" />
+    <Content Include="brain-app\data\data\1-coords.txt" />
+    <Content Include="brain-app\data\data\1-nodeLabels.txt" />
+    <Content Include="brain-app\data\directed\worm_attributes.txt" />
+    <Content Include="brain-app\data\directed\worm_coords.txt" />
+    <Content Include="brain-app\data\directed\worm_matrix.txt" />
+    <Content Include="brain-app\data\labels.txt" />
+    <Content Include="brain-app\data\mat1.txt" />
+    <Content Include="brain-app\data\mat2.txt" />
+    <Content Include="brain-app\data\multi-module\adj.txt" />
+    <Content Include="brain-app\data\multi-module\attr.txt" />
+    <Content Include="brain-app\data\multi-module\coords.txt" />
+    <Content Include="brain-app\data\multi-module\mod.txt" />
+    <Content Include="brain-app\data\README.txt" />
+    <Content Include="brain-app\graph2d.js.map" />
+    <Content Include="brain-app\graph3d.js.map" />
+    <Content Include="brain-app\input.js.map" />
+    <Content Include="brain-app\save_examples\40496078-effa-4ac3-9d3e-cb7f946e7dd1_137.147.133.145.txt" />
+    <Content Include="brain-app\save_examples\5168206f-e59b-4301-9de1-7c25b4e570cd_211.27.92.117.txt" />
+    <Content Include="brain-app\save_examples\664e89bc-ae33-4503-803b-f9bbd54e40b0_58.178.234.18.txt" />
+    <Content Include="brain-app\save_examples\8a9703ac-d047-4021-853e-5239a1051ded_137.147.133.145_attributes.txt" />
+    <Content Include="brain-app\save_examples\bcc69707-4e70-418c-86ed-3f5bc4bbcb77_137.147.133.145_matrix.txt" />
+    <Content Include="brain-app\save_examples\cef210d4-31a2-496b-9c2f-d64d1c9d9cc3_137.147.133.145_coordinates.txt" />
+    <Content Include="brain-app\save_examples\d598e6ef-f38b-4895-a22b-aa1fddc0cde3_58.178.234.18.txt" />
+    <Content Include="brain-app\save_examples\dfcba247-07ae-404e-b82b-c0811b5d4dd4_58.178.234.18.txt" />
+    <Content Include="brain-app\save_examples\e4e59658-c7c6-4092-b19c-14fbde2dd14b_58.178.236.210.txt" />
+    <Content Include="brain-app\state.js.map" />
+    <Content Include="examples\graphdata\reverse-winding.py" />
+    <Content Include="extern\bootstrap-3.3.7-dist\css\bootstrap-theme.css.map" />
+    <Content Include="extern\bootstrap-3.3.7-dist\css\bootstrap-theme.min.css.map" />
+    <Content Include="extern\bootstrap-3.3.7-dist\css\bootstrap.css.map" />
+    <Content Include="extern\bootstrap-3.3.7-dist\css\bootstrap.min.css.map" />
+    <Content Include="extern\bootstrap-3.3.7-dist\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="extern\bootstrap-3.3.7-dist\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="extern\bootstrap-3.3.7-dist\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="extern\bootstrap-3.3.7-dist\fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="extern\bootstrap-colorpicker\css\bootstrap-colorpicker.css.map" />
+    <Content Include="extern\bootstrap-colorpicker\css\bootstrap-colorpicker.min.css.map" />
+    <Content Include="extern\geom.js.map" />
+    <Content Include="extern\hljs\LICENSE" />
+    <Content Include="extern\hljs\README.md" />
+    <Content Include="extern\hljs\README.ru.md" />
+    <Content Include="extern\three-99.js" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\package.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\README.md" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.accordion.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.autocomplete.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.button.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.core.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.datepicker.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.dialog.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.draggable.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.droppable.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-blind.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-bounce.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-clip.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-drop.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-explode.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-fade.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-fold.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-highlight.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-pulsate.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-scale.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-shake.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-slide.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect-transfer.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.effect.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.menu.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.mouse.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.position.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.progressbar.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.resizable.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.selectable.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.slider.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.sortable.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.spinner.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.tabs.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.tooltip.jquery.json" />
+    <Content Include="extern\jquery-ui-1.10.4.custom\development-bundle\ui.widget.jquery.json" />
+    <Content Include="extern\layout3d.js.map" />
+    <Content Include="extern\linklengths.js.map" />
+    <Content Include="extern\powergraph.js.map" />
+    <Content Include="extern\rectangle.js.map" />
+    <Content Include="extern\slider\less\slider.less" />
+    <Content Include="extern\splashPage\images\CircularGraph.ai" />
+    <Content Include="extern\splashPage\SplashPagePlan" />
+    <Content Include="extern\ts\descent.js.map" />
+    <Content Include="extern\ts\pqueue.js.map" />
+    <Content Include="extern\ts\shortestpaths.js.map" />
+    <Content Include="extern\vpsc.js.map" />
+    <Content Include="examples\graphdata\BrainLSDecimated0.01.obj" />
+    <Content Include="examples\graphdata\BrainMesh_ch2.obj" />
+    <Content Include="examples\graphdata\BrainMesh_Ch2withCerebellum.obj" />
+    <Content Include="examples\graphdata\BrainMesh_Ch2_Inflated.obj" />
+    <Content Include="examples\graphdata\BrainMesh_ICBM152.obj" />
+    <Content Include="examples\graphdata\T1.hdr" />
+    <Content Include="brain-app\data\example.zip" />
+    <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\brainapp.pubxml" />
     <Content Include="README.md" />
     <None Include="Web.Debug.config">
@@ -114,6 +229,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="extern\" />
+    <Folder Include="brain-app\save\" />
+    <Folder Include="extern\bootstrap-colorpicker\js\old\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -157,6 +277,14 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets'))" />
+  </Target>
+  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.3.3\build\Microsoft.TypeScript.MSBuild.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

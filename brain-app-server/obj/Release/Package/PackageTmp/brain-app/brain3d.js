@@ -65,7 +65,7 @@ var Brain3DApp = (function () {
             dy: 0
         };
         // Constants
-        this.nearClip = 1;
+        this.nearClip = 0;
         this.farClip = 2000;
         this.modeLerpLength = 0.6;
         this.rotationSpeed = 1.2;
@@ -76,8 +76,346 @@ var Brain3DApp = (function () {
         //instances[this.id] = this;
         this.commonData = commonData;
         this.input = inputTargetCreator(0, 0, 0, sliderSpace);
+<<<<<<< Updated upstream
         this.jDiv = jDiv;
 
+=======
+        this.edgeCountSliderValue = initialEdgesShown;
+        // Setting up viewport
+        this.setupInput();
+        this.setupUserInteraction(this.jDiv);
+        // Set up camera
+        this.camera = new THREE.OrthographicCamera(-this.jDiv.width() / 4, // left
+        this.jDiv.width() / 4, // right
+        this.jDiv.height() / 4, // top
+        -this.jDiv.height() / 4, // bottom
+        this.nearClip, this.farClip);
+        this.resize(this.jDiv.width(), this.jDiv.height(), 'resizestart');
+        this.brain3DModelDefaultXPosition = this.camera.left + (this.camera.right - this.camera.left) / 4;
+        // Set up scene
+        var ambient = new THREE.AmbientLight(0x1f1f1f);
+        var directionalLight = new THREE.DirectionalLight(0xffeedd);
+        directionalLight.position.set(0, 0, 1);
+        this.scene = new THREE.Scene();
+        this.scene.add(directionalLight);
+        this.scene.add(ambient);
+        // Set up the base objects for the graphs
+        this.brainObject = new THREE.Object3D();
+        this.brainContainer = new THREE.Object3D();
+        this.brainContainer.add(this.brainObject);
+        this.brainContainer.position.set(this.brain3DModelDefaultXPosition, 0, 0);
+        // CA causes the brain to look at the camera
+        //this.brainContainer.lookAt(this.camera.position);
+        this.scene.add(this.brainContainer);
+        this.colaObject = new THREE.Object3D();
+        this.colaObject.position.set(-this.brain3DModelDefaultXPosition, 0, 0);
+        this.scene.add(this.colaObject);
+        // Register the data callbacks
+        var coords = function () {
+            _this.restart();
+        };
+        var lab = function () {
+            _this.restart();
+        };
+        //if (this.commonData.noBranSurface == true) this.surfaceLoaded = true;
+        // Load default brain surface mode when the new model is loaded
+        this.setBrainMode(this.brainSurfaceMode);
+        commonData.regNotifyCoords(coords);
+        commonData.regNotifyLabels(lab);
+        // Set up loop
+        if (!this.loop)
+            this.loop = new Loop(this, 0.03);
+        // Initialise Graph Objects
+        this.circularGraph = new CircularGraph(this.id, this.jDiv, this.dataSet, this.svg, this.svgDefs, this.svgAllElements, this.d3Zoom, this.commonData, this.saveFileObj);
+        //initialize display
+        this.initialiseDisplay();
+        this.resize(this.jDiv.width(), this.jDiv.height(), 'resizestart');
+    }
+    Brain3DApp.prototype.initialiseDisplay = function () {
+        var displaySettings_mode = $('#display_settings_mode').val();
+        var displaySettings_labels = $('#display_settings_labels').val();
+        var displaySettings_split = $('#display_settings_split').val();
+        var displaySettings_rotation = $('#display_settings_rotation').val();
+        if (displaySettings_mode != 'top') {
+            this.defaultOrientationsOnClick(displaySettings_mode);
+        }
+        if (displaySettings_labels != 'false') {
+            this.allLabelsOnChange();
+        }
+        if (displaySettings_split != 'false') {
+        }
+        if (displaySettings_rotation != 'false') {
+            this.autoRotationOnChange('anticlockwise');
+        }
+    };
+    Brain3DApp.prototype.setEdgeDirection = function (directionMode) {
+        this.directionMode = directionMode;
+        if (this.physioGraph)
+            this.physioGraph.setEdgeDirection(directionMode);
+        if (this.colaGraph)
+            this.colaGraph.setEdgeDirection(directionMode);
+        if (this.circularGraph)
+            this.circularGraph.circularLayoutEdgeDirectionModeOnChange(directionMode);
+        if (this.canvasGraph)
+            this.canvasGraph.setDirectionMode(directionMode);
+        this.isAnimationOn = (directionMode === "animation");
+        this.svgNeedsUpdate = true;
+        if (this.dataSet.info.isSymmetricalMatrix && directionMode !== "none") {
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "The given similarity matrix is symmetrical," +
+                "so the animation of edges do not reflect their actual direction.");
+        }
+    };
+    Brain3DApp.prototype.getNodeColors = function (colorAttribute, minColor, maxColor) {
+        /* Get the color array, a mapping of the configured color attribute to color values, e.g.
+            [
+                // Continuous values are evenly split
+                [
+                    {color: 0xfa36dd, portion: 0.33},
+                    {color: 0x006f34, portion: 0.33},
+                    {color: 0x228d00, portion: 0.33}
+                ]
+            ]
+        */
+        var a = this.dataSet.attributes;
+        if (!a.info[colorAttribute]) {
+            return this.getNodeColorsEmpty();
+        }
+        var valueArray = a.get(colorAttribute);
+        // D3 can scale colours, but needs to use color strings
+        // remove any leading # characters and then append
+        var minString = "#" + minColor.toString(16).replace(/^#+/gm, '');
+        var maxString = "#" + maxColor.toString(16).replace(/^#+/gm, '');
+        // Continuous has each value mapped with equal proportion
+        var i = a.columnNames.indexOf(colorAttribute);
+        var singlePortion = (1 / a.info[colorAttribute].numElements) || 0;
+        var colorMap = d3.scale
+            .linear()
+            .domain([a.getMin(i), a.getMax(i)])
+            .range([minString, maxString]);
+        return valueArray.map(function (aArray) { return aArray.map(function (value) { return ({
+            color: parseInt(colorMap(value).substring(1), 16),
+            portion: singlePortion
+        }); }); });
+    };
+    Brain3DApp.prototype.getNodeColorsDiscrete = function (colorAttribute, discreteValues, discreteColors) {
+        /* Get the color array, a mapping of the configured color attribute to color values, e.g.
+            [
+                // Discrete values are weighted by proportion
+                [
+                    {color: 0xff0000, portion: 1.0},
+                    {color: 0x00ff00, portion: 0.0},
+                    {color: 0x0000ff, portion: 0.0}
+                ]
+            ]
+        */
+        var a = this.dataSet.attributes;
+        if (!a.info[colorAttribute]) {
+            return this.getNodeColorsEmpty();
+        }
+        var valueArray = a.get(colorAttribute);
+        if (a.info[colorAttribute].numElements > 1) {
+            // Discrete multi-value has each color from the mapping with its proportion of total value in that node
+            return valueArray.map(function (aArray) {
+                var singlePortion = (1 / aArray.reduce(function (weight, acc) { return acc + weight; }, 0)) || 0;
+                return aArray.map(function (value, i) { return ({
+                    color: discreteColors[i],
+                    portion: value * singlePortion
+                }); });
+            });
+        }
+        else {
+            // Discrete single value is just an ordinal mapping
+            var colorMap_1 = d3.scale
+                .ordinal()
+                .domain(discreteValues)
+                .range(discreteColors);
+            return valueArray.map(function (aArray) { return aArray.map(function (value) { return ({
+                color: colorMap_1(value),
+                portion: 1.0
+            }); }); });
+        }
+    };
+    Brain3DApp.prototype.getNodeColorsEmpty = function () {
+        /* Get a minimal practical color array
+            [
+                // Empty values are a minimal set of grey
+                [
+                    {color: 0xd3d3d3, portion: 1.0}
+                ]
+            ]
+        */
+        var defaultColor = { color: 0xd3d3d3, portion: 1.0 };
+        return Array.apply(null, Array(this.dataSet.attributes.numRecords)).map(function (d) { return [defaultColor]; });
+    };
+    Brain3DApp.prototype.setupUserInteraction = function (jDiv) {
+        var _this = this;
+        var varEdgesBundlingOnChange = function () { _this.edgesBundlingOnChange(); };
+        var varAllLabelsOnChange = function () { _this.allLabelsOnChange(); };
+        var varAutoRotationOnChange = function (s) { _this.autoRotationOnChange(s); };
+        var varGraphViewSliderOnChange = function (v) { _this.graphViewSliderOnChange(v); };
+        var varEdgeCountSliderOnChange = function (v) { _this.edgeCountSliderOnChange(v); };
+        var varCloseBrainAppOnClick = function () { _this.closeBrainAppOnClick(); };
+        var varDefaultOrientationsOnClick = function (s) { _this.defaultOrientationsOnClick(s); };
+        var varNetworkTypeOnChange = function (s) { _this.networkTypeOnChange(s); };
+        var varBrainSurfaceModeOnChange = function () {
+            if (_this.brainSurfaceMode === 0) {
+                _this.brainSurfaceMode = 1;
+                //record display settting
+                $('#display_settings_split').val('true');
+                _this.setBrainMode(1);
+                if (_this.dataSet) {
+                    var newCoords = _this.computeMedialViewCoords();
+                    _this.physioGraph.setNodePositions(newCoords);
+                    _this.physioGraph.update();
+                }
+            }
+            else {
+                _this.brainSurfaceMode = 0;
+                //record display setting
+                $('#display_settings_split').val('false');
+                _this.setBrainMode(0);
+                if (_this.dataSet) {
+                    _this.physioGraph.setNodePositions(_this.dataSet.brainCoords);
+                    _this.physioGraph.update();
+                }
+            }
+        };
+        var varShowProcessingNotification = function () { _this.showProcessingNotification(); };
+        // Set the background color
+        jDiv.css({ backgroundColor: '#ffffff' });
+        // Set up renderer, and add the canvas and the slider to the div
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            preserveDrawingBuffer: true,
+            alpha: true
+        });
+        this.renderer.sortObjects = true;
+        this.renderer.setSize(jDiv.width(), (jDiv.height() - sliderSpace));
+        jDiv
+            //.append($('<span id="close-brain-app-' + this.id + '" title="Close" class="view-panel-span"  data-toggle="tooltip" data-placement="bottom">x</span>')
+            //.css({ 'right': '6px', 'top': '10px', 'font-size': '12px', 'z-index': 1000 })
+            //.click(function () { varCloseBrainAppOnClick(); }))
+            .append($('<span id="top-view-' + this.id + '" title="Top view" class="view-panel-span" data-toggle="tooltip" data-placement="left">T</span>')
+            .css({ 'right': '6px', 'top': '30px', 'z-index': 1000 })
+            .click(function () { varDefaultOrientationsOnClick("top"); }))
+            .append($('<span id="bottom-view-' + this.id + '" title="Bottom view" class="view-panel-span" data-toggle="tooltip" data-placement="left">B</span>')
+            .css({ 'right': '6px', 'top': '50px', 'z-index': 1000 })
+            .click(function () { varDefaultOrientationsOnClick("bottom"); }))
+            .append($('<span id="left-view-' + this.id + '" title="Left view" class="view-panel-span" data-toggle="tooltip" data-placement="left">L</span>')
+            .css({ 'right': '6px', 'top': '70px', 'z-index': 1000 })
+            .click(function () { varDefaultOrientationsOnClick("left"); }))
+            .append($('<span id="right-view-' + this.id + '" title="Right view" class="view-panel-span" data-toggle="tooltip" data-placement="left">R</span>')
+            .css({ 'right': '6px', 'top': '90px', 'z-index': 1000 })
+            .click(function () { varDefaultOrientationsOnClick("right"); }))
+            .append($('<span id="front-view-' + this.id + '" title="Front view" class="view-panel-span" data-toggle="tooltip" data-placement="left">F</span>')
+            .css({ 'right': '6px', 'top': '110px', 'z-index': 1000 })
+            .click(function () { varDefaultOrientationsOnClick("front"); }))
+            .append($('<span id="back-view-' + this.id + '" title="Back view" class="view-panel-span" data-toggle="tooltip" data-placement="left">B</span>')
+            .css({ 'right': '6px', 'top': '130px', 'z-index': 1000 })
+            .click(function () { varDefaultOrientationsOnClick("back"); }))
+            .append($('<span id="all-labels-' + this.id + '" title="Show/hide all node labels" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8704</span>')
+            .css({ 'right': '6px', 'top': '150px', 'z-index': 1000 })
+            .click(function () { varAllLabelsOnChange(); }))
+            .append($('<span id="top-view-' + this.id + '" title="Split brain" class="view-panel-span" data-toggle="tooltip" data-placement="left">M</span>')
+            .css({ 'right': '6px', 'top': '170px', 'z-index': 1000 })
+            .click(function () { varBrainSurfaceModeOnChange(); }))
+            .append($('<span id="anti-auto-rotation-' + this.id + '" title="Anticlockwise auto-rotation" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8634</span>')
+            .css({ 'right': '6px', 'top': '190px', 'z-index': 1000 })
+            .click(function () { varAutoRotationOnChange("anticlockwise"); }))
+            // Circular Graph
+            .append($('<div id="div-graph-' + this.id + '"></div>')
+            .css({ 'position': 'absolute', 'width': '100%', 'height': '100%', 'top': 0, 'left': 0, 'z-index': 10, 'overflow': 'hidden' })
+            .append(this.renderer.domElement))
+            .append($("<div id='div-graph-controls'></div>").css({ position: "absolute", bottom: 0 })
+            // Controls for the bottom of the graph area
+            .append('<p>Showing <label id="count-' + this.id + '">0</label> edges (<label id=percentile-' + this.id + '>0</label>th percentile)</p>')
+            .append($("<input id=\"edge-count-slider-".concat(this.id, "\" type=\"text\" />")))
+            // Select Network Type button group
+            .append($("<div id=\"select-network-type-".concat(this.id, "\" class=\"btn-group\" data-toggle=\"buttons\">\n                    <label id=\"select-network-type-").concat(this.id, "-3D\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"3D topological projection based on the cola method, as provided by WebCola\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"3d\" autocomplete=\"off\">3D\n                    </label>\n                    <label id=\"select-network-type-").concat(this.id, "-2D\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"2D topological projection generated according to one of several different algorithms. See Options for details.\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"2d\" autocomplete=\"off\">2D\n                    </label>\n                    <label id=\"select-network-type-").concat(this.id, "-circular\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Circular layout with additional attribute visualisation. See Options for details.\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"circular\" autocomplete=\"off\">Circular\n                    </label>\n                    <label id=\"select-network-type-").concat(this.id, "-none\" class=\"btn btn-primary btn-sm\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Remove the secondary view\">\n                        <input class=\"select-network-type-input\" type=\"radio\" name=\"select-network-type-").concat(this.id, "\" value=\"none\" autocomplete=\"off\">None\n                    </label>\n                </div>")).css({ 'margin-left': '5px', 'position': 'relative', 'z-index': 1000 })));
+        $("#edge-count-slider-" + this.id)['bootstrapSlider']({
+            min: 1,
+            max: maxEdgesShowable,
+            step: 1,
+            value: initialEdgesShown,
+            id: "edge-count-slider-" + this.id + "-slider"
+        });
+        $("#edge-count-slider-" + this.id).on("slide", function (event) { return varEdgeCountSliderOnChange(event["value"]); });
+        $("#edge-count-slider-" + this.id).on("slideStop", function (event) { return _this.showNetwork(false); });
+        $("#edge-count-slider-" + this.id + "-slider").css({
+            'width': '300px',
+            'margin-right': 10,
+            'margin-left': 10,
+            'z-index': 1000
+        });
+        var $checkboxTips = $("#checkbox-tips");
+        var onToggleTips = function () {
+            if ($checkboxTips.is(":checked")) {
+                $("[data-toggle='tooltip']").tooltip({ container: 'body', trigger: 'hover' });
+            }
+            else {
+                $("[data-toggle='tooltip']").tooltip("destroy");
+            }
+        };
+        $checkboxTips.change(onToggleTips);
+        onToggleTips();
+        $("input[name=select-network-type-".concat(this.id, "]:radio")).change(function (event) { return varNetworkTypeOnChange(event.target["value"]); });
+        // Graph canvas setup
+        this.graph2dContainer = d3.select('#div-graph-' + this.id)
+            .append("div")
+            .style({
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0
+        })
+            .classed("graph2dContainer", true)
+            .node();
+        // SVG Initializing
+        var varSVGZoom = function () { _this.svgZoom(); };
+        this.svg = d3.select('#div-graph-' + this.id).append("svg")
+            .attr("width", jDiv.width())
+            .attr("height", jDiv.height() - sliderSpace)
+            .call(this.d3Zoom.on("zoom", varSVGZoom));
+        try {
+            this.svg[0][0].setAttribute("id", "svgGraph" + this.id);
+            this.svg[0][0].setAttribute("style", "position: absolute; top: 0; left: 0");
+            this.svgAllElements = this.svg.append("g"); // svg Group of shapes
+            // add arrow marker
+            this.svgAllElements.append("defs").append("marker")
+                .attr("id", "arrowhead-circular")
+                .attr("refX", 0)
+                .attr("refY", 2)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 4)
+                .attr("orient", "auto")
+                .attr("viewbox", "0 0 20 20")
+                .append("path")
+                .attr("d", "M 0,0 V 4 L6,2 Z"); //this is actual shape for arrowhead
+            this.svgAllElements.append("defs").append("marker")
+                .attr("id", "arrowhead-2d")
+                .attr("refX", 8)
+                .attr("refY", 2)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 4)
+                .attr("orient", "auto")
+                .attr("viewbox", "0 0 20 20")
+                .append("path")
+                .attr("d", "M 0,0 V 4 L6,2 Z"); //this is actual shape for arrowhead
+            var varSvg = this.svg[0];
+            var varNamespaceURI = varSvg[0].namespaceURI;
+            this.svgDefs = document.createElementNS(varNamespaceURI, 'defs');
+            this.createMarker();
+            varSvg[0].appendChild(this.svgDefs);
+            this.jDivProcessingNotification = document.createElement('div');
+            this.jDivProcessingNotification.id = 'div-processing-notification';
+        }
+        catch (err) {
+            console.log(err);
+        }
+    };
+    Brain3DApp.prototype.setupInput = function () {
+        var _this = this;
+>>>>>>> Stashed changes
         // Register callbacks
         this.input.regKeyTickCallback('a', function (deltaTime) {
             //this.brainObject.rotation.set(this.brainObject.rotation.x, this.brainObject.rotation.y - this.rotationSpeed * deltaTime, this.brainObject.rotation.z);
@@ -131,11 +469,33 @@ var Brain3DApp = (function () {
         });
 
         this.input.regMouseDragCallback(function (dx, dy, mode) {
+<<<<<<< Updated upstream
             if (_this.svgControlMode)
                 return;
 
             // left button: rotation
             if (mode == 1) {
+=======
+            var SZ = {
+                height: _this.jDiv.height(),
+                width: _this.jDiv.width()
+            };
+            var pixelHeight = (_this.camera.top - _this.camera.bottom) / SZ.height;
+            var pixelWidth = (_this.camera.right - _this.camera.left) / SZ.width;
+            var pointer = _this.input.localPointerPosition();
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(pointer, _this.camera);
+            var inBoundingSphere = !!(raycaster.intersectObject(_this.brainSurfaceBoundingSphere, true).length);
+            if (!inBoundingSphere) {
+                if (_this.networkType == '3d') {
+                    _this.colaObject.position.set(_this.colaObject.position.x + dx * pixelWidth, _this.colaObject.position.y - dy * pixelHeight, _this.colaObject.position.z);
+                    return;
+                }
+                return;
+            }
+            // right button: rotation
+            if (mode == 2) {
+>>>>>>> Stashed changes
                 if (_this.autoRotation == false) {
                     var pixelAngleRatio = 50;
 
@@ -154,6 +514,7 @@ var Brain3DApp = (function () {
                     quatY.setFromAxisAngle(axisY, dy / pixelAngleRatio); // axis must be normalized, angle in radians
                     _this.brainObject.quaternion.multiplyQuaternions(quatY, _this.brainObject.quaternion);
                     _this.colaObject.quaternion.multiplyQuaternions(quatY, _this.colaObject.quaternion);
+<<<<<<< Updated upstream
                 } else {
                     _this.mouse.dx = dx;
                     _this.mouse.dy = dy;
@@ -168,6 +529,92 @@ var Brain3DApp = (function () {
 
                 _this.brainObject.position.set(_this.brainObject.position.x + dx / pixelDistanceRatio, _this.brainObject.position.y - dy / pixelDistanceRatio, _this.brainObject.position.z);
                 _this.colaObject.position.set(_this.colaObject.position.x + dx / pixelDistanceRatio, _this.colaObject.position.y - dy / pixelDistanceRatio, _this.colaObject.position.z);
+=======
+                    _this.saveBrainRotation();
+                }
+                else {
+                    _this.mouse.dx = dx;
+                    _this.mouse.dy = dy;
+                }
+            }
+            // left button: pan
+            else if (mode == 0) {
+                var pixelDistanceRatio = 1.6; // with: defaultCameraFov = 25; defaultViewWidth = 800;
+                var defaultCameraFov = 25;
+                var defaultViewWidth = 800;
+                // move brain model
+                //perspective camera
+                //pixelDistanceRatio /= (this.camera.fov / defaultCameraFov);
+                //pixelDistanceRatio *= (this.currentViewWidth / defaultViewWidth);
+                //this.brainContainer.position.set(this.brainContainer.position.x + dx / pixelDistanceRatio, this.brainContainer.position.y - dy / pixelDistanceRatio, this.brainContainer.position.z);
+                //this.colaObject.position.set(this.colaObject.position.x + dx / pixelDistanceRatio, this.colaObject.position.y - dy / pixelDistanceRatio, this.colaObject.position.z);
+                //var prevQuaternion = this.brainContainer.quaternion.clone();
+                //this.brainContainer.lookAt(this.camera.position);
+                //orthographic camera
+                // the height and width of each pixel in world space
+                var pixelHeight_1 = (_this.camera.top - _this.camera.bottom) / SZ.height;
+                var pixelWidth = (_this.camera.right - _this.camera.left) / SZ.width;
+                //console.log({
+                //    cameraWidth: cameraWidth,
+                //    cameraHeight: cameraHeight
+                //});
+                // why is this causing the brain to rotate?
+                _this.brainContainer.position.set(_this.brainContainer.position.x + dx * pixelWidth, _this.brainContainer.position.y - dy * pixelHeight_1, _this.brainContainer.position.z);
+            }
+        });
+        this.input.regMouseLeftClickCallback(function (x, y) {
+            console.log("regMouseLeftClickCallback");
+            var oldSelectedNodeID = _this.commonData.selectedNode;
+            _this.commonData.selectedNode = -1;
+            // Check if pointer is over 3D Model
+            var node = _this.getNodeUnderPointer(_this.input.localPointerPosition());
+            _this.getBoundingSphereUnderPointer(_this.input.localPointerPosition());
+            // Check if pointer is over 2D Model in all view
+            var nodeIDUnderPointer = -1;
+            for (var i = 0; i < _this.commonData.nodeIDUnderPointer.length; i++) {
+                if (_this.commonData.nodeIDUnderPointer[i] != -1) {
+                    nodeIDUnderPointer = _this.commonData.nodeIDUnderPointer[i];
+                    break;
+                }
+            }
+            if (oldSelectedNodeID != -1) {
+                // Deselect the previous selected node
+                _this.physioGraph.deselectNode(oldSelectedNodeID);
+                _this.colaGraph.deselectNode(oldSelectedNodeID);
+                var varNodeID = oldSelectedNodeID;
+                if (_this.networkType == "circular") {
+                    var varMouseOutedCircularLayout = function (d) { _this.circularGraph.mouseOutedCircularLayout(d); };
+                    _this.svgAllElements.selectAll(".nodeCircular")
+                        .each(function (d) {
+                        if (varNodeID == d.id)
+                            varMouseOutedCircularLayout(d);
+                    });
+                }
+                else if (_this.networkType == "2d") {
+                    _this.svgNeedsUpdate = true;
+                }
+            }
+            // If the pointer is pointing to any node in 2D or 3D graph
+            if (node || (nodeIDUnderPointer != -1)) {
+                _this.commonData.selectedNode = node ? node.userData.id : nodeIDUnderPointer;
+                // Select the new node
+                _this.physioGraph.selectNode(_this.commonData.selectedNode, false);
+                _this.colaGraph.selectNode(_this.commonData.selectedNode, _this.ignore3dControl);
+                var varNodeID = _this.commonData.selectedNode;
+                if (_this.networkType == "circular") {
+                    var varMouseOveredCircularLayout = function (d) { _this.circularGraph.mouseOveredCircularLayout(d); };
+                    _this.svgAllElements.selectAll(".nodeCircular")
+                        .each(function (d) {
+                        if (varNodeID == d.id)
+                            varMouseOveredCircularLayout(d);
+                    });
+                }
+                else if (_this.networkType == "2d") {
+                    _this.svgNeedsUpdate = true;
+                }
+                _this.physioGraph.update();
+                _this.colaGraph.update();
+>>>>>>> Stashed changes
             }
         });
 
@@ -188,6 +635,7 @@ var Brain3DApp = (function () {
         this.input.regMouseDoubleClickCallback(function () {
             if (_this.svgControlMode)
                 return;
+<<<<<<< Updated upstream
 
             _this.fovZoomRatio = 1;
             _this.camera.fov = _this.defaultFov;
@@ -201,9 +649,22 @@ var Brain3DApp = (function () {
             _this.colaObject.position = new THREE.Vector3(_this.graphOffset, 0, 0);
             _this.colaObject.rotation.set(0, 0, 0);
             //}
+=======
+            //this.fovZoomRatio = 1;
+            //this.camera.fov = this.defaultFov;
+            _this.camera.updateProjectionMatrix();
+            _this.brain3DModelDefaultXPosition = _this.camera.left + (_this.camera.right - _this.camera.left) / 4;
+            _this.brainContainer.position.set(_this.brain3DModelDefaultXPosition, 0, 0);
+            _this.brainContainer.lookAt(_this.camera.position);
+            _this.brainObject.rotation.set(0, 0, 0);
+            _this.colaObject.position.set(-_this.brain3DModelDefaultXPosition, 0, 0);
+            _this.colaObject.rotation.set(0, 0, 0);
+            _this.saveBrainRotation();
+>>>>>>> Stashed changes
         });
 
         this.input.regMouseWheelCallback(function (delta) {
+<<<<<<< Updated upstream
             if (_this.svgControlMode)
                 return;
 
@@ -214,6 +675,79 @@ var Brain3DApp = (function () {
             _this.fovZoomRatio = _this.camera.fov / _this.defaultFov;
             _this.camera.updateProjectionMatrix();
             //console.log("this.camera.fov: " + this.camera.fov);
+=======
+            var ZOOM_FACTOR = 50;
+            if (_this.isControllingGraphOnly)
+                return; // 2D Flat Version of the network
+            var pointer = _this.input.localPointerPosition();
+            //var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
+            // the box for the pointer is
+            // [left edge, right edge]: [-1, 1]
+            // [bottom edge, top edge]: [-1, 1]
+            // I'm not zooming if the pointer is outside the fov
+            if (Math.abs(pointer.x) > 1 || Math.abs(pointer.y) > 1) {
+                return;
+            }
+            // point coordinates in normalized coordinates, from top-left [0, 0], bottom-right [1, 1]
+            var pointerFrac = {
+                x: (pointer.x + 1) / 2,
+                y: (1 - pointer.y) / 2
+            };
+            //console.log({
+            //    left: this.camera.left,
+            //    right: this.camera.right,
+            //    top: this.camera.top,
+            //    bottom: this.camera.bottom
+            //});
+            //console.log(pointer);
+            //console.log(pointerFrac);
+            // expand or contract the box around the pointer location
+            //let cameraAspect = (this.originalCameraBox.right - this.originalCameraBox.left) / (this.originalCameraBox.top - this.originalCameraBox.bottom);
+            //console.log(this.originalCameraBox);
+            // change the left proportionally to the location of the pointer in the screen
+            // if the pointer is closer to the left then we zoom less on the left, more on the right
+            var leftDelta = -(pointerFrac.x * CommonUtilities.sign(delta) * (_this.camera.right - _this.camera.left) / ZOOM_FACTOR);
+            var rightDelta = (1 - pointerFrac.x) * CommonUtilities.sign(delta) * (_this.camera.right - _this.camera.left) / ZOOM_FACTOR;
+            var topDelta = pointerFrac.y * CommonUtilities.sign(delta) * (_this.camera.top - _this.camera.bottom) / ZOOM_FACTOR;
+            var bottomDelta = -((1 - pointerFrac.y) * CommonUtilities.sign(delta) * (_this.camera.top - _this.camera.bottom) / ZOOM_FACTOR);
+            if ((_this.camera.left + leftDelta > _this.camera.right + rightDelta)
+                || (_this.camera.bottom + bottomDelta > _this.camera.top + topDelta)) {
+                return;
+            }
+            _this.camera.left += leftDelta;
+            _this.camera.right += rightDelta;
+            _this.camera.top += topDelta;
+            _this.camera.bottom += bottomDelta;
+            _this.brain3DModelDefaultXPosition = _this.camera.left + (_this.camera.right - _this.camera.left) / 4;
+            _this.saveFileObj.surfaceSettings.brain3DModelDefaultXPosition = _this.brain3DModelDefaultXPosition;
+            //this.camera.left -= pointerFrac.x * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
+            //this.camera.right += (1 - pointerFrac.x) * Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR * cameraAspect;
+            //this.camera.top += pointerFrac.y * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
+            //this.camera.bottom -= (1 - pointerFrac.y) * Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR / cameraAspect;
+            // delta > 0 = zoom out, delta < 0 = zoom in
+            // this zooms in and out from the centre, not the pointer
+            // need to find a cap for this, i.e. maximum zoom in and zoom out
+            //let XDelta = Math.sign(delta) * (this.originalCameraBox.right - this.originalCameraBox.left) / ZOOM_FACTOR;
+            //let YDelta = Math.sign(delta) * (this.originalCameraBox.top - this.originalCameraBox.bottom) / ZOOM_FACTOR;
+            // do not allow the box to "invert"
+            //if ((this.camera.left - XDelta) > (this.camera.right + XDelta)
+            //    || (this.camera.bottom - YDelta) > (this.camera.top + YDelta)) {
+            //    return;
+            //}
+            //this.camera.left -= XDelta;
+            //this.camera.right += XDelta;
+            //this.camera.top += YDelta;
+            //this.camera.bottom -= YDelta;
+            //console.log("aspect : " + cameraAspect);
+            //console.log("aspect after resize: " + (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom));
+            //pointerNDC.unproject(this.camera);
+            //pointerNDC.sub(this.camera.position);
+            // the perspective version wont work with the orthographic
+            //this.camera.position.addVectors(this.camera.position, pointerNDC.setLength(delta < 0 ? ZOOM_FACTOR : -ZOOM_FACTOR));
+            //var curZoom = this.camera.zoom;
+            //this.camera.zoom = curZoom + Math.sign(delta) * 0.1;
+            _this.camera.updateProjectionMatrix();
+>>>>>>> Stashed changes
         });
 
         this.input.regGetRotationCallback(function () {
@@ -230,10 +764,65 @@ var Brain3DApp = (function () {
                 _this.colaObject.rotation.set(rotation[0], rotation[1], rotation[2]);
             }
         });
+<<<<<<< Updated upstream
+=======
+    };
+    Brain3DApp.prototype.setBrainModelObject = function (modelObject) {
+        this.brainModelOrigin = modelObject;
+        this.setBrainMode(this.brainSurfaceMode);
+    };
+    Brain3DApp.prototype.saveBrainRotation = function () {
+        this.saveFileObj.surfaceSettings.rotation = this.brainObject.quaternion.clone();
+    };
+    Brain3DApp.prototype.setBrainMode = function (mode) {
+        this.brainSurfaceMode = mode;
+        var model = this.brainModelOrigin;
+        this.surfaceUniformList = [];
+        var uniformList = this.surfaceUniformList;
+        /*
+        var normalShader = {
+            vertexShader: [
+
+                "uniform float mode;",
+                "varying vec3 vNormal;",
+                "varying vec3 vPosition;" ,
+
+                THREE.ShaderChunk["morphtarget_pars_vertex"],
+
+                "void main() {",
+                    "vPosition = position;",
+                    "vNormal = normalize( normalMatrix * normal );",
+
+                    THREE.ShaderChunk["morphtarget_vertex"],
+                    THREE.ShaderChunk["default_vertex"],
+
+                "}"
+
+            ].join("\n"),
+
+            fragmentShader: [
+                "uniform float mode;",
+                "uniform float opacity;",
+                "varying vec3 vNormal;",
+                "varying vec3 vPosition;" +
+
+                "void main() {",
+                    "if (vPosition.x * mode >= 0.0){",
+                        "vec3 color = vec3(0.9, 0.9, 0.9);",
+                        "float dotProduct = dot( normalize(vNormal), normalize(vec3(0,0,1)));",
+                        "gl_FragColor = vec4( color * dotProduct, opacity );",
+                    "}else{",
+                        "discard;",
+                    "}",
+                "}"
+
+            ].join("\n")
+>>>>>>> Stashed changes
 
         var varShowNetwork = function (b) {
             _this.showNetwork(b);
         };
+<<<<<<< Updated upstream
         var varEdgesThicknessByWeightedOnChange = function () {
             _this.edgesThicknessByWeightedOnChange();
         };
@@ -422,6 +1011,294 @@ var Brain3DApp = (function () {
                     sphereObject.visible = false;
                     sphereObject.isBoundingSphere = true;
                     boundingSphereObject.add(sphereObject);
+=======
+        */
+        // Remove the old mesh and add the new one (we don't need a restart)
+        this.brainObject.remove(this.brainSurface);
+        var clonedObject = new THREE.Object3D();
+        var boundingSphereObject = new THREE.Object3D();
+        var surfaceMaterial = new THREE.MeshLambertMaterial({
+            color: 0xcccccc,
+            transparent: true,
+            opacity: 0.5,
+            //depthWrite: true,
+            //depthTest: false,
+            //side: THREE.FrontSide
+            depthWrite: true,
+            depthTest: true,
+            side: THREE.FrontSide
+        });
+        if (model) {
+            // Default mode: full brain model 
+            if (mode == 0) {
+                // Clone the mesh - we can't share it between different canvases without cloning it
+                model.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        /*
+                        this.uniforms = {
+                            opacity: { type: "f", value: 0.5 },
+                            mode: { type: 'f', value: 0.0 }
+                        };
+                        uniformList.push(this.uniforms);
+    
+                        clonedObject.add(new THREE.Mesh(child.geometry.clone(), new THREE.ShaderMaterial(<any>{
+                            uniforms: this.uniforms,
+                            vertexShader: normalShader.vertexShader,
+                            fragmentShader: normalShader.fragmentShader,
+                            transparent: true
+                        })));
+                        */
+                        //clonedObject.add(new THREE.Mesh(child.geometry.clone(), surfaceMaterial));
+                        var mesh = new THREE.Mesh(child.geometry.clone(), surfaceMaterial);
+                        mesh.renderOrder = RENDER_ORDER_BRAIN;
+                        clonedObject.add(mesh);
+                        child.geometry.computeBoundingSphere();
+                        var boundingSphere = child.geometry.boundingSphere;
+                        var sphereMaterial = child.material.clone();
+                        sphereMaterial.visible = false;
+                        var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
+                        var sphereObject = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                        sphereObject.position.copy(boundingSphere.center);
+                        boundingSphereObject.add(sphereObject);
+                    }
+                });
+                // Medial View
+            }
+            else if (mode === 1) {
+                // Clone the mesh - we can't share it between different canvases without cloning it
+                model.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        /*
+                        this.leftUniforms = {
+                            opacity: { type: "f", value: 0.5 },
+                            mode: { type: 'f', value: -1.0 }
+                        };
+    
+                        this.rightUniforms = {
+                            opacity: { type: "f", value: 0.5 },
+                            mode: { type: 'f', value: 1.0 }
+                        };
+    
+                        uniformList.push(this.leftUniforms);
+                        uniformList.push(this.rightUniforms);
+    
+                        // left brain
+                        var leftBrain = new THREE.Mesh(child.geometry.clone(), new THREE.ShaderMaterial(<any>{
+                            uniforms: this.leftUniforms,
+                            vertexShader: normalShader.vertexShader,
+                            fragmentShader: normalShader.fragmentShader,
+                            transparent: true
+                        }));
+                        leftBrain.renderDepth = 2;
+                        var rightBrain = new THREE.Mesh(child.geometry.clone(), new THREE.ShaderMaterial(<any>{
+                            uniforms: this.rightUniforms,
+                            vertexShader: normalShader.vertexShader,
+                            fragmentShader: normalShader.fragmentShader,
+                            transparent: true
+                        }));
+                        rightBrain.renderDepth = 2;
+                        */
+                        // Need to edit geometries to "slice" them in half
+                        // Each face is represented by a group 9 values (3 vertices * 3 dimensions). Move to other side if any face touches the right side (i.e. x > 0).
+                        var attribute = child.geometry.getAttribute("position");
+                        var oldPositions = Array.prototype.slice.call(attribute.array);
+                        var leftPositions = [];
+                        var rightPositions = [];
+                        var FACE_CHUNK = 9;
+                        var VERT_CHUNK = 3;
+                        for (var faceIDX = 0; faceIDX < oldPositions.length; faceIDX += FACE_CHUNK) {
+                            if (oldPositions[faceIDX] > 0 || oldPositions[faceIDX + 3] > 0 || oldPositions[faceIDX + 6] > 0) {
+                                rightPositions.push(oldPositions[faceIDX], oldPositions[faceIDX + 1], oldPositions[faceIDX + 2], oldPositions[faceIDX + 3], oldPositions[faceIDX + 4], oldPositions[faceIDX + 5], oldPositions[faceIDX + 6], oldPositions[faceIDX + 7], oldPositions[faceIDX + 8]);
+                            }
+                            else {
+                                leftPositions.push(oldPositions[faceIDX], oldPositions[faceIDX + 1], oldPositions[faceIDX + 2], oldPositions[faceIDX + 3], oldPositions[faceIDX + 4], oldPositions[faceIDX + 5], oldPositions[faceIDX + 6], oldPositions[faceIDX + 7], oldPositions[faceIDX + 8]);
+                            }
+                        }
+                        var leftGeometry = new THREE.BufferGeometry;
+                        leftGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array(leftPositions), VERT_CHUNK));
+                        leftGeometry.computeVertexNormals();
+                        leftGeometry.computeFaceNormals();
+                        var leftBrain = new THREE.Mesh(leftGeometry, surfaceMaterial);
+                        leftBrain.renderOrder = RENDER_ORDER_BRAIN;
+                        var rightGeometry = new THREE.BufferGeometry;
+                        rightGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array(rightPositions), VERT_CHUNK));
+                        rightGeometry.computeVertexNormals();
+                        rightGeometry.computeFaceNormals();
+                        var rightBrain = new THREE.Mesh(rightGeometry, surfaceMaterial);
+                        rightBrain.renderOrder = RENDER_ORDER_BRAIN;
+                        var box = new THREE.Box3()['setFromObject'](model);
+                        leftBrain.rotation.z = 3.14 / 2;
+                        rightBrain.rotation.z = -3.14 / 2;
+                        // center the brain along y axis
+                        var mean = (box.max.z - box.min.z) / 2;
+                        var offsetToHead = box.max.z - mean;
+                        var offsetDistance = 10;
+                        leftBrain.translateY(offsetToHead);
+                        rightBrain.translateY(offsetToHead);
+                        leftBrain.translateZ(-(box.max.z + offsetDistance));
+                        rightBrain.translateZ(Math.abs(box.min.z) + offsetDistance);
+                        clonedObject.add(leftBrain);
+                        clonedObject.add(rightBrain);
+                        child.geometry.computeBoundingSphere();
+                        var boundingSphere = child.geometry.boundingSphere;
+                        var material = child.material.clone();
+                        material.visible = false;
+                        var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
+                        var sphereObject = new THREE.Mesh(sphereGeometry, material);
+                        sphereObject.position.copy(boundingSphere.center);
+                        boundingSphereObject.add(sphereObject);
+                    }
+                });
+            }
+            else {
+                console.log("ERROR: Wrong Brain Surface Mode");
+                return;
+            }
+        }
+        //clonedObject.renderOrder = RENDER_ORDER_BRAIN;
+        this.brainSurface = clonedObject;
+        this.brainObject.add(this.brainSurface);
+        this.brainSurfaceBoundingSphere = boundingSphereObject;
+        this.brainObject.add(this.brainSurfaceBoundingSphere);
+        this.surfaceLoaded = true;
+        // update Physio Graph if exists
+        if (!this.dataSet)
+            return;
+        if (this.brainSurfaceMode === 0) {
+            this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
+        }
+        else {
+            this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(Number(this.edgeCountSliderValue));
+            // tried to see what it would look like if we included interhemispheric edges in the split mode
+            // it wasnt nice
+            //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
+        }
+        this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
+        this.physioGraph.setEdgeVisibilities(this.filteredAdjMatrix);
+    };
+    Brain3DApp.prototype.setSurfaceOpacity = function (opacity) {
+        for (var _i = 0, _a = this.brainSurface.children; _i < _a.length; _i++) {
+            var object = _a[_i];
+            object.material.opacity = opacity;
+            object.material.needsUpdate = true;
+        }
+    };
+    Brain3DApp.prototype.setSurfaceColor = function (color) {
+        for (var _i = 0, _a = this.brainSurface.children; _i < _a.length; _i++) {
+            var object = _a[_i];
+            object.material.color.set(color);
+        }
+    };
+    Brain3DApp.prototype.setSurfaceRotation = function (quat) {
+        if (this.brainObject) {
+            this.brainObject.quaternion.set(quat._x, quat._y, quat._z, quat._w);
+        }
+        if (this.colaObject) {
+            this.colaObject.quaternion.set(quat._x, quat._y, quat._z, quat._w);
+        }
+    };
+    Brain3DApp.prototype.setBrainSurfacePosition = function (posFrac) {
+        if (this.brainObject) {
+            this.brainContainer.position.set(this.camera.left + posFrac.x * (this.camera.right - this.camera.left), this.camera.bottom + posFrac.y * (this.camera.top - this.camera.bottom), 0);
+        }
+    };
+    Brain3DApp.prototype.setColaSurfacePosition = function (pos) {
+        if (this.colaObject) {
+            this.colaObject.position.set(pos.x, pos.y, pos.z);
+        }
+    };
+    Brain3DApp.prototype.setEdgeTransitionColor = function (color) {
+        if ((!this.physioGraph) || (!this.colaGraph))
+            return;
+        this.edgeTransitionColor = color;
+        this.physioGraph.setEdgeColorConfig(this.colorMode, {
+            edgeTransitionColor: this.edgeTransitionColor,
+            useTransitionColor: this.useTransitionColor
+        });
+        this.colaGraph.setEdgeColorConfig(this.colorMode, {
+            edgeTransitionColor: this.edgeTransitionColor,
+            useTransitionColor: this.useTransitionColor
+        });
+        this.svgNeedsUpdate = true;
+        this.needUpdate = true;
+        if (this.circularGraph)
+            this.circularGraph.circularLayoutEdgeColorModeOnChange(this.colorMode, {
+                edgeTransitionColor: this.edgeTransitionColor,
+                useTransitionColor: this.useTransitionColor
+            });
+    };
+    Brain3DApp.prototype.setUseTransitionColor = function (useColor) {
+        if ((!this.physioGraph) || (!this.colaGraph))
+            return;
+        this.useTransitionColor = useColor;
+        this.physioGraph.setEdgeColorConfig(this.colorMode, {
+            edgeTransitionColor: this.edgeTransitionColor,
+            useTransitionColor: this.useTransitionColor
+        });
+        this.colaGraph.setEdgeColorConfig(this.colorMode, {
+            edgeTransitionColor: this.edgeTransitionColor,
+            useTransitionColor: this.useTransitionColor
+        });
+        this.svgNeedsUpdate = true;
+        this.needUpdate = true;
+        if (this.circularGraph)
+            this.circularGraph.circularLayoutEdgeColorModeOnChange(this.colorMode, {
+                edgeTransitionColor: this.edgeTransitionColor,
+                useTransitionColor: this.useTransitionColor
+            });
+    };
+    Brain3DApp.prototype.getDrawingCanvas = function () {
+        if (this.renderer)
+            return this.renderer.domElement;
+    };
+    Brain3DApp.prototype.save = function (app) {
+        app.edgeCount = this.edgeCountSliderValue;
+        app.brainSurfaceMode = this.brainSurfaceMode;
+        app.showingTopologyNetwork = this.showingTopologyNetwork;
+        app.networkType = this.networkType == undefined ? "" : this.networkType;
+        if (this.circularGraph) {
+            app.circularBundleAttribute = this.circularGraph.circularBundleAttribute;
+            app.circularSortAttribute = this.circularGraph.circularSortAttribute;
+            app.circularLabelAttribute = this.circularGraph.circularLabelAttribute;
+            app.circularAttributeBars = this.circularGraph.attributeBars;
+        }
+        else {
+            console.log("ERROR: circularGraph is NULL");
+        }
+        if (this.canvasGraph) {
+            app.layout2d = this.canvasGraph.layout;
+            app.bundle2d = this.canvasGraph.groupNodesBy;
+            app.scale2d = this.canvasGraph.scale;
+        }
+        else {
+            console.log("ERROR: canvasGraph is NULL");
+        }
+    };
+    Brain3DApp.prototype.initEdgeCountSlider = function (app) {
+        this.edgeCountSliderOnChange(app.edgeCount);
+        $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", parseInt(app.edgeCount));
+    };
+    Brain3DApp.prototype.initShowNetwork = function (app) {
+        console.log("initShowNetwork()");
+        if (app.showingTopologyNetwork) {
+            $("#select-network-type-".concat(this.id, "-").concat(app.networkType)).addClass("active");
+            this.networkTypeOnChange(app.networkType);
+            if (app.networkType == "circular") {
+                $('#select-circular-layout-bundle-' + this.id).val(app.circularBundleAttribute);
+                $('#select-circular-layout-sort-' + this.id).val(app.circularSortAttribute);
+                $('#select-circular-label-' + this.id).val(app.circularLabelAttribute);
+                $('#checkbox-circular-edge-gradient-' + this.id).prop('checked', app.circularEdgeGradient);
+                if (app.circularAttributeBars && app.circularAttributeBars.length > 0) {
+                    for (var bar in app.circularAttributeBars) {
+                        this.circularGraph.addAttributeBar();
+                    }
+                    for (var barIndex in app.circularAttributeBars) {
+                        $('#select-circular-layout-attribute-' + app.circularAttributeBars[barIndex].id + '-' + this.id).val(app.circularAttributeBars[barIndex].attribute);
+                        $('#input-circular-layout-bar' + app.circularAttributeBars[barIndex].id + '-color').val(app.circularAttributeBars[barIndex].color.substring(1));
+                        this.circularGraph.circularLayoutAttributeOnChange(app.circularAttributeBars[barIndex].id, app.circularAttributeBars[barIndex].attribute);
+                        this.circularGraph.updateCircularBarColor(app.circularAttributeBars[barIndex].id, app.circularAttributeBars[barIndex].color);
+                    }
+>>>>>>> Stashed changes
                 }
             });
 
@@ -432,6 +1309,7 @@ var Brain3DApp = (function () {
                 _this.brainSurface = clonedObject;
                 _this.brainObject.add(_this.brainSurface);
             }
+<<<<<<< Updated upstream
 
             boundingSphereObject.visible = false;
             _this.brainSurfaceBoundingSphere = boundingSphereObject;
@@ -457,6 +1335,24 @@ var Brain3DApp = (function () {
             this.input.sliderEvent = true;
         } else if (e == "mouseup") {
             this.input.sliderEvent = false;
+=======
+            else if (app.networkType == "2d") {
+                $('#select-graph2d-layout-' + this.id).val(app.layout2d);
+                $('#select-graph2d-group-' + this.id).val(app.bundle2d);
+                $("#div-scale-slider-alt-" + this.id)['bootstrapSlider']("setValue", app.scale2d);
+                this.canvasGraph.layout = app.layout2d;
+                this.canvasGraph.groupNodesBy = app.bundle2d;
+                this.canvasGraph.scale = app.scale2d;
+                // Don't try to update if it hasn't had the initial layout generation run yet
+                if (this.canvasGraph.nodes.length) {
+                    this.canvasGraph.updateGraph();
+                    this.canvasGraph.settingOnChange();
+                }
+            }
+        }
+        else {
+            $("#select-network-type-".concat(this.id, "-none")).addClass("active");
+>>>>>>> Stashed changes
         }
     };
 
@@ -478,11 +1374,42 @@ var Brain3DApp = (function () {
 
     Brain3DApp.prototype.networkTypeOnChange = function (type) {
         this.networkType = type;
+<<<<<<< Updated upstream
 
         this.setupNetworkTypeAppendedElements();
 
         //if (this.showingCola == true) {
         if (this.colaGraph.isVisible()) {
+=======
+        if (type === "circular" && this.circularGraph) {
+            this.circularGraph.setupOptionMenuUI(); // add options button to the page
+            this.svg.attr("visibility", "visible");
+            $(this.graph2dContainer).hide();
+            for (var bar in this.circularGraph.attributeBars) {
+                this.circularGraph.addAttributeBarElements(this.circularGraph.attributeBars[bar]);
+            }
+        }
+        else {
+            // hide options button
+            $('#button-circular-layout-histogram-' + this.id).hide();
+        }
+        if (type === "2d" && this.canvasGraph) {
+            this.canvasGraph.setupOptionMenuUI(); // add options button to the page
+            this.svg.attr("visibility", "hidden");
+            $(this.graph2dContainer).show();
+        }
+        else {
+            // hide options button
+            $('#button-graph2d-option-menu-' + this.id).hide();
+            $(this.graph2dContainer).hide();
+        }
+        if (type === "none") {
+            this.svg.attr("visibility", "hidden");
+            $(this.graph2dContainer).hide();
+            this.colaGraph.setVisible(false);
+        }
+        if (this.colaGraph && this.colaGraph.isVisible()) {
+>>>>>>> Stashed changes
             this.showNetwork(true);
         } else {
             this.showNetwork(false);
@@ -1015,10 +1942,27 @@ var Brain3DApp = (function () {
             numEdges = max;
         $('#count-' + this.id).get(0).textContent = numEdges;
         var percentile = numEdges * 100 / max;
+<<<<<<< Updated upstream
         $('#percentile-' + this.id).get(0).textContent = percentile.toFixed(2);
         this.filteredAdjMatrix = this.adjMatrixFromEdgeCount(numEdges);
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix, null);
         this.physioGraph.setEdgeVisibilities(this.filteredAdjMatrix);
+=======
+        var $percentile = $('#percentile-' + this.id).get(0);
+        if ($percentile)
+            $percentile.textContent = percentile.toFixed(2);
+        if (this.brainSurfaceMode === 0) {
+            this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
+        }
+        else {
+            //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
+            this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(numEdges);
+        }
+        if (this.physioGraph) {
+            this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
+            this.physioGraph.setEdgeVisibilities(this.filteredAdjMatrix);
+        }
+>>>>>>> Stashed changes
     };
 
     Brain3DApp.prototype.edgesThicknessByWeightedOnChange = function () {
@@ -2294,6 +3238,7 @@ var Brain3DApp = (function () {
 
         this.svgNeedsUpdate = true;
     };
+<<<<<<< Updated upstream
 
     Brain3DApp.prototype.resize = function (width, height) {
         // Resize the renderer
@@ -2325,6 +3270,500 @@ var Brain3DApp = (function () {
 
         // Select the maximum distance of the two
         this.camera.position.set(0, 0, Math.max(distanceByH, distanceByV));
+=======
+    //////////////////////////////////////////////////
+    /// Edge Attributes //////////////////////////////
+    //////////////////////////////////////////////////
+    Brain3DApp.prototype.getCurrentEdgeWeightRange = function () {
+        var range = {
+            min: this.physioGraph.edgeMinWeight,
+            max: this.physioGraph.edgeMaxWeight
+        };
+        return range;
+    };
+    Brain3DApp.prototype.setEdgeSize = function (size) {
+        this.physioGraph.setEdgeScale(size);
+        this.colaGraph.setEdgeScale(size);
+        this.svgNeedsUpdate = true;
+        this.needUpdate = true;
+    };
+    Brain3DApp.prototype.setEdgeThicknessByWeight = function (bool) {
+        this.edgeThicknessByWeightOnChange(bool);
+        this.needUpdate = true;
+    };
+    Brain3DApp.prototype.setEdgeColorByWeight = function (config) {
+        var colorMode = "weight";
+        this.edgeColorOnChange(colorMode, config);
+        this.needUpdate = true;
+    };
+    Brain3DApp.prototype.setEdgeColorByNode = function () {
+        var colorMode = "node";
+        this.edgeColorOnChange(colorMode, {
+            edgeTransitionColor: this.edgeTransitionColor,
+            useTransitionColor: this.useTransitionColor
+        });
+        this.needUpdate = true;
+    };
+    Brain3DApp.prototype.setEdgeNoColor = function () {
+        var colorMode = "none";
+        this.edgeColorOnChange(colorMode);
+        this.needUpdate = true;
+    };
+    Brain3DApp.prototype.setEdgeDirectionGradient = function () {
+        if (this.physioGraph)
+            this.physioGraph.setEdgeDirectionGradient();
+        if (this.colaGraph)
+            this.colaGraph.setEdgeDirectionGradient();
+        if (this.circularGraph)
+            this.circularGraph.update();
+        this.needUpdate = true;
+    };
+    /* Called when the size of the view port is changed */
+    /* action: 'resize', set the borders of the camera by the viewport and move 3d surfaces to be at the same proportional location */
+    /* the remaining action values are for zooming in/out for a screenshot
+    /* action: 'screenshotzoomstart', we are zooming in for a screenshot, account for changes in aspect ratio, save the original camera limits
+    /* action: 'screenshotzoomend', restore the saved limits from 'screenshotzoomstart'
+    /* If zooming is true, set the borders of the camera to zoom on the existing borders */
+    Brain3DApp.prototype.resize = function (width, height, action) {
+        if (this.canvasGraph) {
+            if (this.canvasGraph.cy && (action == 'screenshotzoomstart' || action == 'resize')) {
+                this.canvasGraphPanAndZoomBeforeScreenShotZoom = {
+                    zoom: this.canvasGraph.cy.zoom(),
+                    pan: this.canvasGraph.cy.pan(),
+                    BBox: this.commonData.graph2DBoundingBox
+                    //BBox: this.canvasGraph.cy.elements().renderedBoundingBox()
+                };
+                this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre = {
+                    x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.x1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                    y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.y1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                };
+            }
+        }
+        ;
+        // Resize the renderer
+        this.renderer.setSize(width, height - sliderSpace);
+        // Resize the svg canvas
+        this.svg
+            .attr("width", width)
+            .attr("height", height - sliderSpace);
+        // Calculate the aspect ratio
+        //var aspect = width / (height - sliderSpace);
+        //this.camera.aspect = aspect;
+        //// Calculate the FOVs
+        //var verticalFov = Math.atan(height / window.outerHeight); // Scale the vertical fov with the vertical height of the window (up to 45 degrees)
+        //var horizontalFov = verticalFov * aspect;
+        //this.defaultFov = verticalFov * 180 / Math.PI;
+        //console.log(this.defaultFov * this.fovZoomRatio);
+        //console.log({
+        //    defaultFov: this.defaultFov,
+        //    fovZoomRatio: this.fovZoomRatio
+        //});
+        //this.camera.fov = this.defaultFov * this.fovZoomRatio;
+        //this.camera.updateProjectionMatrix();
+        // get the proportions of the objects in the viewport
+        var brainContainerPosition = new THREE.Vector3();
+        var brainViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+        var colaObjectPosition = new THREE.Vector3();
+        var colaObjectViewportProp = {
+            xFrac: 0,
+            yFrac: 0
+        };
+        var brainBBox;
+        if (this.brainContainer) {
+            brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
+            this.brainContainer.getWorldPosition(brainContainerPosition);
+            brainViewportProp = {
+                xFrac: (brainContainerPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+                yFrac: (brainContainerPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+            };
+        }
+        //this.canvasGraph.cy.zoom()
+        if (this.colaObject) {
+            this.colaObject.getWorldPosition(colaObjectPosition);
+            colaObjectViewportProp = {
+                xFrac: (colaObjectPosition.x - this.camera.left) / (this.camera.right - this.camera.left),
+                yFrac: (colaObjectPosition.y - this.camera.bottom) / (this.camera.top - this.camera.bottom)
+            };
+        }
+        var brain2DScreenBox;
+        if (this.brainSurface && this.camera) {
+            brain2DScreenBox = CommonUtilities.computeScreenSpaceBoundingBox(this.brainSurface.children[0], this.camera);
+            brain2DScreenBox.minNorm = brain2DScreenBox.min;
+            brain2DScreenBox.maxNorm = brain2DScreenBox.max;
+            brain2DScreenBox.min = {
+                x: ((brain2DScreenBox.min.x + 1) / 2 * this.jDiv.width()),
+                y: ((brain2DScreenBox.min.y + 1) / 2 * this.jDiv.height())
+            };
+            brain2DScreenBox.max = {
+                x: ((brain2DScreenBox.max.x + 1) / 2) * this.jDiv.width(),
+                y: ((brain2DScreenBox.max.y + 1) / 2) * this.jDiv.height()
+            };
+            brain2DScreenBox.w = brain2DScreenBox.max.x - brain2DScreenBox.min.x;
+            brain2DScreenBox.h = brain2DScreenBox.max.y - brain2DScreenBox.min.y;
+            brain2DScreenBox.centreX = brain2DScreenBox.min.x + brain2DScreenBox.w / 2;
+            brain2DScreenBox.centreY = brain2DScreenBox.min.y + brain2DScreenBox.h / 2;
+            brain2DScreenBox.aspect = brain2DScreenBox.w / brain2DScreenBox.h;
+        }
+        //if (this.canvasGraph) {
+        //    if (this.canvasGraph.cy) {
+        //        console.log(this.renderer.getSize());
+        //        let BBox = this.canvasGraph.cy.elements().renderedBoundingBox();
+        //        console.log(BBox);
+        //        console.log(this.canvasGraph.cy.zoom());
+        //        console.log(this.canvasGraph.cy.pan());
+        //    }
+        //}
+        var oldCanvasAspectRatio = this.oldWidth / this.oldHeight;
+        //var oldCameraAspectRatio = (this.camera.right - this.camera.left) / (this.camera.top - this.camera.bottom);
+        var newCanvasAspectRatio = width / (height - sliderSpace);
+        //var oldPixelHeight = (this.camera.top - this.camera.bottom) / this.oldHeight;
+        //var oldPixelWidth = (this.camera.right - this.camera.left) / this.oldWidth;
+        var canvasGraphPanAndZoomAtScreenShotZoom;
+        switch (action) {
+            case "resize":
+            case "resizestart":
+                if (this.brainContainer) {
+                    this.camera.position.set(0, 0, brainBBox.max.z + 50);
+                }
+                else {
+                    this.camera.position.set(0, 0, 200);
+                }
+                // move the circular graph with the change in viewport size
+                if (this.circularGraph) {
+                    var translation = this.circularGraph.d3Zoom.translate();
+                    this.circularGraph.d3Zoom.translate([translation[0] / this.oldWidth * width, translation[1] / this.oldHeight * height]);
+                    this.circularGraph.svgAllElements.attr("transform", "translate(" + translation[0] + "," + translation[1] + ")scale(" + this.d3Zoom.scale() * (width / this.oldWidth) + ")");
+                }
+                // set the camera borders according to the viewport size
+                if (action == 'resizestart') {
+                    this.camera.right = width / 8;
+                    this.camera.top = (height - sliderSpace) / 8;
+                    this.camera.bottom = -(height - sliderSpace) / 8;
+                    this.camera.left = -width / 8;
+                    this.originalCameraBox = {
+                        right: this.camera.right,
+                        left: this.camera.left,
+                        bottom: this.camera.bottom,
+                        top: this.camera.top
+                    };
+                }
+                else {
+                    this.camera.right = this.camera.left + (this.camera.right - this.camera.left) * width / this.oldWidth;
+                    this.camera.top = this.camera.bottom + (this.camera.top - this.camera.bottom) * height / this.oldHeight;
+                }
+                this.originalCameraPosition = this.camera.position.clone();
+                //console.log(this.originalCameraPosition);
+                // update the positions of the 3d surface objects to be at the same proportions in the new viewport
+                if (this.brainContainer) {
+                    brainBBox = new THREE.Box3().setFromObject(this.brainContainer);
+                    //let originalBrainContainerScale = this.brainContainer.scale;
+                    var newBrainContainerPosition_1 = {
+                        x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                        y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                        z: 0
+                    };
+                    //newBrainContainerPosition.x = this.camera.left;
+                    //console.log('setting brain container');
+                    this.brainContainer.position.set(newBrainContainerPosition_1.x, newBrainContainerPosition_1.y, newBrainContainerPosition_1.z);
+                    //if (action == 'resize') {
+                    //    this.brainContainer.scale.set(originalBrainContainerScale.x / (pixelWidth / oldPixelWidth),
+                    //        originalBrainContainerScale.y / ((oldPixelHeight) / (pixelHeight)),
+                    //        originalBrainContainerScale.z);
+                    //}
+                    //console.log(this.brainContainer.position);
+                }
+                //console.log(this.colaObject);
+                if (this.colaObject) {
+                    var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
+                    this.colaObject.position.set(this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac, this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac, 0);
+                }
+                if (this.canvasGraph) {
+                    if (this.canvasGraph.cy) {
+                        this.canvasGraph.cy.panBy({
+                            x: width * this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x / this.oldWidth - this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x,
+                            y: height * this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y / this.oldHeight - this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y
+                        });
+                    }
+                }
+                //console.log(this);
+                //if (this.circularGraph) {
+                //console.log(this.circularGraph);
+                ////var curTransform = d3.zoomTransform(this.circularGraph.svg.node());
+                //this.svgAllElements.attr
+                //    console.log({
+                //        width: width,
+                //        this.oldWidth: this.oldWidth,
+                //        height: height,
+                //        this.oldHeight: this.oldHeight
+                //    });
+                //    this.circularGraph.d3Zoom.translateBy(
+                //        this.circularGraph.svg,
+                //        width - this.oldWidth,
+                //        height - this.oldHeight
+                //    );
+                //this.svg.call(
+                //    this.d3Zoom.transform,
+                //    d3.zoomIdentity.translate(width, height).scale(1)
+                //}
+                //
+                // 
+                //
+                // find the zoom required to fit the brain into the screen size
+                this.saveFileObj.camera = {
+                    left: this.camera.left,
+                    right: this.camera.right,
+                    top: this.camera.top,
+                    bottom: this.camera.bottom
+                };
+                break;
+            case "screenshotzoomstart":
+                //if (this.canvasGraph) {
+                //    if (this.canvasGraph.cy) {
+                //        canvasGraphPanAndZoomAtScreenShotZoom = {
+                //            zoom: this.canvasGraph.cy.zoom(),
+                //            pan: this.canvasGraph.cy.pan(),
+                //            BBox: this.canvasGraph.cy.elements().renderedBoundingBox()
+                //        };
+                //        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox);
+                //    }
+                //}
+                this.cameraBeforeScreenshotZoom = {
+                    left: this.camera.left,
+                    right: this.camera.right,
+                    top: this.camera.top,
+                    bottom: this.camera.bottom,
+                    zoom: this.camera.zoom
+                };
+                //console.log({
+                //    oldCanvasAspectRatio: oldCanvasAspectRatio,
+                //    newCanvasAspectRatio: newCanvasAspectRatio
+                //});
+                // move the centre of the object so that it is in the same place in the resized window
+                //let brainObjectNewCentreInPixels = {
+                //   x: brainViewportProp.xFrac * width,
+                //   y: brainViewportProp.yFrac * (height - sliderSpace)
+                //};
+                //this.camera.left = 0;
+                //this.camera.top = 0;
+                //this.camera.right = width;
+                //this.camera.bottom = -(height - sliderSpace); // + pixel spacing in world coordinates needed to put the object at the same proportions;
+                //                brainObjectNewCentreInPixels
+                //              var cameraYCentre = (this.camera.top + this.camera.bottom) / 2;
+                //            this.camera.bottom = cameraYCentre - (cameraYCentre - this.camera.bottom) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                //          this.camera.top = cameraYCentre + (this.camera.top - cameraYCentre) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                //this.camera.left = -width / 8;
+                //    let brainObjectCentreInPixels =
+                //    let brainObjectCentreInCoords = {
+                //        x: (this.camera.right - this.camera.left)  brain2DScreenBox.centreX,
+                //    }
+                //newBrain2DScreenBox.w = (brain2DScreenBox.max.x - brain2DScreenBox.min.x) ;
+                //brain2DScreenBox.h = brain2DScreenBox.max.y - brain2DScreenBox.min.y;
+                //brain2DScreenBox.centreX = brain2DScreenBox.min.x + brain2DScreenBox.w / 2;
+                //brain2DScreenBox.centreY = brain2DScreenBox.min.y + brain2DScreenBox.h / 2;
+                //brain2DScreenBox.aspect = brain2DScreenBox.w / brain2DScreenBox.h;
+                //this.camera.right = width / 8;
+                //this.camera.top = (height - sliderSpace) / 8;
+                //this.camera.bottom = -(height - sliderSpace) / 8;
+                //this.camera.left = -width / 8;
+                // width needs to be
+                // needs to be
+                //this.camera.left = space for the object + buffer for unused
+                //if (width < this.jDiv.width()) {
+                //}
+                //if (height < this.jDiv.height()) {
+                //}
+                //this.camera.left
+                //brainViewportProp
+                //this.brainContainer.position
+                //brainViewportProp.xFrac
+                //brainViewportProp.yFrac
+                //brain2DScreenBox.centreX = brain2DScreenBox.min.x + brain2DScreenBox.w / 2;
+                //brain2DScreenBox.centreY = brain2DScreenBox.min.y + brain2DScreenBox.h / 2;
+                //this.camera.zoom = this.camera.zoom * (width / this.oldWidth);
+                //this.camera.right = (this.camera.right - this.camera.left) * (width / this.oldWidth);
+                //this.camera.bottom = (this.camera.top - this.camera.bottom) / this.camera.zoom * (width / this.oldWidth * height / this.oldHeight);
+                if (newCanvasAspectRatio > oldCanvasAspectRatio) {
+                    //    // new canvas is wider, need to expand the left and right borders of the camera
+                    //    // multiply the distance between the left and right borders from the centre by
+                    //    // the increase in the aspect ratio
+                    var cameraXCentre = (this.camera.right + this.camera.left) / 2;
+                    //this.camera.left = cameraXCentre - (cameraXCentre - this.camera.left) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                    this.camera.right = cameraXCentre + (this.camera.right - cameraXCentre) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                }
+                else {
+                    //    // new canvas is taller, need to expand the top and bottom borders of the camera
+                    //    // divide the distance between the left and right borders from the centre by
+                    //    // the increase in the aspect ratio
+                    var cameraYCentre = (this.camera.top + this.camera.bottom) / 2;
+                    this.camera.bottom = cameraYCentre - (cameraYCentre - this.camera.bottom) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                    //this.camera.top = cameraYCentre + (this.camera.top - cameraYCentre) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                }
+                var newBrainContainerPosition = {
+                    x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                    y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                    z: 0
+                };
+                //newBrainContainerPosition.x = this.camera.left;
+                //this.brainContainer.position.set(newBrainContainerPosition.x, newBrainContainerPosition.y, newBrainContainerPosition.z);
+                // resize so that the brain is in 
+                //cy.zoom(cy.zoom() * ((container.offsetHeight * 0.75) / cyBBox.h));
+                //cy.pan(this.canvasGraphPanAndZoomBeforeScreenShotZoom )
+                if (this.brainContainer) {
+                    this.brainContainer.position.set(this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac, this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac, 0);
+                }
+                if (this.colaObject) {
+                    var colaBBox = new THREE.Box3().setFromObject(this.colaObject);
+                    this.colaObject.position.set(this.camera.left + (this.camera.right - this.camera.left) * colaObjectViewportProp.xFrac, this.camera.bottom + (this.camera.top - this.camera.bottom) * colaObjectViewportProp.yFrac, 0);
+                    this.colaObject.position.needsUpdate = true;
+                }
+                //this.colaObject.update();
+                if (this.canvasGraph) {
+                    if (this.canvasGraph.cy) {
+                        canvasGraphPanAndZoomAtScreenShotZoom = {
+                            zoom: this.canvasGraph.cy.zoom(),
+                            pan: this.canvasGraph.cy.pan(),
+                            BBox: this.canvasGraph.cy.elements().renderedBoundingBox()
+                        };
+                        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox);
+                        canvasGraphPanAndZoomAtScreenShotZoom.centre = {
+                            x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.x1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                            y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.y1 + this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                        };
+                        var newCentre = {
+                            x: canvasGraphPanAndZoomAtScreenShotZoom.centre.x / this.oldWidth * width,
+                            y: canvasGraphPanAndZoomAtScreenShotZoom.centre.y / this.oldHeight * height
+                        };
+                        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox);
+                        //console.log(this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre);
+                        //console.log({
+                        //    x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x / this.oldWidth * width - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                        //    y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y / this.oldHeight * (height - sliderSpace) - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                        //});
+                        //this.canvasGraph.cy.pan({
+                        //    x: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.x / this.oldWidth * width - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.w / 2,
+                        //    y: this.canvasGraphPanAndZoomBeforeScreenShotZoom.centre.y / this.oldHeight * (height - sliderSpace) - this.canvasGraphPanAndZoomBeforeScreenShotZoom.BBox.h / 2
+                        //});
+                        //console.log(width);
+                        //console.log(this.oldWidth);
+                        if (newCanvasAspectRatio > oldCanvasAspectRatio) {
+                            //    // new canvas is wider, need to expand the left and right borders of the camera
+                            //    // multiply the distance between the left and right borders from the centre by
+                            //    // the increase in the aspect ratio
+                            var cameraXCentre = (this.camera.right + this.camera.left) / 2;
+                            //this.camera.left = cameraXCentre - (cameraXCentre - this.camera.left) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                            this.camera.right = cameraXCentre + (this.camera.right - cameraXCentre) * (newCanvasAspectRatio / oldCanvasAspectRatio);
+                        }
+                        else {
+                            //    // new canvas is taller, need to expand the top and bottom borders of the camera
+                            //    // divide the distance between the left and right borders from the centre by
+                            //    // the increase in the aspect ratio
+                            var cameraYCentre = (this.camera.top + this.camera.bottom) / 2;
+                            this.camera.bottom = cameraYCentre - (cameraYCentre - this.camera.bottom) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                            //this.camera.top = cameraYCentre + (this.camera.top - cameraYCentre) / (newCanvasAspectRatio / oldCanvasAspectRatio);
+                        }
+                        this.canvasGraph.cy.zoom({
+                            level: this.canvasGraph.cy.zoom() * (width / this.oldWidth),
+                            renderedPosition: {
+                                x: 0,
+                                y: 0
+                            }
+                        });
+                        var cyBBox = this.canvasGraph.cy.elements().renderedBoundingBox();
+                        //console.log(cyBBox);
+                        //console.log(width);
+                        //console.log(height);
+                        if (cyBBox.x2 > width) {
+                            this.canvasGraph.cy.panBy({
+                                x: width - cyBBox.x2,
+                                y: 0
+                            });
+                        }
+                        ;
+                        if (cyBBox.y2 > height) {
+                            this.canvasGraph.cy.panBy({
+                                x: 0,
+                                y: height - cyBBox.y2
+                            });
+                        }
+                        ;
+                        //let l = this.canvasGraph.cy.renderedExtent();
+                        //console.log(this.canvasGraph.cy.renderedExtent());
+                        //console.log(this.graph2dContainer);
+                        //let t = this.renderer.getSize();
+                        //console.log(t);
+                        //this.canvasGraph.cy.invalidateSize();
+                        //console.log(this.renderer);
+                        console.log(this.graph2dContainer.container);
+                        this.graph2dContainerWidthHeightBeforeResize = {
+                            width: $(this.graph2dContainer).css("width"),
+                            height: $(this.graph2dContainer).css("height")
+                            //width: this.renderer.domElement.parentElement.width,
+                            //height: this.renderer.domElement.parentElement.height
+                        };
+                        $(this.graph2dContainer).css({ width: width + "px", height: height + "px" });
+                        //this.renderer.domElement.width = width;
+                        //this.renderer.domElement.height = height;
+                        //this.renderer.domElement.parentElement.width = width;
+                        //this.renderer.domElement.parentElement.height = height;
+                        this.canvasGraph.cy.resize();
+                        //this.canvasGraph.cy.panBy({
+                        //    x: -(canvasGraphPanAndZoomAtScreenShotZoom.centre.x - newCentre.x),
+                        //    y: -(canvasGraphPanAndZoomAtScreenShotZoom.centre.y - newCentre.y)
+                        //});
+                        //console.log(this.canvasGraph.cy.zoom());
+                        //console.log(this.canvasGraph.cy.pan());
+                        //let BBox = this.canvasGraph.cy.elements().renderedBoundingBox();
+                        //this.canvasGraph.cy.zoom(
+                        //    {
+                        //        level: this.canvasGraph.cy.zoom(),
+                        //        renderedPosition: {
+                        //            x: BBox.x1 + BBox.w / 2,
+                        //            y: BBox.y1 + BBox.w / 2
+                        //        }
+                        //    });
+                        //console.log()
+                        //console.log(this.canvasGraph.cy.zoom());
+                        //console.log(this.canvasGraph.cy.pan());
+                    }
+                }
+                break;
+            case "screenshotzoomend":
+                this.camera.left = this.cameraBeforeScreenshotZoom.left;
+                this.camera.right = this.cameraBeforeScreenshotZoom.right;
+                this.camera.top = this.cameraBeforeScreenshotZoom.top;
+                this.camera.bottom = this.cameraBeforeScreenshotZoom.bottom;
+                this.camera.zoom = this.cameraBeforeScreenshotZoom.zoom;
+                // restore the zoom of the 2d
+                if (this.canvasGraph) {
+                    if (this.canvasGraph.cy) {
+                        this.canvasGraph.cy.pan(this.canvasGraphPanAndZoomBeforeScreenShotZoom.pan);
+                        this.canvasGraph.cy.zoom(this.canvasGraphPanAndZoomBeforeScreenShotZoom.zoom);
+                        $(this.graph2dContainer).css({
+                            width: this.graph2dContainerWidthHeightBeforeResize.width,
+                            height: this.graph2dContainerWidthHeightBeforeResize.height
+                        });
+                        this.canvasGraph.cy.resize();
+                    }
+                }
+                if (this.brainContainer) {
+                    var newBrainContainerPosition_2 = {
+                        x: this.camera.left + (this.camera.right - this.camera.left) * brainViewportProp.xFrac,
+                        y: this.camera.bottom + (this.camera.top - this.camera.bottom) * brainViewportProp.yFrac,
+                        z: 0
+                    };
+                    //newBrainContainerPosition.x = this.camera.left;
+                    this.brainContainer.position.set(newBrainContainerPosition_2.x, newBrainContainerPosition_2.y, newBrainContainerPosition_2.z);
+                }
+                break;
+        }
+        this.camera.updateProjectionMatrix();
+        this.oldHeight = height;
+        this.oldWidth = width;
+        this.commonData.resizing = false;
+>>>>>>> Stashed changes
     };
 
     Brain3DApp.prototype.setDataSet = function (dataSet) {
@@ -2391,12 +3830,25 @@ var Brain3DApp = (function () {
             this.colaGraph.destroy();
         this.colaGraph = new Graph(this.colaObject, edgeMatrix, this.nodeColourings, this.dataSet.simMatrix);
         this.colaGraph.setVisible(false);
+<<<<<<< Updated upstream
 
         this.svgGraph = new Graph2D();
 
         // Initialize the filtering
         this.filteredAdjMatrix = this.adjMatrixFromEdgeCount(initialEdgesShown);
         this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix, null);
+=======
+        this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer, this.commonData, this.saveFileObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
+        // Initialise the filtering
+        if (this.brainSurfaceMode === 0) {
+            this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
+        }
+        else {
+            //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
+            this.filteredAdjMatrix = this.dataSet.adjMatrixWithoutEdgesCrossHemisphere(Number(this.edgeCountSliderValue));
+        }
+        this.physioGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix);
+>>>>>>> Stashed changes
         this.physioGraph.setEdgeVisibilities(this.filteredAdjMatrix);
         this.colaGraph.findNodeConnectivity(this.filteredAdjMatrix, this.dissimilarityMatrix, null);
         this.colaGraph.setEdgeVisibilities(this.filteredAdjMatrix);
@@ -2423,6 +3875,7 @@ var Brain3DApp = (function () {
         for (var i = 0; i < this.commonData.nodeCount; ++i) {
             adjMatrix[i] = new Array(this.commonData.nodeCount);
         }
+<<<<<<< Updated upstream
 
         for (var i = 0; i < this.commonData.nodeCount - 1; ++i) {
             adjMatrix[i] = new Array(this.commonData.nodeCount);
@@ -2434,6 +3887,29 @@ var Brain3DApp = (function () {
                     adjMatrix[i][j] = adjMatrix[j][i] = 0;
                 }
             }
+=======
+        else {
+            box = new THREE.Box3(new THREE.Vector3(-70, -100, -50), new THREE.Vector3(70, 70, 100));
+        }
+        var mean = (box.max.z - box.min.z) / 2;
+        var offsetToHead = box.max.z - mean;
+        var offsetDistance = 10;
+        for (var i = 0; i < this.dataSet.brainCoords[0].length; i++) {
+            var coord = new THREE.Vector3(this.dataSet.brainCoords[0][i], this.dataSet.brainCoords[1][i], this.dataSet.brainCoords[2][i]);
+            if (coord.x < 0) { // right
+                coord.applyAxisAngle(zAxis, Math.PI / 2);
+                coord.x = coord.x - offsetToHead;
+                coord.z = coord.z - box.max.z - offsetDistance;
+            }
+            else { // left
+                coord.applyAxisAngle(zAxis, -Math.PI / 2);
+                coord.x = coord.x + offsetToHead;
+                coord.z = coord.z + Math.abs(box.min.z) + offsetDistance;
+            }
+            newCoords[0].push(coord.x);
+            newCoords[1].push(coord.y);
+            newCoords[2].push(coord.z);
+>>>>>>> Stashed changes
         }
         return adjMatrix;
     };
@@ -2460,6 +3936,7 @@ var Brain3DApp = (function () {
 
     Brain3DApp.prototype.getBoundingSphereUnderPointer = function (pointer) {
         var _this = this;
+<<<<<<< Updated upstream
         var pointerNDC = new THREE.Vector3(pointer.x, pointer.y, 1);
         this.projector.unprojectVector(pointerNDC, this.camera);
         var directionVector = pointerNDC.sub(this.camera.position);
@@ -2473,6 +3950,25 @@ var Brain3DApp = (function () {
             if (intersected[i].object.isBoundingSphere) {
                 inBoundingSphere = true;
                 break;
+=======
+        if ((this.networkType == '2d') || (this.networkType == 'circular') || (this.networkType == '3d')) {
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(pointer, this.camera);
+            var inBoundingSphere = !!(raycaster.intersectObject(this.brainSurfaceBoundingSphere, true).length);
+            if (this.prevInBoundingSphere !== inBoundingSphere) {
+                if (inBoundingSphere) {
+                    this.isControllingGraphOnly = false;
+                    this.svg.on(".zoom", null);
+                    this.canvasGraph.setUserControl(false);
+                }
+                else {
+                    this.isControllingGraphOnly = true;
+                    var varSVGZoom = function () { _this.svgZoom(); };
+                    var func = this.d3Zoom.on("zoom", varSVGZoom);
+                    this.svg.call(func);
+                    this.canvasGraph.setUserControl(true);
+                }
+>>>>>>> Stashed changes
             }
         }
 
@@ -2580,6 +4076,7 @@ var Brain3DApp = (function () {
 
                     this.selectedNodeID = -1;
                 }
+                this.needUpdate = true;
             }
 
             //if (this.showingCola)

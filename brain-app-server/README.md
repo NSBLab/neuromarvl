@@ -26,7 +26,7 @@ Where more detailed help is required, it is accessible by clicking on a nearby h
 
 ## Build instructions
 
-The project can be built in Visual Studio 2015 with support for TypeScript and C# installed.
+The project can be built in Visual Studio 2022 with support for TypeScript and C# installed.
 
 The built project is then deployable to an IIS server with ASP.NET.
 

@@ -1110,7 +1110,7 @@ class CircularGraph {
         // update bar object
         var bar = this.attributeBars[barID];
         bar.color = color;
-
+        console.log("updateCircularBarColor " + bar.id + " " + color);
         var gScale = 100;
         var r, g, b;
         var txt: string;

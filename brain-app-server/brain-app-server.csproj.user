@@ -1,35 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-    <NameOfLastUsedPublishProfile>brainapp</NameOfLastUsedPublishProfile>
-    <ToolsVersionPromptShown>1.8</ToolsVersionPromptShown>
-    <UseIISExpress>true</UseIISExpress>
-    <ProjectView>ShowAllFiles</ProjectView>
-=======
     <NameOfLastUsedPublishProfile>E:\OneDrive\neuromarvl-new\neuromarvl\brain-app-server\Properties\PublishProfiles\brainapp.pubxml</NameOfLastUsedPublishProfile>
     <ToolsVersionPromptShown>1.8</ToolsVersionPromptShown>
     <UseIISExpress>true</UseIISExpress>
     <ProjectView>ShowAllFiles</ProjectView>
     <LastActiveSolutionConfig>Release|Any CPU</LastActiveSolutionConfig>
-=======
-    <NameOfLastUsedPublishProfile>C:\Source\Monash\v.2.0\neuromarvl\brain-app-server\Properties\PublishProfiles\neuro - Web Deploy.pubxml</NameOfLastUsedPublishProfile>
-    <ToolsVersionPromptShown>1.8</ToolsVersionPromptShown>
-    <UseIISExpress>true</UseIISExpress>
-    <ProjectView>ShowAllFiles</ProjectView>
-    <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     <Use64BitIISExpress />
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
   </PropertyGroup>
   <PropertyGroup>
     <ReferencePath>C:\Source\Monash\neuromarvl\node_modules\</ReferencePath>

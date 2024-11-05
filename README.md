@@ -16,3 +16,7 @@ Allow neuroscientist to rapidly apply the current configuration to multiple diff
 Visualisations can be exported into SVG format for further editing.
 
 All source code and files in this repository are available for use under the terms of the [GPL](LICENSE).
+
+### Running locally ###
+
+Users may run NeuroMArVL locally by checking out the source code and opening the Visual Studio solution file “brain-app-server.sln” in Visual Studio 2022. Upon building the project and selecting Google Chrome as the web browser, it will open the main splash screen. Then, the user is able to use the software.

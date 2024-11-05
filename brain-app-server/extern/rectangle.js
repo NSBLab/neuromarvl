@@ -351,17 +351,10 @@ var cola;
         }(vpsc.Variable));
         var Projection = /** @class */ (function () {
             function Projection(nodes, groups, rootGroup, constraints, avoidOverlaps) {
-<<<<<<< HEAD
                 if (rootGroup === void 0) { rootGroup = null; }
                 if (constraints === void 0) { constraints = null; }
                 if (avoidOverlaps === void 0) { avoidOverlaps = false; }
                 var _this = this;
-=======
-                var _this = this;
-                if (rootGroup === void 0) { rootGroup = null; }
-                if (constraints === void 0) { constraints = null; }
-                if (avoidOverlaps === void 0) { avoidOverlaps = false; }
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
                 this.nodes = nodes;
                 this.groups = groups;
                 this.rootGroup = rootGroup;

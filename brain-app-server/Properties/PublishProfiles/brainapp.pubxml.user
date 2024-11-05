@@ -12,20 +12,12 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   </PropertyGroup>
   <ItemGroup>
     <File Include="bin/brain-app-server.dll">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
       <publishTime>08/11/2014 15:39:11</publishTime>
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     </File>
     <File Include="bin/brain-app-server.pdb">
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="brain-app/brain3d.js">
-<<<<<<< HEAD
-      <publishTime>08/11/2014 15:39:19</publishTime>
-=======
       <publishTime>10/10/2024 12:24:37</publishTime>
     </File>
     <File Include="bin/brain-app-server.pdb">
@@ -36,13 +28,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="brain-app/brain3d.js.map">
       <publishTime>10/16/2024 14:42:21</publishTime>
->>>>>>> Stashed changes
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
-    </File>
-    <File Include="brain-app/brain3d.js.map">
-      <publishTime>01/01/0001 00:00:00</publishTime>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     </File>
     <File Include="brain-app/brainapp.aspx">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -51,11 +36,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>11/08/2014 13:14:00</publishTime>
     </File>
     <File Include="brain-app/brainapp.js">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
       <publishTime>08/11/2014 15:39:19</publishTime>
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="brain-app/brainapp.js.map">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -140,7 +121,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="brain-app/data/README.txt">
       <publishTime>01/01/0001 00:00:00</publishTime>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     </File>
     <File Include="brain-app/getapp.aspx">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -278,9 +258,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/07/2022 15:46:48</publishTime>
     </File>
     <File Include="brain-app/saveapp.aspx">
-<<<<<<< HEAD
-      <publishTime>08/05/2014 16:13:13</publishTime>
-=======
       <publishTime>10/16/2024 14:42:21</publishTime>
     </File>
     <File Include="brain-app/brainapp.js.map">
@@ -543,9 +520,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="brain-app/upload.aspx">
       <publishTime>02/23/2024 11:40:38</publishTime>
->>>>>>> Stashed changes
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="brain-app/state.js">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -555,7 +529,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="brain-app/upload.aspx">
       <publishTime>01/01/0001 00:00:00</publishTime>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     </File>
     <File Include="cola.v1.min.js">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -567,11 +540,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>10/06/2014 14:20:06</publishTime>
     </File>
     <File Include="compiledtypescript.js">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
       <publishTime>05/22/2014 13:33:11</publishTime>
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="examples/graphdata/BrainLSDecimated0.01.obj">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -3002,7 +2971,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="index.html">
       <publishTime>11/07/2022 13:25:11</publishTime>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     </File>
     <File Include="linklengths.js">
       <publishTime>01/01/0001 00:00:00</publishTime>
@@ -3017,10 +2985,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Web.config">
-<<<<<<< HEAD
       <publishTime>08/11/2014 15:39:19</publishTime>
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="examples/graphdata/BrainLSDecimated0.01.obj">
       <publishTime>02/23/2024 11:40:39</publishTime>
@@ -5469,10 +5434,6 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     </File>
     <File Include="Web.config">
       <publishTime>09/12/2024 16:46:42</publishTime>
->>>>>>> Stashed changes
-=======
-      <publishTime>01/01/0001 00:00:00</publishTime>
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
     </File>
   </ItemGroup>
 </Project>

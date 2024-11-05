@@ -4,11 +4,7 @@
     "noEmitOnError": true,
     "removeComments": false,
     "sourceMap": true,
-<<<<<<< HEAD
     "target": "ES5"
-=======
-    "target": "es5"
->>>>>>> d2c0c4a93bc9257fcb4df0dd36767a98f8c8a07a
   },
   "exclude": [
     "node_modules",

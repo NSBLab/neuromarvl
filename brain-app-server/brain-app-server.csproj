@@ -214,6 +214,7 @@
     <Content Include="examples\graphdata\BrainMesh_ICBM152.obj" />
     <Content Include="examples\graphdata\T1.hdr" />
     <Content Include="brain-app\data\example.zip" />
+    <Content Include="examples.md" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\brainapp.pubxml" />
     <Content Include="brain-app\graph2d.js" />
@@ -1029,8 +1030,6 @@
     <TypeScriptCompile Include="extern\vpsc.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="extern\" />
-    <Folder Include="brain-app\save\" />
     <Folder Include="extern\bootstrap-colorpicker\js\old\" />
   </ItemGroup>
   <ItemGroup>

@@ -907,13 +907,19 @@ class NeuroMarvl {
     setSelectEdgeKeyBackgroundColor = (color: string) => {
         if (color.length === 6) color = "#" + color; 
         var keySelection = <any>document.getElementById('select-edge-key');
-        keySelection.options[keySelection.selectedIndex].style.backgroundColor = color;
+
+        if (keySelection.selectedIndex != -1) {
+            keySelection.options[keySelection.selectedIndex].style.backgroundColor = color;
+        }
+        
     }
 
     setSelectNodeKeyBackgroundColor = (color: string) => {
         if (color.length === 6) color = "#" + color; 
         var keySelection = <any>document.getElementById('select-node-key');
-        keySelection.options[keySelection.selectedIndex].style.backgroundColor = color;
+        if (keySelection.selectedIndex != -1) {
+            keySelection.options[keySelection.selectedIndex].style.backgroundColor = color;
+        }
     }
 
     setDefaultEdgeDiscretizedValues = () => {
@@ -1854,7 +1860,7 @@ class NeuroMarvl {
                     if (i == 0) {
                         var color = option.style.backgroundColor;
                         var hex = this.colorToHex(color);
-                        (<any>document.getElementById('input-edge-color')).color.fromString(hex.substring(1));
+                        (<any>$("#input-edge-color")).colorpicker('setValue', hex);
                     }
                     $('#select-edge-key').append(option);
                 }
@@ -1962,7 +1968,7 @@ class NeuroMarvl {
         this.referenceDataSet.brainCoords = [Array(len), Array(len), Array(len)];
         this.referenceDataSet.info.nodeCount = len;
         for (var i = 0; i < len; ++i) {
-            var words = lines[i].split(' ');
+            var words = lines[i].split(/\s+/);
             // Translate the coords into Cola's format
             this.referenceDataSet.brainCoords[0][i] = parseFloat(words[0]);
             this.referenceDataSet.brainCoords[1][i] = parseFloat(words[1]);
@@ -2273,7 +2279,9 @@ class NeuroMarvl {
         var simMatrix = [];
         lines.forEach((line, i) => {
             if (line.length > 0) {
-                simMatrix.push(line.split(' ').map(parseFloat));
+                console.log(line);
+                console.log(line.split(/\s+/).map(parseFloat));
+                simMatrix.push(line.split(/\s+/).map(parseFloat));
             }
         });
         // Normalise values to range 0...1, files can have very different value ranges

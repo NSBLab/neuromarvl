@@ -9,3 +9,4 @@ brain-app-server/brain-app/save
 
 brain-app-server/Properties/
 /packages
+/brain-app-server/obj/Release/Package/PackageTmp/bin/brain-app-server.dll

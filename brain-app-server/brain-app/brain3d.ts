@@ -444,7 +444,7 @@ class Brain3DApp implements Application, Loopable {
             .append($('<span id="front-view-' + this.id + '" title="Front view" class="view-panel-span" data-toggle="tooltip" data-placement="left">F</span>')
                 .css({ 'right': '6px', 'top': '110px', 'z-index': 1000 })
                 .click(function () { varDefaultOrientationsOnClick("front"); }))
-            .append($('<span id="back-view-' + this.id + '" title="Back view" class="view-panel-span" data-toggle="tooltip" data-placement="left">B</span>')
+            .append($('<span id="back-view-' + this.id + '" title="Back view" class="view-panel-span" data-toggle="tooltip" data-placement="left">P</span>')
                 .css({ 'right': '6px', 'top': '130px', 'z-index': 1000 })
                 .click(function () { varDefaultOrientationsOnClick("back"); }))
             .append($('<span id="all-labels-' + this.id + '" title="Show/hide all node labels" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8704</span>')

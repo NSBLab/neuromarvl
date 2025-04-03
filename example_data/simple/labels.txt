@@ -1,0 +1,10 @@
+Left_Frontal_Lobe
+Left_Parietal_Lobe
+Left_Temporal_Lobe
+Left_Occipital_Lobe
+Left_Cerebellum
+Right_Frontal_Lobe
+Right_Parietal_Lobe
+Right_Temporal_Lobe
+Right_Occipital_Lobe
+Right_Cerebellum

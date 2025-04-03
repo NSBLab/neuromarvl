@@ -1,0 +1,12 @@
+Visual1	#0000FF
+Visual2	#6400FF
+Somatomotor	#00FFFF
+Cingulo-Opercular	#990099
+Dorsal-attention	#00FF00
+Language	#009A9A
+Frontoparietal	#FFFF00
+Auditory	#F93DFB
+Default	#FF0000
+Posterior-Multimodal	#B15928
+Ventral-Multimodal	#FF9C00
+Orbito-Affective	#417C00

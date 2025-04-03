@@ -1,0 +1,17 @@
+Network_1	#781285
+Network_2	#FF0000
+Network_3	#4682B4
+Network_4	#2ACCA3
+Network_5	#499B3B
+Network_6	#00760E
+Network_7	#C439F9
+Network_8	#FF97D4
+Network_9	#DCF8A3
+Network_10	#798631
+Network_11	#778BAF
+Network_12	#E69321
+Network_13	#863149
+Network_14	#0B2FFF
+Network_15	#000082
+Network_16	#FFFF00
+Network_17	#CD3D4E

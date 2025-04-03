@@ -1,0 +1,12 @@
+Visual1
+Visual2
+Somatomotor
+Cingulo-Opercular
+Dorsal-attention
+Language
+Frontoparietal
+Auditory
+Default
+Posterior-Multimodal
+Ventral-Multimodal
+Orbito-Affective

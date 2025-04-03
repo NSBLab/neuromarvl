@@ -1,0 +1,7 @@
+Control_(Frontoparietal)	#E69321
+Default	#CD3D4E
+Dorsal_Attention	#00760E
+Limbic	#DCF8A3
+Somatomotor	#4682B4
+Ventral_Attention	#C439F9
+Visual	#781285

@@ -161,15 +161,21 @@ class Graph3D {
         // draw text on canvas 
         var multiplyScale = 3; // for higher resolution of the label
         var varFontSize = fontSize * multiplyScale;
-
+        
         // 1. create a canvas element
         var canvas = document.createElement('canvas');
 
         var context = canvas.getContext('2d');
         //context.font = "Bold " + varFontSize + "px Arial";
-        
+
+        var canvasWidth;
+        if (text == "") {
+            canvasWidth = 8;
+        } else {
+            canvasWidth = context.measureText(text).width * 2;
+        }
         // Canvas dimensions expected to be a power of 2
-        canvas.width = this.nextPowerOf2(context.measureText(text).width * 2);
+        canvas.width = this.nextPowerOf2(canvasWidth);
         canvas.height = this.nextPowerOf2(varFontSize);
 
         context.font = varFontSize + "px Arial";
@@ -192,6 +198,7 @@ class Graph3D {
             depthTest: false
         });
         var sprite = new THREE.Sprite(spriteMaterial);
+        
         sprite.scale.set(canvas.width / multiplyScale, canvas.height / multiplyScale, 1);
         sprite.renderOrder = RENDER_ORDER_EDGE;
 

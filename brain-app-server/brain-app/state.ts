@@ -282,11 +282,14 @@ class DataSet {
 }
 
 class SaveFile {
-    // user-uploaded file names
+    // user-uploaded file names, munged
     serverFileNameCoord: string;
     serverFileNameMatrix: string;
     serverFileNameAttr: string;
     serverFileNameLabel: string;
+    serverFileNameModel: string;
+    // original name of the uploaded surface
+    uploadedModelName: string;
 
     // UI Settings
     surfaceSettings;
@@ -365,6 +368,8 @@ class SaveFile {
             if (sourceObject.serverFileNameMatrix) this.serverFileNameMatrix = sourceObject.serverFileNameMatrix;
             if (sourceObject.serverFileNameAttr) this.serverFileNameAttr = sourceObject.serverFileNameAttr;
             if (sourceObject.serverFileNameLabel) this.serverFileNameLabel = sourceObject.serverFileNameLabel;
+            if (sourceObject.serverFileNameModel) this.serverFileNameModel = sourceObject.serverFileNameModel;
+            if (sourceObject.uploadedModelName) this.uploadedModelName = sourceObject.uploadedModelName;
 
             if (sourceObject.filteredRecords) this.serverFileNameCoord = sourceObject.filteredRecords;
         }

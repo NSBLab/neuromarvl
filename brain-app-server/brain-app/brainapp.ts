@@ -17,6 +17,7 @@ const TYPE_COORD = "coordinates";
 const TYPE_MATRIX = "matrix";
 const TYPE_ATTR = "attributes";
 const TYPE_LABEL = "labels";
+const TYPE_MODEL = "model";
 
 // The names of the views are referenced quite often
 const TL_VIEW = '#view-top-left';
@@ -375,8 +376,12 @@ class NeuroMarvl {
                         // Ensure that data is not empty
                         if (!data || !data.length) return;
 
-                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));                        
+                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));
+                        console.log(this.saveFileObj);
                         for (var app of this.saveFileObj.saveApps) {
+                            console.log("start ");
+                            console.log(app);
+
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
 
@@ -622,7 +627,9 @@ class NeuroMarvl {
 
     uploadTextFile = (file, fileType: string) => {
         var reader = new FileReader();
-
+        
+        // disable the save buttons
+        $('#control-panel-bottom').find('.btn').attr('disabled', 'true');
         reader.onload = () => {
             $.post("brain-app/upload.aspx",
                 {
@@ -631,7 +638,11 @@ class NeuroMarvl {
                     type: fileType
                 },
                 (data, status) => {
+                    console.log(status);
+                    // enable the save buttons
+                    $('#control-panel-bottom').find('.btn').removeAttr('disabled');
                     if (status.toLowerCase() == "success") {
+                        console.log(data);
                         if (fileType == TYPE_COORD) {
                             this.saveFileObj.serverFileNameCoord = data;
                         }
@@ -643,6 +654,9 @@ class NeuroMarvl {
                         }
                         else if (fileType == TYPE_LABEL) {
                             this.saveFileObj.serverFileNameLabel = data;
+                        }
+                        else if (fileType == TYPE_MODEL) {
+                            this.saveFileObj.serverFileNameModel = data;
                         }
                     }
                     else {
@@ -757,6 +771,8 @@ class NeuroMarvl {
             attrLoaded: false,
             labelLoaded: (saveObj.serverFileNameLabel) ? false : true
         };
+        console.log("loadUploadedData");
+        console.log(saveObj);
 
         let sourceLocation = (source === "example") ? "save_examples" : "save";
         
@@ -1713,7 +1729,24 @@ class NeuroMarvl {
 
         // each view name has a dedicated Id
         let viewTypeId = this.viewToId(viewType);
+        //console.log("this.createBrainView");
+        console.log("model");
+        console.log(model);
+        console.log("source");
+        console.log(source);
 
+        if (model == "upload") {
+            $("#div-upload-brain-model-name").show();
+            console.log(this.saveFileObj);
+            $("#uploaded-label-model-name").html(this.saveFileObj.uploadedModelName);
+        }
+        //console.log(this.saveFileObj);
+        //var realModel;
+
+        //if (model === "upload") {
+        //    realModel = this.saveFileObj.serverFileNameModel;
+        //}
+        // object is the return value from the funcion that loads teh brain model surface
         this.loadBrainModel(model, object => {
             $(viewType).empty();
 
@@ -2202,27 +2235,46 @@ class NeuroMarvl {
             document.body.removeChild(this.divLoadingNotification);
     }
 
+    endsWith = (str: string, target: string) => {
+        return str.slice(-target.length) === target;
+    }
+
     // Load the brain surface (hardcoded - it is not simple to load geometry from the local machine, but this has not been deeply explored yet).
     // NOTE: The loaded model cannot be used in more than one WebGL context (scene) at a time - the geometry and materials must be .cloned() into
     // new THREE.Mesh() objects by the application wishing to use the model.
     loadBrainModel = (model: string, callback) => {
+
         let file = (model === 'ch2') && 'BrainMesh_Ch2withCerebellum.obj'
             || (model === 'ch2nocerebellum') && 'BrainMesh_Ch2.obj'
             || (model === 'icbm') && 'BrainMesh_ICBM152.obj'
             ;
-        if (!file) {
-            callback();
-            return;
-        }
 
-        this.loader.load('examples/graphdata/' + file, object => {
-            if (!object) {
-                CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
+        if (model != 'upload') {
+
+            if (!file) {
+                callback();
                 return;
             }
 
-            callback(object);
-        });
+            this.loader.load('examples/graphdata/' + file, object => {
+                if (!object) {
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
+                    return;
+                }
+
+                callback(object);
+            });
+        } else {
+            this.loader.load('brain-app/save/' + this.saveFileObj.serverFileNameModel, object => {
+                if (!object) {
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
+                    return;
+                }
+
+                callback(object);
+            });
+        }
+
     }
 
     setBrainSurfaceRotation = (quat) => {
@@ -2279,8 +2331,8 @@ class NeuroMarvl {
         var simMatrix = [];
         lines.forEach((line, i) => {
             if (line.length > 0) {
-                console.log(line);
-                console.log(line.split(/\s+/).map(parseFloat));
+                //console.log(line);
+                //console.log(line.split(/\s+/).map(parseFloat));
                 simMatrix.push(line.split(/\s+/).map(parseFloat));
             }
         });
@@ -2587,14 +2639,22 @@ class NeuroMarvl {
             $this.addClass('active');
         });
 
+
         $('#button-upload-model').button().click(() => {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Uploading the brain model...");
             var file = (<any>$('#input-select-model').get(0)).files[0];
+            console.log(file);
             if (file) {
                 var reader = new FileReader();
                 reader.onload = () => {
+
                     let brainModel = this.loader.parse(reader.result);
+
                     this.applicationsInstances[0].setBrainModelObject(brainModel);
+                    this.uploadTextFile(file, TYPE_MODEL);
+                    // save the model to the "save" directory
+                    this.saveFileObj.uploadedModelName = file.name;
+                    $("#uploaded-label-model-name").html(this.saveFileObj.uploadedModelName);
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "New brain model uploaded");
                 };
                 reader.onerror = () => {
@@ -2737,8 +2797,10 @@ class NeuroMarvl {
 
             if (model === "upload") {
                 $("#div-upload-brain-model").show();
+                $("#div-upload-brain-model-name").show();
             } else {
                 $("#div-upload-brain-model").hide();
+                $("#div-upload-brain-model-name").hide();
                 
                 var model = $('#select-brain3d-model').val();
                 this.setBrainModel(TL_VIEW, model);

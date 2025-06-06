@@ -19,7 +19,14 @@ namespace brain_app_server.brain_app
             string type = Request.Form["type"];
                         
             string path;
-            filename += ("_" + type + ".txt");
+            if(type == "model")
+            {
+                filename += ("_" + type + ".obj");
+            } else
+            {
+                filename += ("_" + type + ".txt");
+            }
+
             path = Server.MapPath("save") + "\\" + filename;
 
             try

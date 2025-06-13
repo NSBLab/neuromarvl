@@ -5,6 +5,10 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using System.IO;
+using System.IO.Compression;
+
+
 namespace brain_app_server.brain_app
 {
     public partial class upload : System.Web.UI.Page
@@ -19,6 +23,8 @@ namespace brain_app_server.brain_app
             string type = Request.Form["type"];
                         
             string path;
+
+            string pathgz;
             if(type == "model")
             {
                 filename += ("_" + type + ".obj");
@@ -28,14 +34,28 @@ namespace brain_app_server.brain_app
             }
 
             path = Server.MapPath("save") + "\\" + filename;
+            pathgz = Server.MapPath("save") + "\\" + filename + ".gz";
 
-            try
+            using (FileStream compressedFileStream = File.Create(pathgz))
             {
-                System.IO.File.WriteAllText(path, fileText);
+                using (GZipStream compressionStream = new GZipStream(compressedFileStream,
+                   CompressionMode.Compress))
+                {
+                    using (StreamWriter writer = new StreamWriter(compressionStream))
+                    {
+                        writer.Write(fileText);
+                    }
+                }
             }
-            catch
-            {
-            }
+
+
+            //try
+            //{
+            //    System.IO.File.WriteAllText(path, fileText);
+            //}
+            //catch
+            //{
+            //}
 
             Response.Write(filename);
         }

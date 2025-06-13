@@ -16,7 +16,7 @@ namespace brain_app_server.brain_app
             if ((ip != null) && (!ip.Contains("::"))) guid += ("_" + ip);
 
             string saveString = Request.Form["save"];
-            string path = Server.MapPath("save") + "\\" + guid +".txt";
+            string path = Server.MapPath("save") + "\\" + guid + ".txt";
 
             try
             {

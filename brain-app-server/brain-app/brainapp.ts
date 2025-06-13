@@ -377,11 +377,9 @@ class NeuroMarvl {
                         if (!data || !data.length) return;
 
                         this.saveFileObj = new SaveFile(jQuery.parseJSON(data));
-                        console.log(this.saveFileObj);
+                        
                         for (var app of this.saveFileObj.saveApps) {
-                            console.log("start ");
-                            console.log(app);
-
+                        
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
 
@@ -638,11 +636,9 @@ class NeuroMarvl {
                     type: fileType
                 },
                 (data, status) => {
-                    console.log(status);
                     // enable the save buttons
                     $('#control-panel-bottom').find('.btn').removeAttr('disabled');
                     if (status.toLowerCase() == "success") {
-                        console.log(data);
                         if (fileType == TYPE_COORD) {
                             this.saveFileObj.serverFileNameCoord = data;
                         }
@@ -771,9 +767,6 @@ class NeuroMarvl {
             attrLoaded: false,
             labelLoaded: (saveObj.serverFileNameLabel) ? false : true
         };
-        console.log("loadUploadedData");
-        console.log(saveObj);
-
         let sourceLocation = (source === "example") ? "save_examples" : "save";
         
         var callback = () => {
@@ -785,67 +778,189 @@ class NeuroMarvl {
             }
         }
 
-        $.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameCoord, text => {
-            this.parseCoordinates(text);
-            $('#label-coords')
-                .text("Pre-uploaded data")
-                .css({ color: 'green' });
-            status.coordLoaded = true;
-            // change status
-            document.getElementById("button-select-coords-filename").innerHTML = saveObj.serverFileNameCoord;
-            this.changeFileStatus("coords-status", "uploaded");
 
-            callback();
-        });
-        $.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameMatrix, text => {
-            this.parseSimilarityMatrix(text, this.referenceDataSet);
-            $('#label-similarity-matrix')
-                .text("Pre-uploaded data")
-                .css({ color: 'green' });
-            status.matrixLoaded = true;
 
-            // change status
-            document.getElementById("button-select-matrix-filename").innerHTML = saveObj.serverFileNameMatrix;
-            this.changeFileStatus("matrix-status", "uploaded");
+        $.post("brain-app/getfile.aspx",
+            {
+                filename: saveObj.serverFileNameCoord,
+                source: "save"
+            },
+            (data, loadStatus) => {
+                if (loadStatus.toLowerCase() == "success") {
+                    // Ensure that data is not empty
+                    if (!data || !data.length) return;
 
-            callback();
-        });
-        $.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameAttr, text => {
-            this.parseAttributes(text, this.referenceDataSet);
-            //$('#d1-att').css({ color: 'green' });
-            $('#label-attributes')
-                .text("Pre-uploaded data")
-                .css({ color: 'green' });
-            this.setupAttributeTab();
-            status.attrLoaded = true;
-            // change status
-            document.getElementById("button-select-attrs-filename").innerHTML = saveObj.serverFileNameAttr;
-            this.changeFileStatus("attrs-status", "uploaded");
+                    this.parseCoordinates(data);
+                    $('#label-coords')
+                        .text("Pre-uploaded data")
+                        .css({ color: 'green' });
+                    status.coordLoaded = true;
+                    // change status
+                    document.getElementById("button-select-coords-filename").innerHTML = saveObj.serverFileNameCoord;
+                    this.changeFileStatus("coords-status", "uploaded");
 
-            callback()
-        });
+                    callback();
+                }
+                else {
+                    alert("Loading is: " + status + "\nData: " + data);
+                }
+            }
+        );
+
+        $.post("brain-app/getfile.aspx",
+            {
+                filename: saveObj.serverFileNameMatrix,
+                source: "save"
+            },
+            (data, loadStatus) => {
+                if (loadStatus.toLowerCase() == "success") {
+                    // Ensure that data is not empty
+                    if (!data || !data.length) return;
+                    
+                    this.parseSimilarityMatrix(data, this.referenceDataSet);
+                    $('#label-similarity-matrix')
+                        .text("Pre-uploaded data")
+                        .css({ color: 'green' });
+                    status.matrixLoaded = true;
+
+                    // change status
+                    document.getElementById("button-select-matrix-filename").innerHTML = saveObj.serverFileNameMatrix;
+                    this.changeFileStatus("matrix-status", "uploaded");
+
+                    callback();
+                }
+                else {
+                    alert("Loading is: " + status + "\nData: " + data);
+                }
+            }
+        );
+
+
+        $.post("brain-app/getfile.aspx",
+            {
+                filename: saveObj.serverFileNameAttr,
+                source: "save"
+            },
+            (data, loadStatus) => {
+                if (loadStatus.toLowerCase() == "success") {
+                    // Ensure that data is not empty
+                    if (!data || !data.length) return;
+                    this.parseAttributes(data, this.referenceDataSet);
+                    //$('#d1-att').css({ color: 'green' });
+                    $('#label-attributes')
+                        .text("Pre-uploaded data")
+                        .css({ color: 'green' });
+                    this.setupAttributeTab();
+                    status.attrLoaded = true;
+                    // change status
+                    document.getElementById("button-select-attrs-filename").innerHTML = saveObj.serverFileNameAttr;
+                    this.changeFileStatus("attrs-status", "uploaded");
+
+                    callback()
+                }
+                else {
+                    alert("Loading is: " + status + "\nData: " + data);
+                }
+            }
+        );
+        
         // Check if Label file is uploaded
         if (saveObj.serverFileNameLabel) {
-            $.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameLabel, text => {
-                this.parseLabels(text);
-                //$('#shared-labels').css({ color: 'green' });
-                $('#label-labels')
-                    .text("Pre-uploaded data")
-                    .css({ color: 'green' });
+            $.post("brain-app/getfile.aspx",
+                {
+                    filename: saveObj.serverFileNameLabel,
+                    source: "save"
+                },
+                (data, loadStatus) => {
+                    if (loadStatus.toLowerCase() == "success") {
+                        // Ensure that data is not empty
+                        if (!data || !data.length) return;
+                        this.parseLabels(data);
+                        //$('#shared-labels').css({ color: 'green' });
+                        $('#label-labels')
+                            .text("Pre-uploaded data")
+                            .css({ color: 'green' });
 
-                status.labelLoaded = true;
+                        status.labelLoaded = true;
 
-                // change status
-                document.getElementById("button-select-labels-filename").innerHTML = saveObj.serverFileNameLabel;
-                this.changeFileStatus("labels-status", "uploaded");
+                        // change status
+                        document.getElementById("button-select-labels-filename").innerHTML = saveObj.serverFileNameLabel;
+                        this.changeFileStatus("labels-status", "uploaded");
 
-                callback();
-            });
+                        callback();
+                    }
+                    else {
+                        alert("Loading is: " + status + "\nData: " + data);
+                    }
+                }
+            );
         }
         else {
             status.labelLoaded = true;
             callback();
         }
+
+        //$.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameCoord, text => {
+        //    this.parseCoordinates(text);
+        //    $('#label-coords')
+        //        .text("Pre-uploaded data")
+        //        .css({ color: 'green' });
+        //    status.coordLoaded = true;
+        //    // change status
+        //    document.getElementById("button-select-coords-filename").innerHTML = saveObj.serverFileNameCoord;
+        //    this.changeFileStatus("coords-status", "uploaded");
+
+        //    callback();
+        //});
+        //$.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameMatrix, text => {
+        //    this.parseSimilarityMatrix(text, this.referenceDataSet);
+        //    $('#label-similarity-matrix')
+        //        .text("Pre-uploaded data")
+        //        .css({ color: 'green' });
+        //    status.matrixLoaded = true;
+
+        //    // change status
+        //    document.getElementById("button-select-matrix-filename").innerHTML = saveObj.serverFileNameMatrix;
+        //    this.changeFileStatus("matrix-status", "uploaded");
+
+        //    callback();
+        //});
+        //$.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameAttr, text => {
+        //    this.parseAttributes(text, this.referenceDataSet);
+        //    //$('#d1-att').css({ color: 'green' });
+        //    $('#label-attributes')
+        //        .text("Pre-uploaded data")
+        //        .css({ color: 'green' });
+        //    this.setupAttributeTab();
+        //    status.attrLoaded = true;
+        //    // change status
+        //    document.getElementById("button-select-attrs-filename").innerHTML = saveObj.serverFileNameAttr;
+        //    this.changeFileStatus("attrs-status", "uploaded");
+
+        //    callback()
+        //});
+        //// Check if Label file is uploaded
+        //if (saveObj.serverFileNameLabel) {
+        //    $.get('brain-app/' + sourceLocation + '/' + saveObj.serverFileNameLabel, text => {
+        //        this.parseLabels(text);
+        //        //$('#shared-labels').css({ color: 'green' });
+        //        $('#label-labels')
+        //            .text("Pre-uploaded data")
+        //            .css({ color: 'green' });
+
+        //        status.labelLoaded = true;
+
+        //        // change status
+        //        document.getElementById("button-select-labels-filename").innerHTML = saveObj.serverFileNameLabel;
+        //        this.changeFileStatus("labels-status", "uploaded");
+
+        //        callback();
+        //    });
+        //}
+        //else {
+        //    status.labelLoaded = true;
+        //    callback();
+        //}
         $('#load-example-data').button().prop("disabled", "disabled");
 
     }
@@ -1729,15 +1844,9 @@ class NeuroMarvl {
 
         // each view name has a dedicated Id
         let viewTypeId = this.viewToId(viewType);
-        //console.log("this.createBrainView");
-        console.log("model");
-        console.log(model);
-        console.log("source");
-        console.log(source);
-
+        
         if (model == "upload") {
             $("#div-upload-brain-model-name").show();
-            console.log(this.saveFileObj);
             $("#uploaded-label-model-name").html(this.saveFileObj.uploadedModelName);
         }
         //console.log(this.saveFileObj);
@@ -2265,16 +2374,26 @@ class NeuroMarvl {
                 callback(object);
             });
         } else {
-            this.loader.load('brain-app/save/' + this.saveFileObj.serverFileNameModel, object => {
-                if (!object) {
-                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
-                    return;
+            $.post("brain-app/getfile.aspx",
+                {
+                    filename: this.saveFileObj.serverFileNameModel,
+                    source: "save"
+                },
+                (data, loadStatus) => {
+                    
+                    if (loadStatus.toLowerCase() == "success") {
+                        // Ensure that data is not empty
+                        if (!data || !data.length) return;
+                        
+                        let object = this.loader.parse(data);
+                        callback(object);
+                    }
+                    else {
+                        alert("Loading is: " + status + "\nData: " + data);
+                    }
                 }
-
-                callback(object);
-            });
+            );
         }
-
     }
 
     setBrainSurfaceRotation = (quat) => {
@@ -2643,7 +2762,6 @@ class NeuroMarvl {
         $('#button-upload-model').button().click(() => {
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Uploading the brain model...");
             var file = (<any>$('#input-select-model').get(0)).files[0];
-            console.log(file);
             if (file) {
                 var reader = new FileReader();
                 reader.onload = () => {

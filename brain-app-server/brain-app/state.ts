@@ -700,7 +700,7 @@ class Attributes {
         }
 
         this.attrValues = values;
-
+        console.log(this.attrValues);
     }
 
     getValue(columnIndex: number, index: number) {

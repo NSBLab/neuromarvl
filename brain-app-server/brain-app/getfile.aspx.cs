@@ -6,11 +6,11 @@ using System.Web.UI.WebControls;
 
 namespace brain_app_server.brain_app
 {
-    public partial class getapp : Page
+    public partial class getfile : Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            string filename = Request.Form["filename"] + ".txt";
+            string filename = Request.Form["filename"];
             string savePath = Server.MapPath("save");
             string examplePath = Server.MapPath("save_examples");
             string json = "";
@@ -20,7 +20,9 @@ namespace brain_app_server.brain_app
                 Directory.CreateDirectory(savePath);
             }
             //# System.Diagnostics.Debug.WriteLine("filename:" + Request.Form["filename"] + ".txt");
-            System.Diagnostics.Debug.WriteLine("source:" + Request.Form["source"]);
+            //System.Diagnostics.Debug.WriteLine("source:" + Request.Form["source"]);
+
+            
             try
             {
                 if (Request.Form["source"] == "example")
@@ -35,12 +37,13 @@ namespace brain_app_server.brain_app
                 }
                 else
                 {
-                    if(File.Exists(savePath + "\\" + filename))
+                    if (File.Exists(savePath + "\\" + filename))
                     {
                         json = File.ReadAllText(savePath + "\\" + filename);
                     } 
                     else if(File.Exists(savePath + "\\" + filename + ".gz"))
                     {
+                        System.Diagnostics.Debug.WriteLine(savePath + "\\" + filename + ".gz");
                         using (FileStream fInStream = new FileStream(savePath + "\\" + filename + ".gz",
                             FileMode.Open, FileAccess.Read))
                         {
@@ -48,10 +51,7 @@ namespace brain_app_server.brain_app
                             {
                                 using (StreamReader unzip = new StreamReader(zipStream))
                                 {
-                                    while (!unzip.EndOfStream)
-                                    {
-                                        json = unzip.ReadToEnd();
-                                    }
+                                    json = unzip.ReadToEnd();
                                 }
                             }
                         }

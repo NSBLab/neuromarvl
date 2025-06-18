@@ -1,0 +1,3 @@
+- civet and fsaverage surfaces taken from neuromaps
+	- no inflated surfaces as these are out of register
+- fsLR surfaces taken from [Diedrichsen Lab GitHub](https://github.com/DiedrichsenLab/fs_LR_32) and renamed

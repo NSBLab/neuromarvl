@@ -288,9 +288,17 @@ class SaveFile {
     serverFileNameAttr: string;
     serverFileNameLabel: string;
     serverFileNameModel: string;
+    serverFileNameModelLeftHemi: string;
+    serverFileNameModelRightHemi: string;
+
     // original name of the uploaded surface
     uploadedModelName: string;
+    uploadedModelNameLeftHemi: string;
+    uploadedModelNameRightHemi: string;
 
+    uploadedModelMode: string;
+    uploadedModelBilateralValid: boolean;
+    uploadedModelUnilateralValid: boolean;
     // UI Settings
     surfaceSettings;
     edgeSettings;
@@ -369,7 +377,14 @@ class SaveFile {
             if (sourceObject.serverFileNameAttr) this.serverFileNameAttr = sourceObject.serverFileNameAttr;
             if (sourceObject.serverFileNameLabel) this.serverFileNameLabel = sourceObject.serverFileNameLabel;
             if (sourceObject.serverFileNameModel) this.serverFileNameModel = sourceObject.serverFileNameModel;
+            if (sourceObject.serverFileNameModelLeftHemi) this.serverFileNameModelLeftHemi = sourceObject.serverFileNameModelLeftHemi;
+            if (sourceObject.serverFileNameModelRightHemi) this.serverFileNameModelRightHemi = sourceObject.serverFileNameModelRightHemi;
             if (sourceObject.uploadedModelName) this.uploadedModelName = sourceObject.uploadedModelName;
+            if (sourceObject.uploadedModelNameLeftHemi) this.uploadedModelNameLeftHemi = sourceObject.uploadedModelNameLeftHemi;
+            if (sourceObject.uploadedModelNameRightHemi) this.uploadedModelNameRightHemi = sourceObject.uploadedModelNameRightHemi;
+            if (sourceObject.uploadedModelMode) this.uploadedModelMode = sourceObject.uploadedModelMode;
+            if (sourceObject.uploadedModelBilateralValid) this.uploadedModelBilateralValid = sourceObject.uploadedModelBilateralValid;
+            if (sourceObject.uploadedModelUnilateralValid) this.uploadedModelUnilateralValid = sourceObject.uploadedModelUnilateralValid;
 
             if (sourceObject.filteredRecords) this.serverFileNameCoord = sourceObject.filteredRecords;
         }
@@ -700,7 +715,6 @@ class Attributes {
         }
 
         this.attrValues = values;
-        console.log(this.attrValues);
     }
 
     getValue(columnIndex: number, index: number) {

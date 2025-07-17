@@ -25,7 +25,7 @@ namespace brain_app_server.brain_app
             string path;
 
             string pathgz;
-            if(type == "model")
+            if(type == "model" || type == "model_lh" || type == "model_rh")
             {
                 filename += ("_" + type + ".obj");
             } else

@@ -58,12 +58,12 @@ class CommonUtilities {
 
     // compute the bounding box of the brain
     static computeScreenSpaceBoundingBox(brainModelOrigin, camera) {
-        
         var vertex = new THREE.Vector3();
         var min = new THREE.Vector3(1, 1, 1);
         var max = new THREE.Vector3(-1, -1, -1);
         brainModelOrigin.traverse(function (child) {
             if (child instanceof THREE.Mesh) {
+                
                 var attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position")
                 var oldPositions = Array.prototype.slice.call(attribute.array);
                 const FACE_CHUNK = 9;

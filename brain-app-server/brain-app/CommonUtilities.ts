@@ -23,6 +23,26 @@ class CommonUtilities {
         return true;
     }
 
+    /*
+     * Returns true if all non-zero elements are the same.
+     */
+    static isBinary(matrix: number[][]) {
+        let val = 0;
+
+        if (matrix.length !== matrix[0].length) return false;
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix.length; j++) {
+                if (matrix[i][j] !== 0 && matrix[i][j] !== val && val != 0) {
+                    return false;
+                } else if (matrix[i][j] !== 0 && val == 0) {
+                    val = matrix[i][j];
+                }
+            }
+        }
+
+        return true;
+    }
+
     static isSymmetrical(matrix: number[][]) {
         if (matrix.length !== matrix[0].length) return false;
         for (var i = 0; i < matrix.length; i++) {
@@ -150,7 +170,7 @@ class CommonUtilities {
             alertTypeString = "Warning!";
         } else if (alertType === this.alertType.ERROR) {
             console.log("ERROR: " + alertMessage);
-            console.trace();
+            //console.trace();
             alertTypeClass = "alert-danger";
             alertIcon = "glyphicon-remove-sign";
             alertTypeString = "Error!";

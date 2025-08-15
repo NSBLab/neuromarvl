@@ -470,7 +470,7 @@ class Brain3DApp implements Application, Loopable {
             .append($("<div id='div-graph-controls'></div>").css({ position: "absolute", bottom: 0 })
                 // Controls for the bottom of the graph area
 
-                .append('<p>Showing <label id="count-' + this.id + '">0</label> edges (<label id=percentile-' + this.id + '>0</label>th percentile)</p>')
+                .append('<p><div id="edge-count-label-' + this.id + '">Showing <label id="count-' + this.id + '">0</label> edges (<label id=percentile-' + this.id + '>0</label>th percentile)</div><div id="edge-count-binary-' + this.id + '">Binary matrix, all edges shown</div></p>')
 
                 .append($(`<input id="edge-count-slider-${this.id}" type="text" />`))
 
@@ -1517,6 +1517,7 @@ class Brain3DApp implements Application, Loopable {
     initEdgeCountSlider(app: SaveApp) {
         this.edgeCountSliderOnChange(app.edgeCount);
         $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", parseInt(<any>app.edgeCount));
+        console.log(this.dataSet.info.isBinaryMatrix);
     }
 
     initShowNetwork(app: SaveApp) {
@@ -1682,7 +1683,10 @@ class Brain3DApp implements Application, Loopable {
         let percentile = numEdges * 100 / max;
         let $percentile = $('#percentile-' + this.id).get(0);
         if ($percentile) $percentile.textContent = percentile.toFixed(2);
-        if (this.brainSurfaceMode === 0) {
+        if (this.brainSurfaceMode === 0 ||
+            this.brainSurfaceMode === "both" ||
+            this.brainSurfaceMode === "left" ||
+            this.brainSurfaceMode === "right") {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
         } else {
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
@@ -2897,7 +2901,11 @@ class Brain3DApp implements Application, Loopable {
         this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer, this.commonData, this.saveFileObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
 
         // Initialise the filtering
-        if (this.brainSurfaceMode === 0) {
+        
+        if (this.brainSurfaceMode === 0 ||
+            this.brainSurfaceMode === "both" ||
+            this.brainSurfaceMode === "left" ||
+            this.brainSurfaceMode === "right") {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
         } else {
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
@@ -2911,11 +2919,22 @@ class Brain3DApp implements Application, Loopable {
         this.colaGraph.setEdgeColorConfig(this.colorMode, this.colorConfig);
         this.edgeCountSliderOnChange(Number(this.edgeCountSliderValue));
                 
-        // Enable the slider
-        $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", this.edgeCountSliderValue);
-        $("#edge-count-slider-" + this.id)['bootstrapSlider']("setAttribute", "max", maxEdgesShowable);
-        //$('#button-show-network-' + this.id).prop('disabled', false);
+        // Enable the slider if the matrix isnt binary
+        
+        if (this.dataSet.info.isBinaryMatrix) {
+            $("#edge-count-slider-" + this.id)['bootstrapSlider']("disable");
+            $("#edge-count-label-" + this.id).css({ display: 'none' });
+            $("#edge-count-binary-" + this.id).css({ display: 'block' });
+        } else {
+            $("#edge-count-slider-" + this.id)['bootstrapSlider']("enable");
+            $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", this.edgeCountSliderValue);
+            $("#edge-count-slider-" + this.id)['bootstrapSlider']("setAttribute", "max", maxEdgesShowable);
+            $("#edge-count-label-" + this.id).css({ display: 'block' });
+            $("#edge-count-binary-" + this.id).css({ display: 'none' });
+        }
+        
 
+        // is the matrix is binary, disable the edge count slider
         this.needUpdate = true;
         this.showNetwork(false);
 

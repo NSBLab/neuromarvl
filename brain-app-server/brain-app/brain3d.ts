@@ -383,14 +383,17 @@ class Brain3DApp implements Application, Loopable {
         var varCloseBrainAppOnClick = () => { this.closeBrainAppOnClick(); };
         var varDefaultOrientationsOnClick = (s: string) => { this.defaultOrientationsOnClick(s); };
         var varNetworkTypeOnChange = (s: string) => { this.networkTypeOnChange(s); };
-        var varBrainSurfaceModeOnChange = () => {
-            if (this.brainSurfaceMode === 0) {
-                this.brainSurfaceMode = 1;
+        var varBrainSurfaceModeOnChange = (s: string) => {
+            this.brainSurfaceMode = s;
+            //console.log(this.brainSurfaceMode);
+            // tofix tomorrow
+            if (this.brainSurfaceMode === 1 || this.brainSurfaceMode === "split") {
+                //#this.brainSurfaceMode = 1;
 
                 //record display settting
-                $('#display_settings_split').val('true');
+                //$('#display_settings_split').val('true');
 
-                this.setBrainMode(1);
+                this.setBrainMode(this.brainSurfaceMode);
                 if (this.dataSet) {
                     
                     var newCoords = this.computeMedialViewCoords();
@@ -398,12 +401,12 @@ class Brain3DApp implements Application, Loopable {
                     this.physioGraph.update();
                 }
             } else {
-                this.brainSurfaceMode = 0;
+                //this.brainSurfaceMode = 0;
 
                 //record display setting
-                $('#display_settings_split').val('false');
+                //$('#display_settings_split').val('false');
 
-                this.setBrainMode(0);
+                this.setBrainMode(this.brainSurfaceMode);
                 if (this.dataSet) {
                     this.physioGraph.setNodePositions(this.dataSet.brainCoords);
                     this.physioGraph.update();
@@ -450,11 +453,11 @@ class Brain3DApp implements Application, Loopable {
             .append($('<span id="all-labels-' + this.id + '" title="Show/hide all node labels" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8704</span>')
                 .css({ 'right': '6px', 'top': '150px', 'z-index': 1000 })
                 .click(function () { varAllLabelsOnChange(); }))
-            .append($('<span id="top-view-' + this.id + '" title="Split brain" class="view-panel-span" data-toggle="tooltip" data-placement="left">M</span>')
-                .css({ 'right': '6px', 'top': '170px', 'z-index': 1000 })
-                .click(function () { varBrainSurfaceModeOnChange(); }))
+            //.append($('<span id="top-view-' + this.id + '" title="Split brain" class="view-panel-span" data-toggle="tooltip" data-placement="left">M</span>')
+            //    .css({ 'right': '6px', 'top': '170px', 'z-index': 1000 })
+            //    .click(function () { varBrainSurfaceModeOnChange(); }))
             .append($('<span id="anti-auto-rotation-' + this.id + '" title="Anticlockwise auto-rotation" class="view-panel-span" data-toggle="tooltip" data-placement="left">&#8634</span>')
-                .css({ 'right': '6px', 'top': '190px', 'z-index': 1000 })
+                .css({ 'right': '6px', 'top': '170px', 'z-index': 1000 })
                 .click(function () { varAutoRotationOnChange("anticlockwise"); }))
 
 
@@ -463,32 +466,55 @@ class Brain3DApp implements Application, Loopable {
                 .css({ 'position': 'absolute', 'width': '100%', 'height': '100%', 'top': 0, 'left': 0, 'z-index': 10, 'overflow': 'hidden' })
                 .append(this.renderer.domElement)
             )
-            
+
             .append($("<div id='div-graph-controls'></div>").css({ position: "absolute", bottom: 0 })
                 // Controls for the bottom of the graph area
 
-                .append('<p>Showing <label id="count-' + this.id + '">0</label> edges (<label id=percentile-' + this.id + '>0</label>th percentile)</p>')
-                
-                .append($(`<input id="edge-count-slider-${this.id}" type="text" />`)
-                )
+                .append('<p><div id="edge-count-label-' + this.id + '">Showing <label id="count-' + this.id + '">0</label> edges (<label id=percentile-' + this.id + '>0</label>th percentile)</div><div id="edge-count-binary-' + this.id + '">Binary matrix, all edges shown</div></p>')
 
-                // Select Network Type button group
-                .append($(`<div id="select-network-type-${this.id}" class="btn-group" data-toggle="buttons">
-                    <label id="select-network-type-${this.id}-3D" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="3D topological projection based on the cola method, as provided by WebCola">
-                        <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="3d" autocomplete="off">3D
+                .append($(`<input id="edge-count-slider-${this.id}" type="text" />`))
+
+                    //.append($(``))
+                    .append($(`
+                    
+                    <div id="div-hemi-view-${this.id}" class="btn-group" data-toggle="buttons">
+                    <p>Hemisphere display:</p>
+                    <label id="hemi-display-both-${this.id}" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Both hemispheres">
+                       <input class="select-network-type-input" type="radio" name="hemis-to-display-${this.id}" value="both" autocomplete="off">Both
+                    </label> 
+                    <label id="hemi-display-split-${this.id}" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Split view">
+                       <input class="select-network-type-input" type="radio" name="hemis-to-display-${this.id}" value="split" autocomplete="off">Split
+                    </label> 
+                    <label id="hemi-display-left-${this.id}" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Left hemisphere">
+                       <input class="select-network-type-input" type="radio" name="hemis-to-display-${this.id}" value="left" autocomplete="off">Left
+                    </label> 
+                    <label id="hemi-display-right-${this.id}" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Right hemisphere">
+                       <input class="select-network-type-input" type="radio" name="hemis-to-display-${this.id}" value="right" autocomplete="off">Right
                     </label>
-                    <label id="select-network-type-${this.id}-2D" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="2D topological projection generated according to one of several different algorithms. See Options for details.">
-                        <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="2d" autocomplete="off">2D
+                    <label id="hemi-display-none-${this.id}" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="None, turn off brain model">
+                       <input class="select-network-type-input" type="radio" name="hemis-to-display-${this.id}" value="none" autocomplete="off">None
                     </label>
-                    <label id="select-network-type-${this.id}-circular" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Circular layout with additional attribute visualisation. See Options for details.">
-                        <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="circular" autocomplete="off">Circular
-                    </label>
-                    <label id="select-network-type-${this.id}-none" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Remove the secondary view">
-                        <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="none" autocomplete="off">None
-                    </label>
-                </div>`).css({ 'margin-left': '5px', 'position': 'relative', 'z-index': 1000 }))
-            )
-        ;
+
+                    </div>`).css({ 'margin-left': '5px', 'position': 'relative', 'z-index': 500 }))
+
+                    // Select Network Type button group
+
+                    .append($(`<div id="select-network-type-${this.id}" class="btn-group" data-toggle="buttons">
+                        <p> Second graph: </p>
+                        <label id="select-network-type-${this.id}-3D" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="3D topological projection based on the cola method, as provided by WebCola">
+                            <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="3d" autocomplete="off">3D
+                        </label>
+                        <label id="select-network-type-${this.id}-2D" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="2D topological projection generated according to one of several different algorithms. See Options for details.">
+                            <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="2d" autocomplete="off">2D
+                        </label>
+                        <label id="select-network-type-${this.id}-circular" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Circular layout with additional attribute visualisation. See Options for details.">
+                            <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="circular" autocomplete="off">Circular
+                        </label>
+                        <label id="select-network-type-${this.id}-none" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="top" title="Remove the secondary view">
+                            <input class="select-network-type-input" type="radio" name="select-network-type-${this.id}" value="none" autocomplete="off">None
+                        </label>
+                    </div>`).css({ 'margin-left': '5px', 'position': 'relative', 'z-index': 1000 }))
+                );
 
         $("#edge-count-slider-" + this.id)['bootstrapSlider']({
             min: 1, 
@@ -517,7 +543,9 @@ class Brain3DApp implements Application, Loopable {
         };
         $checkboxTips.change(onToggleTips);
         onToggleTips();
-        
+
+        $(`input[name=hemis-to-display-${this.id}]:radio`).change(event => varBrainSurfaceModeOnChange(event.target["value"]));
+
         $(`input[name=select-network-type-${this.id}]:radio`).change(event => varNetworkTypeOnChange(event.target["value"]));
 
 
@@ -918,6 +946,23 @@ class Brain3DApp implements Application, Loopable {
 
     setBrainModelObject(modelObject) {
         this.brainModelOrigin = modelObject;
+        if (modelObject.children.length == 1) {
+            // unilateral model
+            if (this.brainSurfaceMode == "left" || this.brainSurfaceMode == "right") {
+                this.brainSurfaceMode = "both";
+            }
+            //$(`#div-hemi-view-${this.id}`).find('input[value="left"]').attr("disabled", "true");
+            //$(`#hemi-display-left-${this.id}`).attr("disabled", "true");
+            $(`#hemi-display-left-${this.id}`).css({ "display": "none" });
+            $(`#hemi-display-right-${this.id}`).css({ "display": "none" });
+            //$(`#hemi-display-left-${this.id}`).addClass("disabled");
+            //$(`#div-hemi-view-${this.id}`).find('input[value="left"]').addClass("disabled");
+            //$(`#div-hemi-view-${this.id}`).find('input[value="right"]').prop("disabled", true);
+        } else {
+            // bilateral model
+            $(`#hemi-display-left-${this.id}`).css({ "display": "block" });
+            $(`#hemi-display-right-${this.id}`).css({ "display": "block" });
+        }
         this.setBrainMode(this.brainSurfaceMode);
     }
 
@@ -931,6 +976,7 @@ class Brain3DApp implements Application, Loopable {
         let model = this.brainModelOrigin;
         this.surfaceUniformList = [];
         let uniformList = this.surfaceUniformList;
+
         /*
         var normalShader = {
             vertexShader: [
@@ -992,8 +1038,55 @@ class Brain3DApp implements Application, Loopable {
         
         if (model) {
             // Default mode: full brain model 
-            if (mode == 0) {
+            if (mode == 'both' || mode == 'left' || mode == 'right') {
+                
+                let singleGeometry = new THREE.Geometry();
 
+                // Clone the mesh - we can't share it between different canvases without cloning it
+                model.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        //console.log(child);
+                        /*
+                        this.uniforms = {
+                            opacity: { type: "f", value: 0.5 },
+                            mode: { type: 'f', value: 0.0 }
+                        };
+                        uniformList.push(this.uniforms);
+    
+                        clonedObject.add(new THREE.Mesh(child.geometry.clone(), new THREE.ShaderMaterial(<any>{
+                            uniforms: this.uniforms,
+                            vertexShader: normalShader.vertexShader,
+                            fragmentShader: normalShader.fragmentShader,
+                            transparent: true
+                        })));
+                        */
+
+
+                        if ((child.name == 'rh' && mode == 'right') || (child.name == 'lh' && mode == 'left') || mode == 'both') {
+                            child.updateMatrix();
+                            singleGeometry.merge(new THREE.Geometry().fromBufferGeometry(<THREE.BufferGeometry>child.geometry.clone()), child.matrix);
+                        }
+                        //clonedObject.add(new THREE.Mesh(child.geometry.clone(), surfaceMaterial));
+                        //console.log(mesh);
+
+                    }
+                });
+                let mesh = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(singleGeometry), surfaceMaterial);
+                mesh.renderOrder = RENDER_ORDER_BRAIN;
+                clonedObject.add(mesh);
+                
+                singleGeometry.computeBoundingSphere();
+                var boundingSphere = singleGeometry.boundingSphere;
+                var sphereMaterial = mesh.material.clone();
+                sphereMaterial.visible = false;
+                var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
+                var sphereObject = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                sphereObject.position.copy((<THREE.Sphere>boundingSphere).center);
+                boundingSphereObject.add(sphereObject);
+
+                
+            } else if (mode === 0) {
+                // old behaviour for compatibility
                 // Clone the mesh - we can't share it between different canvases without cloning it
                 model.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
@@ -1012,7 +1105,7 @@ class Brain3DApp implements Application, Loopable {
                         })));
                         */
 
-                        //clonedObject.add(new THREE.Mesh(child.geometry.clone(), surfaceMaterial));
+                        
                         let mesh = new THREE.Mesh(<THREE.Geometry>child.geometry.clone(), surfaceMaterial);
                         mesh.renderOrder = RENDER_ORDER_BRAIN;
                         clonedObject.add(mesh);
@@ -1028,8 +1121,132 @@ class Brain3DApp implements Application, Loopable {
                     }
                 });
 
-                // Medial View
+            } else if (mode === 'split') {
+                // Clone the mesh - we can't share it between different canvases without cloning it
+
+                model.traverse(function (child) {
+                    
+                    if (child instanceof THREE.Mesh) {
+
+                        if (child.name == 'lh' || child.name == "rh") {
+                            let curMesh = new THREE.Mesh(<THREE.Geometry>child.geometry, surfaceMaterial);
+                            curMesh.geometry.computeVertexNormals();
+                            curMesh.geometry.computeFaceNormals();
+                            curMesh.renderOrder = RENDER_ORDER_BRAIN;
+
+                            curMesh.rotation.z = child.name == 'lh' ? 3.14 / 2 : -3.14 / 2;
+
+                            var box = new THREE.Box3()['setFromObject'](model);
+
+                            // center the brain along y axis
+                            var mean = (box.max.z - box.min.z) / 2;
+                            var offsetToHead = box.max.z - mean;
+                            var offsetDistance = 10;
+
+                            curMesh.translateY(offsetToHead);
+
+                            switch (child.name) {
+                                case 'lh':
+                                    curMesh.translateZ(-(box.max.z + offsetDistance));
+                                    break;
+                                case 'rh':
+                                    curMesh.translateZ(Math.abs(box.min.z) + offsetDistance);
+                                    break;
+                            }
+
+
+                            clonedObject.add(curMesh);
+
+                            child.geometry.computeBoundingSphere();
+                            var boundingSphere = child.geometry.boundingSphere;
+                            var material = child.material.clone();
+                            material.visible = false;
+                            var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
+                            var sphereObject = new THREE.Mesh(sphereGeometry, material);
+                            sphereObject.position.copy((<THREE.Sphere>boundingSphere).center);
+
+                            boundingSphereObject.add(sphereObject);
+                        } else {
+                            // old behaviour
+                            var attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position")
+                            var oldPositions = Array.prototype.slice.call(attribute.array);
+                            var leftPositions = [];
+                            var rightPositions = [];
+                            const FACE_CHUNK = 9;
+                            const VERT_CHUNK = 3;
+                            for (var faceIDX = 0; faceIDX < oldPositions.length; faceIDX += FACE_CHUNK) {
+                                if (oldPositions[faceIDX] > 0 || oldPositions[faceIDX + 3] > 0 || oldPositions[faceIDX + 6] > 0) {
+                                    rightPositions.push(
+                                        oldPositions[faceIDX],
+                                        oldPositions[faceIDX + 1],
+                                        oldPositions[faceIDX + 2],
+                                        oldPositions[faceIDX + 3],
+                                        oldPositions[faceIDX + 4],
+                                        oldPositions[faceIDX + 5],
+                                        oldPositions[faceIDX + 6],
+                                        oldPositions[faceIDX + 7],
+                                        oldPositions[faceIDX + 8]
+                                    );
+                                } else {
+                                    leftPositions.push(
+                                        oldPositions[faceIDX],
+                                        oldPositions[faceIDX + 1],
+                                        oldPositions[faceIDX + 2],
+                                        oldPositions[faceIDX + 3],
+                                        oldPositions[faceIDX + 4],
+                                        oldPositions[faceIDX + 5],
+                                        oldPositions[faceIDX + 6],
+                                        oldPositions[faceIDX + 7],
+                                        oldPositions[faceIDX + 8]
+                                    );
+                                }
+                            }
+
+                            var leftGeometry = new THREE.BufferGeometry;
+                            leftGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array(leftPositions), VERT_CHUNK));
+                            leftGeometry.computeVertexNormals();
+                            leftGeometry.computeFaceNormals();
+                            var leftBrain = new THREE.Mesh(leftGeometry, surfaceMaterial);
+                            leftBrain.renderOrder = RENDER_ORDER_BRAIN;
+
+                            var rightGeometry = new THREE.BufferGeometry;
+                            rightGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array(rightPositions), VERT_CHUNK));
+                            rightGeometry.computeVertexNormals();
+                            rightGeometry.computeFaceNormals();
+                            var rightBrain = new THREE.Mesh(rightGeometry, surfaceMaterial);
+                            rightBrain.renderOrder = RENDER_ORDER_BRAIN;
+
+                            var box = new THREE.Box3()['setFromObject'](model);
+                            leftBrain.rotation.z = 3.14 / 2;
+                            rightBrain.rotation.z = -3.14 / 2;
+
+                            // center the brain along y axis
+                            var mean = (box.max.z - box.min.z) / 2;
+                            var offsetToHead = box.max.z - mean;
+                            var offsetDistance = 10;
+                            leftBrain.translateY(offsetToHead);
+                            rightBrain.translateY(offsetToHead);
+
+                            leftBrain.translateZ(-(box.max.z + offsetDistance));
+                            rightBrain.translateZ(Math.abs(box.min.z) + offsetDistance);
+
+                            clonedObject.add(leftBrain);
+                            clonedObject.add(rightBrain);
+
+                            child.geometry.computeBoundingSphere();
+                            var boundingSphere = child.geometry.boundingSphere;
+                            var material = child.material.clone();
+                            material.visible = false;
+                            var sphereGeometry = new THREE.SphereGeometry(boundingSphere.radius + 10, 10, 10);
+                            var sphereObject = new THREE.Mesh(sphereGeometry, material);
+                            sphereObject.position.copy((<THREE.Sphere>boundingSphere).center);
+
+                            boundingSphereObject.add(sphereObject);
+                        }
+                    }
+                });
             } else if (mode === 1) {
+                // old behaviour of split for compatibility
                 // Clone the mesh - we can't share it between different canvases without cloning it
 
                 model.traverse(function (child) {
@@ -1143,6 +1360,8 @@ class Brain3DApp implements Application, Loopable {
                     }
                 });
 
+            } else if (mode == 'none') {
+                // no mesh
             } else {
                 console.log("ERROR: Wrong Brain Surface Mode");
                 return;
@@ -1156,7 +1375,15 @@ class Brain3DApp implements Application, Loopable {
         this.brainSurfaceBoundingSphere = boundingSphereObject;
         this.brainObject.add(this.brainSurfaceBoundingSphere);
         this.surfaceLoaded = true;
-        
+
+        let brainButtonActive = this.brainSurfaceMode;
+        if (brainButtonActive == 0) {
+            brainButtonActive = 'both';
+        } else if (brainButtonActive == 1) {
+            brainButtonActive = 'split';
+        }
+
+        $(`#hemi-display-${brainButtonActive}-${this.id}`).addClass("active");
         // update Physio Graph if exists
         if (!this.dataSet) return;
         if (this.brainSurfaceMode === 0) {
@@ -1290,10 +1517,10 @@ class Brain3DApp implements Application, Loopable {
     initEdgeCountSlider(app: SaveApp) {
         this.edgeCountSliderOnChange(app.edgeCount);
         $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", parseInt(<any>app.edgeCount));
+        console.log(this.dataSet.info.isBinaryMatrix);
     }
 
     initShowNetwork(app: SaveApp) {
-        console.log("initShowNetwork()");
         if (app.showingTopologyNetwork) {
             $(`#select-network-type-${this.id}-${app.networkType}`).addClass("active");
 
@@ -1456,7 +1683,10 @@ class Brain3DApp implements Application, Loopable {
         let percentile = numEdges * 100 / max;
         let $percentile = $('#percentile-' + this.id).get(0);
         if ($percentile) $percentile.textContent = percentile.toFixed(2);
-        if (this.brainSurfaceMode === 0) {
+        if (this.brainSurfaceMode === 0 ||
+            this.brainSurfaceMode === "both" ||
+            this.brainSurfaceMode === "left" ||
+            this.brainSurfaceMode === "right") {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
         } else {
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(numEdges);
@@ -2117,7 +2347,7 @@ class Brain3DApp implements Application, Loopable {
 
         var brain2DScreenBox;
         if (this.brainSurface && this.camera) {
-            brain2DScreenBox = CommonUtilities.computeScreenSpaceBoundingBox(this.brainSurface.children[0], this.camera);
+            brain2DScreenBox = CommonUtilities.computeScreenSpaceBoundingBox(this.brainSurface, this.camera);
             brain2DScreenBox.minNorm = brain2DScreenBox.min;
             brain2DScreenBox.maxNorm = brain2DScreenBox.max;
             brain2DScreenBox.min = {
@@ -2617,7 +2847,7 @@ class Brain3DApp implements Application, Loopable {
         for (var i = 0; i < this.dataSet.simMatrix.length; ++i) {
             this.dissimilarityMatrix.push(this.dataSet.simMatrix[i].map((sim) => {
                 //return 15 / (sim + 1); // Convert similarities to distances
-                return 0.5 / (sim * sim); 
+                return 0.5 / (sim * sim);
             }));
         }
 
@@ -2629,7 +2859,7 @@ class Brain3DApp implements Application, Loopable {
             nodeColors = this.getNodeColorsEmpty();
         }
         else if (this.dataSet.attributes.info[colorAttribute].isDiscrete) {
-            let discreteColorValues = nSettings.nodeColorDiscrete.map(colorString => parseInt(colorString.substring(1), 16)); 
+            let discreteColorValues = nSettings.nodeColorDiscrete.map(colorString => parseInt(colorString.substring(1), 16));
             nodeColors = this.getNodeColorsDiscrete(colorAttribute, this.dataSet.attributes.info[colorAttribute].distinctValues, discreteColorValues);
         }
         else {      // continuous
@@ -2650,9 +2880,13 @@ class Brain3DApp implements Application, Loopable {
         if (this.physioGraph) this.physioGraph.destroy();
         this.physioGraph = new Graph3D(this.brainObject, edgeMatrix, nodeColors, this.dataSet.simMatrix, this.dataSet.brainLabels, this.commonData, this.saveFileObj);
 
-        if (this.brainSurfaceMode === 0) {
+        if (this.brainSurfaceMode === "both" || this.brainSurfaceMode === "left" || this.brainSurfaceMode === "right") {
             this.physioGraph.setNodePositions(this.dataSet.brainCoords);
-        } else if (this.brainSurfaceMode === 1) {
+        } else if (this.brainSurfaceMode === 0) {
+            // original behaviour
+            this.physioGraph.setNodePositions(this.dataSet.brainCoords);
+        } else if (this.brainSurfaceMode === 1 || this.brainSurfaceMode === "split") {
+            // original behaviour
             var newCoords = this.computeMedialViewCoords();
             this.physioGraph.setNodePositions(newCoords);
         } else {
@@ -2667,7 +2901,11 @@ class Brain3DApp implements Application, Loopable {
         this.canvasGraph = new Graph2D(this.id, this.jDiv, this.dataSet, this.graph2dContainer, this.commonData, this.saveFileObj, this.physioGraph, this.camera, this.edgeCountSliderValue);
 
         // Initialise the filtering
-        if (this.brainSurfaceMode === 0) {
+        
+        if (this.brainSurfaceMode === 0 ||
+            this.brainSurfaceMode === "both" ||
+            this.brainSurfaceMode === "left" ||
+            this.brainSurfaceMode === "right") {
             this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
         } else {
             //this.filteredAdjMatrix = this.dataSet.adjMatrixFromEdgeCount(Number(this.edgeCountSliderValue));
@@ -2681,11 +2919,22 @@ class Brain3DApp implements Application, Loopable {
         this.colaGraph.setEdgeColorConfig(this.colorMode, this.colorConfig);
         this.edgeCountSliderOnChange(Number(this.edgeCountSliderValue));
                 
-        // Enable the slider
-        $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", this.edgeCountSliderValue);
-        $("#edge-count-slider-" + this.id)['bootstrapSlider']("setAttribute", "max", maxEdgesShowable);
-        //$('#button-show-network-' + this.id).prop('disabled', false);
+        // Enable the slider if the matrix isnt binary
+        
+        if (this.dataSet.info.isBinaryMatrix) {
+            $("#edge-count-slider-" + this.id)['bootstrapSlider']("disable");
+            $("#edge-count-label-" + this.id).css({ display: 'none' });
+            $("#edge-count-binary-" + this.id).css({ display: 'block' });
+        } else {
+            $("#edge-count-slider-" + this.id)['bootstrapSlider']("enable");
+            $('#edge-count-slider-' + this.id)['bootstrapSlider']("setValue", this.edgeCountSliderValue);
+            $("#edge-count-slider-" + this.id)['bootstrapSlider']("setAttribute", "max", maxEdgesShowable);
+            $("#edge-count-label-" + this.id).css({ display: 'block' });
+            $("#edge-count-binary-" + this.id).css({ display: 'none' });
+        }
+        
 
+        // is the matrix is binary, disable the edge count slider
         this.needUpdate = true;
         this.showNetwork(false);
 

@@ -18,6 +18,8 @@ const TYPE_MATRIX = "matrix";
 const TYPE_ATTR = "attributes";
 const TYPE_LABEL = "labels";
 const TYPE_MODEL = "model";
+const TYPE_MODEL_LEFT_HEMI = "model_lh";
+const TYPE_MODEL_RIGHT_HEMI = "model_rh";
 
 // The names of the views are referenced quite often
 const TL_VIEW = '#view-top-left';
@@ -134,6 +136,10 @@ class NeuroMarvl {
     viewHeight = 0;
     pinWidth = 0;
     pinHeight = 0;
+
+    brainModelLeftHemi;
+    brainModelRightHemi;
+    brainModelUnilateral;
 
     // UI elements
     divLoadingNotification;
@@ -377,11 +383,24 @@ class NeuroMarvl {
                         if (!data || !data.length) return;
 
                         this.saveFileObj = new SaveFile(jQuery.parseJSON(data));
-                        
+                        console.log(this.saveFileObj);
                         for (var app of this.saveFileObj.saveApps) {
                         
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
+                                console.log(app.brainSurfaceMode);
+
+                                if (!(app.brainSurfaceMode === 'left' ||
+                                    app.brainSurfaceMode === 'right' ||
+                                    app.brainSurfaceMode === 'both' ||
+                                    app.brainSurfaceMode === 0 ||
+                                    app.brainSurfaceMode === 1 ||
+                                    app.brainSurfaceMode === 'none'
+                                )) {
+                                    app.brainSurfaceMode = 'both'; // default to both hemispheres
+                                }
                                 this.createBrainView(app.view, app.surfaceModel, commonInit, source, app.brainSurfaceMode);
+
+                                //this.createBrainView(app.view, app.surfaceModel, commonInit, source, 'left');
 
                                 //to fix the model is not loading after save
                                 $('#select-brain3d-model').val(app.surfaceModel);
@@ -641,18 +660,20 @@ class NeuroMarvl {
                     if (status.toLowerCase() == "success") {
                         if (fileType == TYPE_COORD) {
                             this.saveFileObj.serverFileNameCoord = data;
-                        }
-                        else if (fileType == TYPE_MATRIX) {
+                        } else if (fileType == TYPE_MATRIX) {
                             this.saveFileObj.serverFileNameMatrix = data;
-                        }
-                        else if (fileType == TYPE_ATTR) {
+                        } else if (fileType == TYPE_ATTR) {
                             this.saveFileObj.serverFileNameAttr = data;
-                        }
-                        else if (fileType == TYPE_LABEL) {
+                        } else if (fileType == TYPE_LABEL) {
                             this.saveFileObj.serverFileNameLabel = data;
-                        }
-                        else if (fileType == TYPE_MODEL) {
+                        } else if (fileType == TYPE_MODEL) {
                             this.saveFileObj.serverFileNameModel = data;
+                        } else if (fileType == TYPE_MODEL) {
+                            this.saveFileObj.serverFileNameModel = data;
+                        } else if (fileType == TYPE_MODEL_LEFT_HEMI) {
+                            this.saveFileObj.serverFileNameModelLeftHemi = data;
+                        } else if (fileType == TYPE_MODEL_RIGHT_HEMI) {
+                            this.saveFileObj.serverFileNameModelRightHemi = data;
                         }
                     }
                     else {
@@ -777,8 +798,6 @@ class NeuroMarvl {
                 func();
             }
         }
-
-
 
         $.post("brain-app/getfile.aspx",
             {
@@ -1846,8 +1865,16 @@ class NeuroMarvl {
         let viewTypeId = this.viewToId(viewType);
         
         if (model == "upload") {
-            $("#div-upload-brain-model-name").show();
-            $("#uploaded-label-model-name").html(this.saveFileObj.uploadedModelName);
+            $("#div-upload-brain-model").show();
+            switch (this.saveFileObj.uploadedModelMode) {
+                case 'bilateral':
+                    $("#uploaded-label-model-name-left").html(this.saveFileObj.uploadedModelNameLeftHemi);
+                    $("#uploaded-label-model-name-right").html(this.saveFileObj.uploadedModelNameRightHemi);
+                    break;
+                case 'unilateral':
+                    $("#uploaded-label-model-name").html(this.saveFileObj.uploadedModelName);
+                    break;
+            }
         }
         //console.log(this.saveFileObj);
         //var realModel;
@@ -2353,46 +2380,156 @@ class NeuroMarvl {
     // new THREE.Mesh() objects by the application wishing to use the model.
     loadBrainModel = (model: string, callback) => {
 
-        let file = (model === 'ch2') && 'BrainMesh_Ch2withCerebellum.obj'
-            || (model === 'ch2nocerebellum') && 'BrainMesh_Ch2.obj'
-            || (model === 'icbm') && 'BrainMesh_ICBM152.obj'
-            ;
+        let fileLH;
+        let fileRH;
+
+        switch (model) {
+            case 'ch2':
+                fileLH = 'BrainMesh_Ch2withCerebellum.obj';
+                break;
+            case 'ch2nocerebellum':
+                fileLH = 'BrainMesh_Ch2_lh.obj';
+                fileRH = 'BrainMesh_Ch2_rh.obj';
+                break;
+            case 'icbm':
+                fileLH = 'BrainMesh_ICBM152_lh.obj';
+                fileRH = 'BrainMesh_ICBM152_rh.obj';
+                break;
+            case 'fsaveragepial':
+                fileLH = 'tpl-fsaverage_den-41k_hemi-L_pial.surf.obj';
+                fileRH = 'tpl-fsaverage_den-41k_hemi-R_pial.surf.obj';
+                break;
+            case 'fsaveragewhite':
+                fileLH = 'tpl-fsaverage_den-41k_hemi-L_white.surf.obj';
+                fileRH = 'tpl-fsaverage_den-41k_hemi-R_white.surf.obj';
+                break;
+            case 'fslr32mid':
+                fileLH = 'tpl-fsLR_den-32k_hemi-L_midthickness.surf.obj';
+                fileRH = 'tpl-fsLR_den-32k_hemi-R_midthickness.surf.obj';
+                break;
+            case 'fslr32inflated':
+                fileLH = 'tpl-fsLR_den-32k_hemi-L_inflated.surf.obj';
+                fileRH = 'tpl-fsLR_den-32k_hemi-R_inflated.surf.obj';
+                break;
+            case 'civetmid':
+                fileLH = 'tpl-civet_den-41k_hemi-L_midthickness.surf.obj';
+                fileRH = 'tpl-civet_den-41k_hemi-R_midthickness.surf.obj';
+                break;
+        }
 
         if (model != 'upload') {
 
-            if (!file) {
+            if (!fileLH) {
                 callback();
                 return;
             }
-
-            this.loader.load('examples/graphdata/' + file, object => {
+            let groupObject = new THREE.Group();
+            this.loader.load('examples/graphdata/' + fileLH, object => {
                 if (!object) {
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
                     return;
                 }
+                object.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        child.name = 'lh';
+                        groupObject.add(child);
+                    }
+                });
+                this.loader.load('examples/graphdata/' + fileRH, object => {
+                    if (!object) {
+                        CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
+                        return;
+                    }
+                    object.traverse(function (child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.name = 'rh';
+                            groupObject.add(child);
+                        }
+                    });
+                    //#object.name = 'rh';
+                    //groupObject.add(object);
+                    callback(groupObject);
+                });
 
-                callback(object);
             });
+            //groupObject.traverse(function (child) { console.log(child) });
+            
+            //this.loader.load('examples/graphdata/' + file, object => {
+            //    if (!object) {
+            //        CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, "Failed to load brain surface.");
+            //        return;
+            //    }
+
+            //    callback(object);
+            //});
         } else {
-            $.post("brain-app/getfile.aspx",
-                {
-                    filename: this.saveFileObj.serverFileNameModel,
-                    source: "save"
-                },
-                (data, loadStatus) => {
-                    
-                    if (loadStatus.toLowerCase() == "success") {
-                        // Ensure that data is not empty
-                        if (!data || !data.length) return;
-                        
-                        let object = this.loader.parse(data);
-                        callback(object);
+            if (this.saveFileObj.serverFileNameModel) {
+                // original method, single file model
+                $.post("brain-app/getfile.aspx",
+                    {
+                        filename: this.saveFileObj.serverFileNameModel,
+                        source: "save"
+                    },
+                    (data, loadStatus) => {
+
+                        if (loadStatus.toLowerCase() == "success") {
+                            // Ensure that data is not empty
+                            if (!data || !data.length) return;
+
+                            let object = this.loader.parse(data);
+                            callback(object);
+                        }
+                        else {
+                            alert("Loading is: " + loadStatus + "\nData: " + data);
+                        }
                     }
-                    else {
-                        alert("Loading is: " + status + "\nData: " + data);
+                );
+            } else if (this.saveFileObj.serverFileNameModelLeftHemi && this.saveFileObj.serverFileNameModelRightHemi) {
+                let groupObject = new THREE.Group();
+                //console.log("Loading uploaded models: " + this.saveFileObj.serverFileNameModelLeftHemi + " " + this.saveFileObj.serverFileNameModelRightHemi)
+                $.post("brain-app/getfile.aspx",
+                    {
+                        filename: this.saveFileObj.serverFileNameModelLeftHemi,
+                        source: "save"
+                    },
+                    (dataLeftHemi, loadStatusLeftHemi) => {
+
+                        if (loadStatusLeftHemi.toLowerCase() == "success") {
+                            // Ensure that data is not empty
+                            if (!dataLeftHemi || !dataLeftHemi.length) return;
+                            let groupLeftHemi = this.loader.parse(dataLeftHemi);
+                            groupLeftHemi.children[0].name = 'lh';
+                            groupObject.add(groupLeftHemi);
+
+                            $.post("brain-app/getfile.aspx",
+                                {
+                                    filename: this.saveFileObj.serverFileNameModelRightHemi,
+                                    source: "save"
+                                },
+                                (dataRightHemi, loadStatusRightHemi) => {
+
+                                    if (loadStatusRightHemi.toLowerCase() == "success") {
+                                        // Ensure that data is not empty
+                                        if (!dataRightHemi || !dataRightHemi.length) return;
+                                        let groupRightHemi = this.loader.parse(dataRightHemi);
+                                        groupRightHemi.children[0].name = 'rh';
+                                        groupObject.add(groupRightHemi);
+
+                                        callback(groupObject);
+                                    }
+                                    else {
+                                        alert("Loading is: " + loadStatusRightHemi + "\nData: " + dataRightHemi);
+                                    }
+                                }
+                            );
+                        }
+                        else {
+                            alert("Loading is: " + loadStatusLeftHemi + "\nData: " + dataLeftHemi);
+                        }
                     }
-                }
-            );
+                );
+
+            }
         }
     }
 
@@ -2586,13 +2723,28 @@ class NeuroMarvl {
         dc.renderAll();
     }
 
+    refreshBilateralSurfaces = () => {
+        if (this.brainModelLeftHemi && this.brainModelRightHemi) {
+            let groupObject = new THREE.Group();
+            console.log("refreshBilateralSurfaces");
 
+            groupObject.add(this.brainModelLeftHemi.children[0].clone());
+            groupObject.add(this.brainModelRightHemi.children[0].clone());
+
+            this.applicationsInstances[0].setBrainModelObject(groupObject);
+            this.saveFileObj.uploadedModelMode = 'bilateral';
+            this.saveFileObj.uploadedModelBilateralValid = true;
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "New brain model updated");
+        } else {
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Left and right surfaces not uploaded");
+        }
+    }
     /*
         Functions to set up interaction, when everything else is ready
     */
-    
     initListeners = () => {
 
+        let _self = this;
         $(document).keyup(e => {
             if (e.keyCode == 27) this.toggleSplashPage();   // esc
         });
@@ -2666,6 +2818,25 @@ class NeuroMarvl {
             // Parse and upload labels
             this.uploadLabels();
         });
+
+        // triggered when the user clicks on the 'Bilateral' or 'Unilateral Brain Model' tabs
+        $("#div-upload-brain-model").find('a').on('shown.bs.tab', function () {
+
+            if ($(this).prop('id') == 'tab-bilateral') {
+                if (_self.saveFileObj.uploadedModelBilateralValid) {
+                    _self.refreshBilateralSurfaces();
+                } else {
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Left and right surfaces not uploaded");
+                }
+            } else if ($(this).prop('id') == 'tab-unilateral') {
+                if (_self.saveFileObj.uploadedModelUnilateralValid) {
+                    _self.applicationsInstances[0].setBrainModelObject(this.brainModelUnilateral);
+                } else {
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Brain model not yet uploaded");
+                }
+            }
+        });
+            
 
         $('#button-load-settings').button().click(() => $("#input-select-load-file").click());
 
@@ -2758,20 +2929,81 @@ class NeuroMarvl {
             $this.addClass('active');
         });
 
-
-        $('#button-upload-model').button().click(() => {
+        $('#button-upload-model-lhrh-lh').button().click(() => {
+            //console.log($(this));
             CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Uploading the brain model...");
-            var file = (<any>$('#input-select-model').get(0)).files[0];
+            var file = (<any>$('#input-select-model-lhrh-lh').get(0)).files[0];
             if (file) {
                 var reader = new FileReader();
                 reader.onload = () => {
 
-                    let brainModel = this.loader.parse(reader.result);
+                    this.brainModelLeftHemi = this.loader.parse(reader.result);
+                    this.brainModelLeftHemi.children[0].name = 'lh';
+                    //this.applicationsInstances[0].setBrainModelObject(brainModel);
+                    this.uploadTextFile(file, TYPE_MODEL_LEFT_HEMI);
+                    // save the model to the "save" directory
+                    this.saveFileObj.uploadedModelNameLeftHemi = file.name;
+                    $("#uploaded-label-model-name-left").html(this.saveFileObj.uploadedModelNameLeftHemi);
 
-                    this.applicationsInstances[0].setBrainModelObject(brainModel);
+                    this.refreshBilateralSurfaces();
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Left hemisphere brain model uploaded");
+                };
+                reader.onerror = () => {
+                    let message = "Failed to upload model " + file;
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, message);
+                    console.log(message);
+                };
+
+                reader.readAsText(file);
+            }
+        });
+
+        $('#button-upload-model-lhrh-rh').button().click(() => {
+            //console.log($(this));
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Uploading the brain model...");
+            var file = (<any>$('#input-select-model-lhrh-rh').get(0)).files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = () => {
+
+                    this.brainModelRightHemi = this.loader.parse(reader.result);
+                    this.brainModelRightHemi.children[0].name = 'rh';
+                    //this.applicationsInstances[0].setBrainModelObject(brainModel);
+                    this.uploadTextFile(file, TYPE_MODEL_RIGHT_HEMI);
+                    // save the model to the "save" directory
+                    this.saveFileObj.uploadedModelNameRightHemi = file.name;
+                    $("#uploaded-label-model-name-right").html(this.saveFileObj.uploadedModelNameRightHemi);
+                    this.refreshBilateralSurfaces();
+                    $("#button-activate-model-unilateral").prop('disabled', 'false');
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Right hemisphere brain model uploaded");
+                };
+                reader.onerror = () => {
+                    let message = "Failed to upload model " + file;
+                    CommonUtilities.launchAlertMessage(CommonUtilities.alertType.ERROR, message);
+                    console.log(message);
+                };
+
+                reader.readAsText(file);
+            }
+        });
+
+
+        $('#button-upload-model-single').button().click(() => {
+            CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Uploading the brain model...");
+            var file = (<any>$('#input-select-model-single').get(0)).files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = () => {
+
+                    this.brainModelUnilateral = this.loader.parse(reader.result);
+
+                    this.applicationsInstances[0].setBrainModelObject(this.brainModelUnilateral);
                     this.uploadTextFile(file, TYPE_MODEL);
                     // save the model to the "save" directory
                     this.saveFileObj.uploadedModelName = file.name;
+                    this.saveFileObj.uploadedModelMode = 'unilateral';
+                    this.saveFileObj.uploadedModelUnilateralValid = true;
+                    $("#button-activate-model-bilateral").prop('disabled', 'false');
                     $("#uploaded-label-model-name").html(this.saveFileObj.uploadedModelName);
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "New brain model uploaded");
                 };
@@ -2916,6 +3148,20 @@ class NeuroMarvl {
             if (model === "upload") {
                 $("#div-upload-brain-model").show();
                 $("#div-upload-brain-model-name").show();
+
+                if ($('#uploadtab-bilateral').hasClass('active')) {
+                    if (this.saveFileObj.uploadedModelBilateralValid) {
+                        this.refreshBilateralSurfaces();
+                    } else {
+                        CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Left and right surfaces not uploaded");
+                    }
+                } else if ($('#uploadtab-unilateral').hasClass('active')) {
+                    if (this.saveFileObj.uploadedModelUnilateralValid) {
+                        this.applicationsInstances[0].setBrainModelObject(this.brainModelUnilateral);
+                    } else {
+                        CommonUtilities.launchAlertMessage(CommonUtilities.alertType.WARNING, "Brain model not yet uploaded");
+                    }
+                }
             } else {
                 $("#div-upload-brain-model").hide();
                 $("#div-upload-brain-model-name").hide();

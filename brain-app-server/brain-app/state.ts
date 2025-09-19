@@ -157,28 +157,47 @@ class DataSet {
             adjMatrix[i] = new Array<number>(this.info.nodeCount);
         }
 
-        for (var i = 0; i < this.info.nodeCount - 1; ++i) {
+        if (this.info.isBinaryMatrix) {
+            for (var i = 0; i < this.info.nodeCount - 1; ++i) {
 
-            for (var j = i + 1; j < this.info.nodeCount; ++j) {
+                for (var j = i + 1; j < this.info.nodeCount; ++j) {
+                    var isSameSide = (this.brainCoords[0][i] * this.brainCoords[0][j] > 0);
+                    if (this.simMatrix[i][j] != 0 && isSameSide) {
+                        adjMatrix[i][j] = 1;
+                    } else {
+                        adjMatrix[i][j] = 0;
+                    }
 
-                var isSameSide = (this.brainCoords[0][i] * this.brainCoords[0][j] > 0);
-                var val = this.simMatrix[i][j];
-                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
-                    adjMatrix[i][j] = 1;
-                }
-                else {
-                    adjMatrix[i][j] = 0;
-                }
-
-                val = this.simMatrix[j][i];
-                if (val >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
-                    adjMatrix[j][i] = 1;
-                }
-                else {
-                    adjMatrix[j][i] = 0;
+                    if (this.simMatrix[j][i] != 0 && isSameSide) {
+                        adjMatrix[j][i] = 1;
+                    } else {
+                        adjMatrix[j][i] = 0;
+                    }
                 }
             }
+        } else {
+                for (var i = 0; i < this.info.nodeCount - 1; ++i) {
+
+                    for (var j = i + 1; j < this.info.nodeCount; ++j) {
+
+                        var isSameSide = (this.brainCoords[0][i] * this.brainCoords[0][j] > 0);
+                        if (this.simMatrix[i][j] >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+                            adjMatrix[i][j] = 1;
+                        }
+                        else {
+                            adjMatrix[i][j] = 0;
+                        }
+
+                        if (this.simMatrix[j][i] >= threshold && isSameSide) { // Accept an edge between nodes that are at least as similar as the threshold value
+                            adjMatrix[j][i] = 1;
+                        }
+                        else {
+                            adjMatrix[j][i] = 0;
+                        }
+                    }
+                }
         }
+
         return adjMatrix;
     }
     // Create a matrix where a 1 in (i, j) means the edge between node i and node j is selected
@@ -192,27 +211,45 @@ class DataSet {
         for (var i = 0; i < this.info.nodeCount; ++i) {
             adjMatrix[i] = new Array<number>(this.info.nodeCount);
         }
+        
+        if (this.info.isBinaryMatrix) {
+            for (var i = 0; i < this.info.nodeCount - 1; ++i) {
 
-        for (var i = 0; i < this.info.nodeCount - 1; ++i) {
+                for (var j = i + 1; j < this.info.nodeCount; ++j) {
+                    if (this.simMatrix[i][j] != 0) {
+                        adjMatrix[i][j] = 1;
+                    } else {
+                        adjMatrix[i][j] = 0;
+                    }
 
-            for (var j = i + 1; j < this.info.nodeCount; ++j) {
-                var val = this.simMatrix[i][j];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
-                    adjMatrix[i][j] = 1;
+                    if (this.simMatrix[j][i] != 0) {
+                        adjMatrix[j][i] = 1;
+                    } else {
+                        adjMatrix[j][i] = 0;
+                    }
                 }
-                else {
-                    adjMatrix[i][j] = 0;
-                }
+            }
+        } else {
+            for (var i = 0; i < this.info.nodeCount - 1; ++i) {
 
-                val = this.simMatrix[j][i];
-                if (val >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
-                    adjMatrix[j][i] = 1;
-                }
-                else {
-                    adjMatrix[j][i] = 0;
+                for (var j = i + 1; j < this.info.nodeCount; ++j) {
+                    if (this.simMatrix[i][j] >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+                        adjMatrix[i][j] = 1;
+                    }
+                    else {
+                        adjMatrix[i][j] = 0;
+                    }
+
+                    if (this.simMatrix[j][i] >= threshold) { // Accept an edge between nodes that are at least as similar as the threshold value
+                        adjMatrix[j][i] = 1;
+                    }
+                    else {
+                        adjMatrix[j][i] = 0;
+                    }
                 }
             }
         }
+
         return adjMatrix;
     }
 
@@ -234,7 +271,9 @@ class DataSet {
     setSimMatrix(simMatrix) {
         this.simMatrix = simMatrix;
         this.info.isSymmetricalMatrix = CommonUtilities.isSymmetrical(this.simMatrix);
+        this.info.isBinaryMatrix = CommonUtilities.isBinary(this.simMatrix);
 
+        console.log("Is binary: " + this.info.isBinaryMatrix);
         this.sortedSimilarities = [];
 
         // Sort the similarities into a list so we can filter edges
@@ -288,9 +327,17 @@ class SaveFile {
     serverFileNameAttr: string;
     serverFileNameLabel: string;
     serverFileNameModel: string;
+    serverFileNameModelLeftHemi: string;
+    serverFileNameModelRightHemi: string;
+
     // original name of the uploaded surface
     uploadedModelName: string;
+    uploadedModelNameLeftHemi: string;
+    uploadedModelNameRightHemi: string;
 
+    uploadedModelMode: string;
+    uploadedModelBilateralValid: boolean;
+    uploadedModelUnilateralValid: boolean;
     // UI Settings
     surfaceSettings;
     edgeSettings;
@@ -369,7 +416,14 @@ class SaveFile {
             if (sourceObject.serverFileNameAttr) this.serverFileNameAttr = sourceObject.serverFileNameAttr;
             if (sourceObject.serverFileNameLabel) this.serverFileNameLabel = sourceObject.serverFileNameLabel;
             if (sourceObject.serverFileNameModel) this.serverFileNameModel = sourceObject.serverFileNameModel;
+            if (sourceObject.serverFileNameModelLeftHemi) this.serverFileNameModelLeftHemi = sourceObject.serverFileNameModelLeftHemi;
+            if (sourceObject.serverFileNameModelRightHemi) this.serverFileNameModelRightHemi = sourceObject.serverFileNameModelRightHemi;
             if (sourceObject.uploadedModelName) this.uploadedModelName = sourceObject.uploadedModelName;
+            if (sourceObject.uploadedModelNameLeftHemi) this.uploadedModelNameLeftHemi = sourceObject.uploadedModelNameLeftHemi;
+            if (sourceObject.uploadedModelNameRightHemi) this.uploadedModelNameRightHemi = sourceObject.uploadedModelNameRightHemi;
+            if (sourceObject.uploadedModelMode) this.uploadedModelMode = sourceObject.uploadedModelMode;
+            if (sourceObject.uploadedModelBilateralValid) this.uploadedModelBilateralValid = sourceObject.uploadedModelBilateralValid;
+            if (sourceObject.uploadedModelUnilateralValid) this.uploadedModelUnilateralValid = sourceObject.uploadedModelUnilateralValid;
 
             if (sourceObject.filteredRecords) this.serverFileNameCoord = sourceObject.filteredRecords;
         }
@@ -700,7 +754,6 @@ class Attributes {
         }
 
         this.attrValues = values;
-        console.log(this.attrValues);
     }
 
     getValue(columnIndex: number, index: number) {

@@ -140,20 +140,52 @@
                 <a href="#" style="display: block; text-align: right"><span class="badge" data-toggle="modal" data-target="#modal-help-model">?</span></a>
                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Set the 3D brain model to a preset option, or upload a new model geometry file in Wavefront OBJ (.obj) format">Model</label>
                 <select id="select-brain3d-model" class="form-control input-sm">
-                    <option value="icbm">ICBM152</option>
-                    <option value="ch2">CH2</option>
+                    <option value="icbm">ICBM152 (cerebrum)</option>
+                    <!--<option value="ch2">CH2 (cerebrum, brainstem, cerebellum)</option>-->
+                    <option value="fsaveragepial">FSAverage pial (cerebrum)</option>
+                    <option value="fsaveragewhite">FSAverage white (cerebrum)</option>
+                    <option value="fslr32mid">FSLR32k midthickness (cerebrum)</option>
+                    <option value="fslr32inflated">FSLR32k inflated (cerebrum)</option>
+                    <option value="civetmid">CIVET midthickness (cerebrum)</option>
                     <option value="ch2nocerebellum">CH2 no cerebellum</option>
                     <option value="upload">Upload</option>
                     <option value="none">None</option>
                 </select>
                 <br />
-                <div id="div-upload-brain-model-name" style="display:none;">
-                    <span class="h3-span">Uploaded brain model: </span><span id="uploaded-label-model-name">empty</span>
-                </div>
+                
                 <div id="div-upload-brain-model" style="display:none;">
-                    <input id="input-select-model" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" />
-                    <button id="button-upload-model" style="font-size:10px;">Upload</button>
-                    <br />
+                    <ul id="uploadtab-tabs" class="nav nav-tabs">
+                        <li id="uploadtab-bilateral" role="presentation" class="active" data-toggle="tooltip" data-placement="bottom" title="Two-surface model, upload separate left and right hemisphere .obj files">
+                            <a id="tab-bilateral" href="#tab-upload-lhrh" data-toggle="tab">Bilateral</a>
+                        </li>
+                        <li id="uploadtab-unilateral" role="presentation" data-toggle="tooltip" data-placement="bottom" title="Single-surface model, upload a single .obj file">
+                            <a id="tab-unilateral" href="#tab-upload-single" data-toggle="tab">Unilateral</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tab-upload-lhrh" class="tab-pane active">
+                            Left Hemisphere surface file: <span id="uploaded-label-model-name-left">empty</span>
+                            <input id="input-select-model-lhrh-lh" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" />
+                            <button id="button-upload-model-lhrh-lh" style="font-size:10px;">Upload</button>
+                            <br />
+                            Right Hemisphere surface file: <span id="uploaded-label-model-name-right">empty</span>
+                            <input id="input-select-model-lhrh-rh" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" />
+                            <button id="button-upload-model-lhrh-rh" style="font-size:10px;">Upload</button>
+                            <br />
+                            <button id="button-activate-model-bilateral" style="font-size:10px;" DISABLED>Switch to bilateral</button>
+                        </div>
+                        <div id="tab-upload-single" class="tab-pane">
+                            Surface file: <span id="uploaded-label-model-name">empty</span>
+                            <input id="input-select-model-single" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" />
+                            <button id="button-upload-model-single" style="font-size:10px;">Upload</button>
+                            <br />
+                            <button id="button-activate-model-unilateral" style="font-size:10px;" DISABLED>Switch to unilateral</button>
+                        </div>
+                    </div>
+
+                    <table>
+
+                    </table>
                 </div>
 
                 <label class="control-label" data-toggle="tooltip" data-placement="right" title="Open color selection palette for the brain model surface">Color</label>
@@ -779,4 +811,3 @@ R Amygdala ">Node labels (optional)</label>
 
 </body>
 </html>
-

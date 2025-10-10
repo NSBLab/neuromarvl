@@ -385,8 +385,6 @@ class Brain3DApp implements Application, Loopable {
         var varNetworkTypeOnChange = (s: string) => { this.networkTypeOnChange(s); };
         var varBrainSurfaceModeOnChange = (s: string) => {
             this.brainSurfaceMode = s;
-            //console.log(this.brainSurfaceMode);
-            // tofix tomorrow
             if (this.brainSurfaceMode === 1 || this.brainSurfaceMode === "split") {
                 //#this.brainSurfaceMode = 1;
 

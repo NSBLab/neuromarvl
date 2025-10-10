@@ -198,6 +198,7 @@ class DataSet {
                 }
         }
 
+
         return adjMatrix;
     }
     // Create a matrix where a 1 in (i, j) means the edge between node i and node j is selected

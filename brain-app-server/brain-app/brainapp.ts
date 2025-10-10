@@ -371,7 +371,7 @@ class NeuroMarvl {
             var json;
             // Only let source be from "save_examples" (if specified by "example") or default to "save".
             let source = p[0];      // "save" or "example"
-            $.post("brain-app/getapp.aspx",
+            $.post("brain-app/getappdatacopy.aspx",
                 {
                     filename: p[1],
                     source
@@ -381,14 +381,52 @@ class NeuroMarvl {
                     if (status.toLowerCase() == "success") {
                         // Ensure that data is not empty
                         if (!data || !data.length) return;
+                        
+                        let dataParsed = jQuery.parseJSON(data);
+                        console.log(dataParsed);
+                        if (dataParsed["saveFileContents"] &&
+                            dataParsed["appDataFileContents"] &&
+                            dataParsed["uploadedModelFileContents"]) {
+                            // new method, all data is sent via the request
+                            console.log("new nethod");
 
-                        this.saveFileObj = new SaveFile(jQuery.parseJSON(data));
-                        console.log(this.saveFileObj);
+                            this.saveFileObj = dataParsed["saveFileContents"];
+                            for (var i = 0; i < 4; i++) {
+                                var curContents = dataParsed["appDataFileContents"][i];
+                                if (curContents) {
+                                    if (curContents["brainCoords"]) {
+                                        console.log("Found brainCoords");
+                                        this.referenceDataSet.brainCoords = curContents["brainCoords"];
+                                        this.commonData.notifyCoords();
+                                    }
+                                    if (curContents["brainLabels"]) {
+                                        console.log("Found brainLabels");
+                                        this.referenceDataSet.brainLabels = curContents["brainLabels"];
+                                        this.commonData.notifyLabels();
+                                    }
+                                    if (curContents["simMatrix"]) {
+                                        console.log("Found simMatrix");
+                                        this.referenceDataSet.setSimMatrix(curContents["simMatrix"]);
+                                        this.referenceDataSet.notifySim();
+                                    }
+                                    if (curContents["attributes"]) {
+                                        console.log("Found attributes");
+                                        this.referenceDataSet.attributes = curContents["attributes"];
+                                        this.referenceDataSet.notifyAttributes();
+
+                                    }
+                                    console.log(curContents);
+                                }
+                            }
+                        } else {
+                            // old method, separate files
+                            console.log("old method");
+                            this.saveFileObj = new SaveFile(dataParsed);
+                        }
+                        
                         for (var app of this.saveFileObj.saveApps) {
                         
                             if (app.surfaceModel && (app.surfaceModel.length > 0)) {
-                                console.log(app.brainSurfaceMode);
-
                                 if (!(app.brainSurfaceMode === 'left' ||
                                     app.brainSurfaceMode === 'right' ||
                                     app.brainSurfaceMode === 'both' ||
@@ -563,7 +601,7 @@ class NeuroMarvl {
         var file = (<any>$('#select-coords').get(0)).files[0];
         if (file) {
             // 1. upload the file to server
-            this.uploadTextFile(file, TYPE_COORD);
+            //this.uploadTextFile(file, TYPE_COORD);
 
             // 2. also load data locally
             this.loadCoordinates(file);
@@ -577,7 +615,7 @@ class NeuroMarvl {
         var file = (<any>$('#select-matrix').get(0)).files[0];
         if (file) {
             // 1. upload the file to server
-            this.uploadTextFile(file, TYPE_MATRIX);
+            //this.uploadTextFile(file, TYPE_MATRIX);
 
             // 2. also load data locally
             this.loadSimilarityMatrix(file, this.referenceDataSet);
@@ -592,7 +630,7 @@ class NeuroMarvl {
         var file = (<any>$('#select-attrs').get(0)).files[0];
         if (file) {
             // 1. upload the file to server
-            this. uploadTextFile(file, TYPE_ATTR);
+            //this.uploadTextFile(file, TYPE_ATTR);
 
             // 2. also load data locally
             //loadAttributes(file, dataSet);
@@ -618,7 +656,7 @@ class NeuroMarvl {
         var file = (<any>$('#select-labels').get(0)).files[0];
         if (file) {
             // 1. upload the file to server
-            this.uploadTextFile(file, TYPE_LABEL);
+            //this.uploadTextFile(file, TYPE_LABEL);
 
             // 2. also load data locally
             this.loadLabels(file);
@@ -1921,7 +1959,7 @@ class NeuroMarvl {
                 makeBrain();
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Empty dataset is loaded.");
             }
-            else if (this.saveFileObj.useExampleData()) {
+            else if (this.saveFileObj.useExampleData) {
                 this.loadExampleData(() => {
                     makeBrain();
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Default example dataset is loaded.");
@@ -2895,6 +2933,9 @@ class NeuroMarvl {
 
         $('#button-save-app').button().click(() => {
             //Save all the applicationsInstances
+
+            var appDataArray = Array();
+
             for (var i = 0; i < 4; i++) {
                 var app = this.saveFileObj.saveApps[i];
 
@@ -2902,20 +2943,84 @@ class NeuroMarvl {
                 if (app && app.surfaceModel) app.surfaceModel = $('#select-brain3d-model').val();
 
                 if (this.applicationsInstances[i]) this.applicationsInstances[i].save(app);
+
+                if (!this.applicationsInstances[i]) {
+                    appDataArray.push([]);
+                } else {
+                    var curArray = {};
+
+                    let fields = ["info", "simMatrix", "attributes", "brainCoords", "brainLabels"];
+                    console.log(this.applicationsInstances[0]);
+                    fields.forEach(function (curField) {
+                        if (this.applicationsInstances[i].dataSet[curField]) {
+                            curArray[curField] = this.applicationsInstances[i].dataSet[curField];
+                        }
+                    }, this);
+                    appDataArray.push(curArray);
+                    
+                }
+            }
+            console.log(appDataArray);
+
+            var uploadedModels = {};
+            // save the surface models if uploaded
+            if (this.saveFileObj.uploadedModelBilateralValid &&
+                this.brainModelLeftHemi &&
+                this.brainModelRightHemi) {
+                
+                this.brainModelLeftHemi.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        let attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position");
+                        uploadedModels["leftHemi"] = Array.prototype.slice.call(attribute.array);
+                    }
+                });
+                this.brainModelRightHemi.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        let attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position");
+                        uploadedModels["rightHemi"] = Array.prototype.slice.call(attribute.array);
+                    }
+                });
+            }
+            var uploadedUnilateralModel;
+
+            if (this.brainModelUnilateral) {
+                this.brainModelUnilateral.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        let attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position");
+                        uploadedModels["unilateral"] = Array.prototype.slice.call(attribute.array);
+                    }
+                });
             }
 
             //reload display settings
             this.reloadDisplay();
 
             var saveJson = JSON.stringify(this.saveFileObj);
-            $.post("brain-app/saveapp.aspx",
+
+            // make a 
+            $.post("brain-app/saveappdatacopy.aspx",
                 {
-                    save: saveJson
+                    save: saveJson,
+                    appDataArray: JSON.stringify(appDataArray),
+                    uploadedModels: JSON.stringify(uploadedModels)
+
                 },
                 (data, status) => {
                     if (status.toLowerCase() == "success") {
                         var url = document.URL.split('?')[0];
-                        prompt("The project is saved. Use the following URL to restore the project:", url + "?save=" + data);
+                        //#prompt("The project is saved. Use the following URL to restore the project:", url + "?save=index_" + data);
+                        var deleteurlarray = document.URL.split('/');
+                        deleteurlarray[deleteurlarray.length - 1] = 'delete.html';
+                        var deleteurl = deleteurlarray.join('/');
+                        $('#saveModal').modal('show');
+                        $('#projectModalText').html(
+                            "Use the following URL to restore the visualisation:<BR>" + 
+                            "<CENTER><B>" + url + "?save=index_" + data + "</CENTER></B>" +
+                            "<BR><BR>Use the following URL to delete the data (permanent):<BR>" +
+                            "<CENTER><B>" + deleteurl + "?save=index_" + data + "</CENTER></B>" +
+                            "<BR><BR><CENTER>Keep these saved</CENTER>"
+                        );
+                        //#alert(url + "?save=index_" + data + "\n" + url + "?save=delete_" + data + "\n");
                     }
                     else {
                         alert("save: " + status);
@@ -2940,7 +3045,7 @@ class NeuroMarvl {
                     this.brainModelLeftHemi = this.loader.parse(reader.result);
                     this.brainModelLeftHemi.children[0].name = 'lh';
                     //this.applicationsInstances[0].setBrainModelObject(brainModel);
-                    this.uploadTextFile(file, TYPE_MODEL_LEFT_HEMI);
+                    //this.uploadTextFile(file, TYPE_MODEL_LEFT_HEMI);
                     // save the model to the "save" directory
                     this.saveFileObj.uploadedModelNameLeftHemi = file.name;
                     $("#uploaded-label-model-name-left").html(this.saveFileObj.uploadedModelNameLeftHemi);
@@ -2969,7 +3074,7 @@ class NeuroMarvl {
                     this.brainModelRightHemi = this.loader.parse(reader.result);
                     this.brainModelRightHemi.children[0].name = 'rh';
                     //this.applicationsInstances[0].setBrainModelObject(brainModel);
-                    this.uploadTextFile(file, TYPE_MODEL_RIGHT_HEMI);
+                    //this.uploadTextFile(file, TYPE_MODEL_RIGHT_HEMI);
                     // save the model to the "save" directory
                     this.saveFileObj.uploadedModelNameRightHemi = file.name;
                     $("#uploaded-label-model-name-right").html(this.saveFileObj.uploadedModelNameRightHemi);
@@ -2998,7 +3103,7 @@ class NeuroMarvl {
                     this.brainModelUnilateral = this.loader.parse(reader.result);
 
                     this.applicationsInstances[0].setBrainModelObject(this.brainModelUnilateral);
-                    this.uploadTextFile(file, TYPE_MODEL);
+                    //this.uploadTextFile(file, TYPE_MODEL);
                     // save the model to the "save" directory
                     this.saveFileObj.uploadedModelName = file.name;
                     this.saveFileObj.uploadedModelMode = 'unilateral';

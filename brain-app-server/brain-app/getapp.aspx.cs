@@ -62,7 +62,6 @@ namespace brain_app_server.brain_app
             {
                 System.Diagnostics.Debug.WriteLine("Failed to find " + filename + ": " + error.Message);
             }
-
             Response.Write(json);
         }
     }

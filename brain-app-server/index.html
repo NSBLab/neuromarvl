@@ -1,13 +1,14 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>Brain Data Viewer</title>
+    <title>NeuroMarvl</title>
 
     <link rel="stylesheet" type="text/css" href="extern/dc.css" />
 
     <!-- Latest compiled and minified CSS -->
     <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">-->
     <link rel="stylesheet" href="extern/bootstrap-3.3.7-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="extern/bootstrap-3.3.7-dist/css/bootstrap-theme.min.css" />
     <link rel="stylesheet" href="extern/splashPage/splashPage.css" />
     <link rel="stylesheet" href="extern/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css" />
     <link rel="stylesheet" href="extern/bootstrap-slider/css/bootstrap-slider.min.css" />
@@ -22,6 +23,22 @@
         <input type="text" id="file-save-name" />
 
     </div>
+    <div class="modal modal-lg fade" tabindex="-1" id="saveModal" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Visualisation saved</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="projectModalText"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
     <div id="splashPage" class="overlay overlay-scale">
         <div id="content">
             <button id="overlay-close" type="button" class="overlay-close">Close</button>
@@ -152,7 +169,7 @@
                     <option value="none">None</option>
                 </select>
                 <br />
-                
+
                 <div id="div-upload-brain-model" style="display:none;">
                     <ul id="uploadtab-tabs" class="nav nav-tabs">
                         <li id="uploadtab-bilateral" role="presentation" class="active" data-toggle="tooltip" data-placement="bottom" title="Two-surface model, upload separate left and right hemisphere .obj files">
@@ -184,7 +201,6 @@
                     </div>
 
                     <table>
-
                     </table>
                 </div>
 
@@ -206,354 +222,354 @@
                 <br />
                 <!-- TODO: Bring back yoking with multi-view -->
                 <!--<div style="margin-left: 0px; margin-bottom: 10px;">
-        view:
-        <input type="checkbox" id="checkbox_yoking_view" style="width: 12px;">yoking orientation
-    </div>-->
+                    view:
+                    <input type="checkbox" id="checkbox_yoking_view" style="width: 12px;">yoking orientation
+                </div>-->
 
             </div>
-                <div id="tab-2" class="tab-pane">
-                    <br />
-                    <div class="btn-group btn-group-justified" data-toggle="btns">
-                        <a class="btn btn-sm btn-primary active" href="#div-set-data-tab" data-toggle="tab">
-                            <span data-toggle="tooltip" data-placement="bottom" title="Set data source files for node position, connectivity, attributes and labels">Dataset</span>
-                        </a>
-                        <a class="btn btn-sm btn-primary" href="#div-batching-tab" data-toggle="tab">
-                            <span data-toggle="tooltip" data-placement="bottom" title="Create and download batch images files using multiple source data files">Batching</span>
-                        </a>
-                    </div>
-                    <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
+            <div id="tab-2" class="tab-pane">
+                <br />
+                <div class="btn-group btn-group-justified" data-toggle="btns">
+                    <a class="btn btn-sm btn-primary active" href="#div-set-data-tab" data-toggle="tab">
+                        <span data-toggle="tooltip" data-placement="bottom" title="Set data source files for node position, connectivity, attributes and labels">Dataset</span>
+                    </a>
+                    <a class="btn btn-sm btn-primary" href="#div-batching-tab" data-toggle="tab">
+                        <span data-toggle="tooltip" data-placement="bottom" title="Create and download batch images files using multiple source data files">Batching</span>
+                    </a>
+                </div>
+                <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
 
-                        <div id="div-set-data-tab" class="tab-pane active">
-                            <br />
-                            <button id="load-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Immediately load default data">Load default data</button>
-                            <a id="download-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Download input files used for default data, to get an example of the format of the input files..." href="brain-app/data/example.zip">Get example files</a>
-                            <br />
-                            <br />
-                            <label class="control-label" data-toggle="tooltip" data-placement="right" title="Spatial coordinates of each node. This file should be a matrix comprising N rows and 3 columns, where N is the number of nodes and the columns represent the [x y z] coordinates of each node. The file can be space, tab or comma delimited.">Node coordinates</label>
-                            <input id="select-coords" style="display:none;" type="file" />
-                            <div class="input-group input-group-sm">
-                                <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="coords-status"
-                                     data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
-                                <button id="button-select-coords" class="form-control btn-default"><span id="button-select-coords-filename">Coordinates file</span></button>
-                            </div>
-                            <br />
-                            <br />
-                            <label class="control-label" data-toggle="tooltip" data-placement="right" title="An N*N adjacency or connectivity matrix, where N is the number of nodes. Can be tab, space or comma delimited. Order of rows/columns should correspond to the row order of the node coordinates.">Connectivity matrix</label>
-                            <input id="select-matrix" style="display:none;" type="file" />
-                            <div class="input-group input-group-sm">
-                                <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="matrix-status"
-                                     data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
-                                <button id="button-select-matrix" class="form-control btn-default"><span id="button-select-matrix-filename">Matrix file</span></button>
-                            </div>
-                            <br />
-                            <br />
-                            <label class="control-label" data-toggle="tooltip" data-placement="right" title="Attributes measured for each node. Should comprise N+1 rows and M columns. The first row should contain strings representing column headings (i.e., the name of each attribute). Each column represents a different attribute measured at each node (e.g., degree, clustering, module affiliation, etc.). If column names are not specified in the first row, default attribute labels will be assigned. The order of the rows should correspond to the node ordering in the other input files.
+                    <div id="div-set-data-tab" class="tab-pane active">
+                        <br />
+                        <button id="load-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Immediately load default data">Load default data</button>
+                        <a id="download-example-data" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="top" title="Download input files used for default data, to get an example of the format of the input files..." href="brain-app/data/example.zip">Get example files</a>
+                        <br />
+                        <br />
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Spatial coordinates of each node. This file should be a matrix comprising N rows and 3 columns, where N is the number of nodes and the columns represent the [x y z] coordinates of each node. The file can be space, tab or comma delimited.">Node coordinates</label>
+                        <input id="select-coords" style="display:none;" type="file" />
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="coords-status"
+                                 data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
+                            <button id="button-select-coords" class="form-control btn-default"><span id="button-select-coords-filename">Coordinates file</span></button>
+                        </div>
+                        <br />
+                        <br />
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="An N*N adjacency or connectivity matrix, where N is the number of nodes. Can be tab, space or comma delimited. Order of rows/columns should correspond to the row order of the node coordinates.">Connectivity matrix</label>
+                        <input id="select-matrix" style="display:none;" type="file" />
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="matrix-status"
+                                 data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
+                            <button id="button-select-matrix" class="form-control btn-default"><span id="button-select-matrix-filename">Matrix file</span></button>
+                        </div>
+                        <br />
+                        <br />
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Attributes measured for each node. Should comprise N+1 rows and M columns. The first row should contain strings representing column headings (i.e., the name of each attribute). Each column represents a different attribute measured at each node (e.g., degree, clustering, module affiliation, etc.). If column names are not specified in the first row, default attribute labels will be assigned. The order of the rows should correspond to the node ordering in the other input files.
 
 If one of the attributes represents module affiliation for an overlapping module decomposition (i.e., a node can belong to more than one module), the module identities should be separated by pipes. e.g., in the following example, node 1 (first row) belongs to modules 1, 2, 5 and 6; node 2 (second row) to modules 2, 3, and 4; and node 3 (third row) to modules 4 and 5 with a stronger affiliation to module 5.
 
 1|1|0|0|1|1
 0|1|1|1|0|0
 0|0|0|1|2|0">Node attributes</label>
-                            <input id="select-attrs" style="display:none;" type="file" />
-                            <div class="input-group input-group-sm">
-                                <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="attrs-status"
-                                     data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
-                                <button id="button-select-attrs" class="form-control btn-default"><span id="button-select-attrs-filename">Attributes file</span></button>
-                            </div>
-                            <br />
-                            <br />
-                            <label class="control-label" data-toggle="tooltip" data-placement="right" title="A file with N rows, each containing a string that is a label for each individual node. e.g.,
+                        <input id="select-attrs" style="display:none;" type="file" />
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="attrs-status"
+                                 data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
+                            <button id="button-select-attrs" class="form-control btn-default"><span id="button-select-attrs-filename">Attributes file</span></button>
+                        </div>
+                        <br />
+                        <br />
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="A file with N rows, each containing a string that is a label for each individual node. e.g.,
 
 L Hippocampus
 R Hippocampus
 L Amygdala
 R Amygdala ">Node labels (optional)</label>
-                            <input id="select-labels" style="display:none;" type="file" />
-                            <div class="input-group input-group-sm">
-                                <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="labels-status"
-                                     data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
-                                <button id="button-select-labels" class="form-control btn-default"><span id="button-select-labels-filename">Labels file</span></button>
-                            </div>
-                            <br />
+                        <input id="select-labels" style="display:none;" type="file" />
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="labels-status"
+                                 data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
+                            <button id="button-select-labels" class="form-control btn-default"><span id="button-select-labels-filename">Labels file</span></button>
                         </div>
+                        <br />
+                    </div>
+                    <div id="div-batching-tab" class="tab-pane">
+                        <br />
+                        <div id="batching-tooltip" class="ui-visible-tooltip">
+                            <p>Batch mode allows you to apply a given display setting to multiple networks. </p>
+                            <p>
+                                Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. Each matrix must have a corresponding attributes file, with the same dimensions and column headings as the first attribute file. You can select multiple files at once, and correspondence between matrix and attribute files is established by loading them in the same order. The app will then generate these visualisations and save them as separate files to your desktop.
+                                <!--Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.-->
+                            </p>
+                        </div>
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Batch mode allows you to apply a given display setting to multiple networks. First, you can select one dataset and generate a particular visualisation. Then you use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.">Connectivity matrices</label>
+                        <input id="select-matrices-batching" style="display:none;" type="file" multiple />
                         <div id="div-batching-tab" class="tab-pane">
-                            <br />
-                            <div id="batching-tooltip" class="ui-visible-tooltip">
-                                <p>Batch mode allows you to apply a given display setting to multiple networks. </p>
-                                <p>
-                                    Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. Each matrix must have a corresponding attributes file, with the same dimensions and column headings as the first attribute file. You can select multiple files at once, and correspondence between matrix and attribute files is established by loading them in the same order. The app will then generate these visualisations and save them as separate files to your desktop.
-                                    <!--Using the Dataset-tab, create a dataset with a particular 2D/3D visualisation first. Then use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.-->
-                                </p>
-                            </div>
-                            <label class="control-label" data-toggle="tooltip" data-placement="right" title="Batch mode allows you to apply a given display setting to multiple networks. First, you can select one dataset and generate a particular visualisation. Then you use this button to select a set of other matrices that the visualisation will be applied to. The matrices must have the same dimensions as the original, but may represent different connections. The app will then generate these visualisations and save them as separate files to your desktop.">Connectivity matrices</label>
-                            <input id="select-matrices-batching" style="display:none;" type="file" multiple />
-                            <div id="div-batching-tab" class="tab-pane">
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="matrices-batching-status"
-                                         data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
-                                    <button id="button-select-matrices-batching" class="form-control btn-default">Matrix files</button>
-                                </div>
-                            </div>
-                            <br />
-                            <br />
-                            <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select a corresponding attribute file for the connectivity matrices. There should be one attribute file for each matrix. They should be listed in the same order as the matrices.">Node attributes</label>
-                            <input id="select-attrs-batching" style="display:none;" type="file" multiple />
                             <div class="input-group input-group-sm">
-                                <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="attrs-batching-status"
+                                <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="matrices-batching-status"
                                      data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
-                                <button id="button-select-attrs-batching" class="form-control btn-default">Attribute files</button>
+                                <button id="button-select-matrices-batching" class="form-control btn-default">Matrix files</button>
                             </div>
-                            <br />
-                            <button id="btn-start-batching" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="right" title="Create batch images...">Batch</button>
                         </div>
-
+                        <br />
+                        <br />
+                        <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select a corresponding attribute file for the connectivity matrices. There should be one attribute file for each matrix. They should be listed in the same order as the matrices.">Node attributes</label>
+                        <input id="select-attrs-batching" style="display:none;" type="file" multiple />
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-addon glyphicon glyphicon glyphicon-info-sign status-changed" id="attrs-batching-status"
+                                 data-toggle="tooltip" data-placement="bottom" title="File is not uploaded"></div>
+                            <button id="button-select-attrs-batching" class="form-control btn-default">Attribute files</button>
+                        </div>
+                        <br />
+                        <button id="btn-start-batching" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="right" title="Create batch images...">Batch</button>
                     </div>
 
                 </div>
-                <div id="tab-3" class="tab-pane" style="height: 100%;">
-                    <br />
-                    <div class="btn-group btn-group-justified" data-toggle="btns">
-                        <a class="btn btn-sm btn-primary active" href="#div-node-attribute-tab" data-toggle="tab">
-                            <span data-toggle="tooltip" data-placement="bottom" title="Visual settings and selection filtering for nodes">Node Attrs</span>
-                        </a>
-                        <a class="btn btn-sm btn-primary" href="#div-edge-attribute-tab" data-toggle="tab">
-                            <span data-toggle="tooltip" data-placement="bottom" title="Visual settings for edges">Edge Attrs</span>
-                        </a>
-                    </div>
 
-                    <br>
-                    <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
-                        <div id="div-node-attribute-tab" class="tab-pane active">
-                            <div>
-                                <div id="div-set-node-scale" style="display: none; margin-bottom: 5px; ">
-                                    <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select node property to change">Set</label>
-                                    <select id="select-node-size-color" class="form-control input-sm">
-                                        <option value="node-size">Size</option>
-                                        <option value="node-color">Color</option>
-                                        <option value="node-default">None</option>
-                                    </select>
-                                    <label class="control-label" data-toggle="tooltip" data-placement="right" title="Change node property according to one of the following attributes">by</label>
-                                    <select id="select-attribute" class="form-control input-sm"></select>
-                                </div>
-                            </div>
-                            <div id="div-node-size" style="display:none; margin-top: 20px; margin-left: 20px;">
-                                <p>
-                                    <label class="control-label" data-toggle="tooltip" data-placement="right" title="Scale range of node sizes">range:</label>
-                                    <label id="label_node_size_range"></label>
-                                </p>
-                                <input id="div-node-size-slider" data-slider-id='node-size-slider' type="text"
-                                       data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="[0.5,1]" />
-                            </div>
-                            <div id="div-node-color-mode" style="display:none;" data-toggle="tooltip" data-placement="right" title="Toggle continuous or discrete colouring">
-                                <input type="checkbox" id="checkbox-node-color-continuous" style="width: 12px;">
-                                <strong>Treat as continuous</strong>
-                            </div>
-                            <div id="div-node-color-pickers-discrete" style="display:none; margin-top: 20px; margin-left: 20px;">
-                                <p>
-                                    <label class="control-label" style="display: inline-block;">Key</label>
-                                    <select id="select-node-key" class="form-control input-sm" style="width: 80px; display: inline-block;"></select>
-                                    <div id="input-node-color" class="input-group colorpicker-component">
-                                        <input type="text" value="ffff00" class="form-control" />
-                                        <span class="input-group-addon"><i></i></span>
-                                    </div>
-                                </p>
-                            </div>
+            </div>
+            <div id="tab-3" class="tab-pane" style="height: 100%;">
+                <br />
+                <div class="btn-group btn-group-justified" data-toggle="btns">
+                    <a class="btn btn-sm btn-primary active" href="#div-node-attribute-tab" data-toggle="tab">
+                        <span data-toggle="tooltip" data-placement="bottom" title="Visual settings and selection filtering for nodes">Node Attrs</span>
+                    </a>
+                    <a class="btn btn-sm btn-primary" href="#div-edge-attribute-tab" data-toggle="tab">
+                        <span data-toggle="tooltip" data-placement="bottom" title="Visual settings for edges">Edge Attrs</span>
+                    </a>
+                </div>
 
-                            <div id="div-node-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
-                                <p style="margin-bottom: 0;">
-                                    <label class="control-label" style="display: inline-block;">Min</label>
-                                    <div id="input-min-color" class="input-group colorpicker-component">
-                                        <input type="text" value="ffff00" class="form-control" />
-                                        <span class="input-group-addon"><i></i></span>
-                                    </div>
-                                </p>
-                                <p style="margin-top: 0;">
-                                    <label class="control-label" style="display: inline-block;">Max</label>
-                                    <div id="input-max-color" class="input-group colorpicker-component">
-                                        <input type="text" value="FF0000" class="form-control" />
-                                        <span class="input-group-addon"><i></i></span>
-                                    </div>
-                                </p>
-                            </div>
-                            <div id="div-charts" class="dc-data-count" style="width: 95%">
-                                <div id="barCharts"></div>
-                                <button id="button-apply-filter" data-toggle="tooltip" data-placement="bottom" title="Show only nodes that are selected using the histogram ranges above" class="btn btn-primary btn-sm">Apply</button>
-                                <span class="filter-count"></span> selected out of <span class="total-count"></span> | <a href="javascript:dc.filterAll();dc.renderAll();">Reset</a>
+                <br>
+                <div class="tab-content" style="height: 85%; overflow-x: hidden; overflow-y: auto;">
+                    <div id="div-node-attribute-tab" class="tab-pane active">
+                        <div>
+                            <div id="div-set-node-scale" style="display: none; margin-bottom: 5px; ">
+                                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Select node property to change">Set</label>
+                                <select id="select-node-size-color" class="form-control input-sm">
+                                    <option value="node-size">Size</option>
+                                    <option value="node-color">Color</option>
+                                    <option value="node-default">None</option>
+                                </select>
+                                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Change node property according to one of the following attributes">by</label>
+                                <select id="select-attribute" class="form-control input-sm"></select>
                             </div>
                         </div>
-                        <div id="div-edge-attribute-tab" class="tab-pane">
-                            <div id="div-edge-size" style="margin-left: 0px; margin-bottom: 10px;" data-toggle="tooltip" data-placement="right" title="Adjust edge thickness">
-                                <p><strong>Edge size</strong></p>
-                                <input id="div-edge-size-slider" data-slider-id='edge-size-slider' type="text"
-                                       data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="1" />
-                                <label id="label_edge_size"></label>
-                            </div>
-
-                            <p data-toggle="tooltip" data-placement="right" title="Toggle thickness proportional to edge weight">
-                                <input type="checkbox" id="checkbox-thickness-by-weight" style="width: 12px;"> <strong>Thickness by weight</strong>
+                        <div id="div-node-size" style="display:none; margin-top: 20px; margin-left: 20px;">
+                            <p>
+                                <label class="control-label" data-toggle="tooltip" data-placement="right" title="Scale range of node sizes">range:</label>
+                                <label id="label_node_size_range"></label>
                             </p>
+                            <input id="div-node-size-slider" data-slider-id='node-size-slider' type="text"
+                                   data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="[0.5,1]" />
+                        </div>
+                        <div id="div-node-color-mode" style="display:none;" data-toggle="tooltip" data-placement="right" title="Toggle continuous or discrete colouring">
+                            <input type="checkbox" id="checkbox-node-color-continuous" style="width: 12px;">
+                            <strong>Treat as continuous</strong>
+                        </div>
+                        <div id="div-node-color-pickers-discrete" style="display:none; margin-top: 20px; margin-left: 20px;">
+                            <p>
+                                <label class="control-label" style="display: inline-block;">Key</label>
+                                <select id="select-node-key" class="form-control input-sm" style="width: 80px; display: inline-block;"></select>
+                                <div id="input-node-color" class="input-group colorpicker-component">
+                                    <input type="text" value="ffff00" class="form-control" />
+                                    <span class="input-group-addon"><i></i></span>
+                                </div>
+                            </p>
+                        </div>
 
+                        <div id="div-node-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
+                            <p style="margin-bottom: 0;">
+                                <label class="control-label" style="display: inline-block;">Min</label>
+                                <div id="input-min-color" class="input-group colorpicker-component">
+                                    <input type="text" value="ffff00" class="form-control" />
+                                    <span class="input-group-addon"><i></i></span>
+                                </div>
+                            </p>
+                            <p style="margin-top: 0;">
+                                <label class="control-label" style="display: inline-block;">Max</label>
+                                <div id="input-max-color" class="input-group colorpicker-component">
+                                    <input type="text" value="FF0000" class="form-control" />
+                                    <span class="input-group-addon"><i></i></span>
+                                </div>
+                            </p>
+                        </div>
+                        <div id="div-charts" class="dc-data-count" style="width: 95%">
+                            <div id="barCharts"></div>
+                            <button id="button-apply-filter" data-toggle="tooltip" data-placement="bottom" title="Show only nodes that are selected using the histogram ranges above" class="btn btn-primary btn-sm">Apply</button>
+                            <span class="filter-count"></span> selected out of <span class="total-count"></span> | <a href="javascript:dc.filterAll();dc.renderAll();">Reset</a>
+                        </div>
+                    </div>
+                    <div id="div-edge-attribute-tab" class="tab-pane">
+                        <div id="div-edge-size" style="margin-left: 0px; margin-bottom: 10px;" data-toggle="tooltip" data-placement="right" title="Adjust edge thickness">
+                            <p><strong>Edge size</strong></p>
+                            <input id="div-edge-size-slider" data-slider-id='edge-size-slider' type="text"
+                                   data-slider-min="0.01" data-slider-max="3" data-slider-step="0.02" data-slider-value="1" />
+                            <label id="label_edge_size"></label>
+                        </div>
+
+                        <p data-toggle="tooltip" data-placement="right" title="Toggle thickness proportional to edge weight">
+                            <input type="checkbox" id="checkbox-thickness-by-weight" style="width: 12px;"> <strong>Thickness by weight</strong>
+                        </p>
+
+                        <p style="margin-top: 5px; margin-bottom: 0;">
+                            <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set a visual indicator of edge direction. Only appropriate for directed networks.">
+                                <label for="select-edge-direction">Edge direction</label>
+                                <select class="form-control" id="select-edge-direction">
+                                    <option value="none">None</option>
+                                    <option value="arrow">Arrow</option>
+                                    <option value="opacity">Transparency</option>
+                                    <option value="gradient">Gradient</option>
+                                    <option value="animation">Animation</option>
+                                </select>
+                            </div>
+                        </p>
+                        <div id="div-edge-gradient-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
+                            <p style="margin-bottom: 0;">
+                                <label class="control-label" style="display: inline-block;">Start</label>
+                                <div id="input-edge-start-color" class="input-group colorpicker-component">
+                                    <input type="text" value="FF0000" class="form-control" />
+                                    <span class="input-group-addon"><i></i></span>
+                                </div>
+                            </p>
+                            <p style="margin-top: 0;">
+                                <label class="control-label" style="display: inline-block;">End</label>
+                                <div id="input-edge-end-color" class="input-group colorpicker-component">
+                                    <input type="text" value="0000FF" class="form-control" />
+                                    <span class="input-group-addon"><i></i></span>
+                                </div>
+                            </p>
+                        </div>
+                        <div id="div-edge-color">
                             <p style="margin-top: 5px; margin-bottom: 0;">
-                                <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set a visual indicator of edge direction. Only appropriate for directed networks.">
-                                    <label for="select-edge-direction">Edge direction</label>
-                                    <select class="form-control" id="select-edge-direction">
+                                <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set edge color either to the color of the connecting nodes or a color scale that represents variations in edge weight. If edges are coloured by nodes, you have the option to select a color for edge attached to nodes of two different colours (e.g., inter-module edges).">
+                                    <label for="select-edge-color">Color edges by</label>
+                                    <select class="form-control" id="select-edge-color">
                                         <option value="none">None</option>
-                                        <option value="arrow">Arrow</option>
-                                        <option value="opacity">Transparency</option>
-                                        <option value="gradient">Gradient</option>
-                                        <option value="animation">Animation</option>
+                                        <option value="node">Node</option>
+                                        <option value="weight">Weight</option>
                                     </select>
                                 </div>
                             </p>
-                            <div id="div-edge-gradient-color-pickers" style="display:none; margin-top: 20px; margin-left: 20px;">
-                                <p style="margin-bottom: 0;">
-                                    <label class="control-label" style="display: inline-block;">Start</label>
-                                    <div id="input-edge-start-color" class="input-group colorpicker-component">
-                                        <input type="text" value="FF0000" class="form-control" />
+                            <div id="div-edge-color-by-node-picker" style="display: none; margin-top: 30px; margin-left: 40px;" data-toggle="tooltip" data-placement="right" title="Set an alternative color for edges with end nodes of different values">
+                                <p><input type="checkbox" id="checkbox-color-transitional-edges" style="width: 12px;"><strong> Customise inter-cluster edges</strong></p>
+                                <p>
+                                    <label for="pick-color-intercluster">Color</label>
+                                    <div id="input-edge-transitional-color" class="input-group colorpicker-component">
+                                        <input id="pick-color-intercluster" type="text" value="ee2211" class="form-control" />
                                         <span class="input-group-addon"><i></i></span>
                                     </div>
-                                </p>
-                                <p style="margin-top: 0;">
-                                    <label class="control-label" style="display: inline-block;">End</label>
-                                    <div id="input-edge-end-color" class="input-group colorpicker-component">
-                                        <input type="text" value="0000FF" class="form-control" />
-                                        <span class="input-group-addon"><i></i></span>
-                                    </div>
+
+                                    <br>
                                 </p>
                             </div>
-                            <div id="div-edge-color">
-                                <p style="margin-top: 5px; margin-bottom: 0;">
-                                    <div class="form-group" data-toggle="tooltip" data-placement="right" title="Set edge color either to the color of the connecting nodes or a color scale that represents variations in edge weight. If edges are coloured by nodes, you have the option to select a color for edge attached to nodes of two different colours (e.g., inter-module edges).">
-                                        <label for="select-edge-color">Color edges by</label>
-                                        <select class="form-control" id="select-edge-color">
-                                            <option value="none">None</option>
-                                            <option value="node">Node</option>
-                                            <option value="weight">Weight</option>
+                            <div id="div-edge-color-pickers" style="display: none; margin-top: 30px; margin-left: 40px;">
+                                <p><input type="checkbox" id="checkbox-edge-color-force-continuous" style="display:none; width: 12px;"><strong>Treat as continuous</strong></p>
+                                <div id="div-edge-color-continuous">
+                                    <p data-toggle="tooltip" data-placement="right" title="Set specific colours for value ranges">
+                                        <input type="checkbox" id="checkbox-edge-color-discretized" style="width: 12px;"><strong> Discretise continuous values</strong>
+                                    </p>
+                                    <div id="div-edge-color-continuous-discretized" data-toggle="tooltip" data-placement="right" title="Set the number and color of divisions based on value ranges">
+
+                                        <strong>Select number of divisions </strong>
+                                        <select id="select-edge-color-number-discretized-category" class="form-control" style="margin-bottom: 10px;">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
                                         </select>
+
+                                        <div id="div-edge-discretized-0">
+                                            <strong>From </strong><input id="input-edge-discretized-0-from" type="text" />
+                                            <br />
+                                            <strong>To </strong><input id="input-edge-discretized-0-to" type="text" />
+                                            <div id="input-edge-discretized-0-color" class="input-group colorpicker-component">
+                                                <input type="text" value="2ecc71" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+                                            <br>
+                                        </div>
+
+                                        <div id="div-edge-discretized-1">
+                                            From:<input id="input-edge-discretized-1-from" type="text" />
+                                            <br />
+                                            To:<input id="input-edge-discretized-1-to" type="text" />
+                                            <div id="input-edge-discretized-1-color" class="input-group colorpicker-component">
+                                                <input type="text" value="3498db" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+
+                                        </div>
+
+                                        <div id="div-edge-discretized-2">
+                                            From:<input id="input-edge-discretized-2-from" type="text" />
+                                            <br />
+                                            To:<input id="input-edge-discretized-2-to" type="text" />
+                                            <div id="input-edge-discretized-2-color" class="input-group colorpicker-component">
+                                                <input type="text" value="9b59b6" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+                                            <br>
+                                        </div>
+
+                                        <div id="div-edge-discretized-3">
+                                            From:<input id="input-edge-discretized-3-from" type="text" />
+                                            To:<input id="input-edge-discretized-3-to" type="text" />
+                                            <div id="input-edge-discretized-3-color" class="input-group colorpicker-component">
+                                                <input type="text" value="f1c40f" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+
+                                        </div>
+
+                                        <div id="div-edge-discretized-4">
+                                            From:<input id="input-edge-discretized-4-from" type="text" />
+                                            <br />
+                                            To:<input id="input-edge-discretized-4-to" type="text" />
+                                            <div id="input-edge-discretized-4-color" class="input-group colorpicker-component">
+                                                <input type="text" value="e74c3c" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+                                            <br>
+                                        </div>
+
                                     </div>
-                                </p>
-                                <div id="div-edge-color-by-node-picker" style="display: none; margin-top: 30px; margin-left: 40px;" data-toggle="tooltip" data-placement="right" title="Set an alternative color for edges with end nodes of different values">
-                                    <p><input type="checkbox" id="checkbox-color-transitional-edges" style="width: 12px;"><strong> Customise inter-cluster edges</strong></p>
+                                    <div id="div-edge-color-continuous-normal">
+                                        <p style="margin-bottom: 0;">
+                                            <strong>Minimum</strong>
+                                            <div id="input-edge-min-color" class="input-group colorpicker-component">
+                                                <input type="text" value="ffff00" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+                                        </p>
+                                        <p style="margin-top: 0;">
+                                            <strong>Maximum</strong>
+                                            <div id="input-edge-max-color" class="input-group colorpicker-component">
+                                                <input type="text" value="ff0000" class="form-control" />
+                                                <span class="input-group-addon"><i></i></span>
+                                            </div>
+                                            <br>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div id="div-edge-color-discrete">
                                     <p>
-                                        <label for="pick-color-intercluster">Color</label>
-                                        <div id="input-edge-transitional-color" class="input-group colorpicker-component">
-                                            <input id="pick-color-intercluster" type="text" value="ee2211" class="form-control" />
+                                        key:
+                                        <select id="select-edge-key" style="background-color: #feeebd"></select>
+                                        <div id="input-edge-color" class="input-group colorpicker-component">
+                                            <input type="text" value="ffff00" class="form-control" />
                                             <span class="input-group-addon"><i></i></span>
                                         </div>
 
                                         <br>
                                     </p>
-                                </div>
-                                <div id="div-edge-color-pickers" style="display: none; margin-top: 30px; margin-left: 40px;">
-                                    <p><input type="checkbox" id="checkbox-edge-color-force-continuous" style="display:none; width: 12px;"><strong>Treat as continuous</strong></p>
-                                    <div id="div-edge-color-continuous">
-                                        <p data-toggle="tooltip" data-placement="right" title="Set specific colours for value ranges">
-                                            <input type="checkbox" id="checkbox-edge-color-discretized" style="width: 12px;"><strong> Discretise continuous values</strong>
-                                        </p>
-                                        <div id="div-edge-color-continuous-discretized" data-toggle="tooltip" data-placement="right" title="Set the number and color of divisions based on value ranges">
 
-                                            <strong>Select number of divisions </strong>
-                                            <select id="select-edge-color-number-discretized-category" class="form-control" style="margin-bottom: 10px;">
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="4">4</option>
-                                                <option value="5">5</option>
-                                            </select>
-
-                                            <div id="div-edge-discretized-0">
-                                                <strong>From </strong><input id="input-edge-discretized-0-from" type="text" />
-                                                <br />
-                                                <strong>To </strong><input id="input-edge-discretized-0-to" type="text" />
-                                                <div id="input-edge-discretized-0-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="2ecc71" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-                                                <br>
-                                            </div>
-
-                                            <div id="div-edge-discretized-1">
-                                                From:<input id="input-edge-discretized-1-from" type="text" />
-                                                <br />
-                                                To:<input id="input-edge-discretized-1-to" type="text" />
-                                                <div id="input-edge-discretized-1-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="3498db" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-
-                                            </div>
-
-                                            <div id="div-edge-discretized-2">
-                                                From:<input id="input-edge-discretized-2-from" type="text" />
-                                                <br />
-                                                To:<input id="input-edge-discretized-2-to" type="text" />
-                                                <div id="input-edge-discretized-2-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="9b59b6" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-                                                <br>
-                                            </div>
-
-                                            <div id="div-edge-discretized-3">
-                                                From:<input id="input-edge-discretized-3-from" type="text" />
-                                                To:<input id="input-edge-discretized-3-to" type="text" />
-                                                <div id="input-edge-discretized-3-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="f1c40f" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-
-                                            </div>
-
-                                            <div id="div-edge-discretized-4">
-                                                From:<input id="input-edge-discretized-4-from" type="text" />
-                                                <br />
-                                                To:<input id="input-edge-discretized-4-to" type="text" />
-                                                <div id="input-edge-discretized-4-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="e74c3c" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-                                                <br>
-                                            </div>
-
-                                        </div>
-                                        <div id="div-edge-color-continuous-normal">
-                                            <p style="margin-bottom: 0;">
-                                                <strong>Minimum</strong>
-                                                <div id="input-edge-min-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="ffff00" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-                                            </p>
-                                            <p style="margin-top: 0;">
-                                                <strong>Maximum</strong>
-                                                <div id="input-edge-max-color" class="input-group colorpicker-component">
-                                                    <input type="text" value="ff0000" class="form-control" />
-                                                    <span class="input-group-addon"><i></i></span>
-                                                </div>
-                                                <br>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div id="div-edge-color-discrete">
-                                        <p>
-                                            key:
-                                            <select id="select-edge-key" style="background-color: #feeebd"></select>
-                                            <div id="input-edge-color" class="input-group colorpicker-component">
-                                                <input type="text" value="ffff00" class="form-control" />
-                                                <span class="input-group-addon"><i></i></span>
-                                            </div>
-
-                                            <br>
-                                        </p>
-
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
         <div style="position: absolute; bottom: 0">
             <label data-toggle="tooltip" data-placement="top" title="Toggle tooltip help">
                 <input id="checkbox-tips" type="checkbox" value="" checked>Show tips
@@ -781,7 +797,7 @@ R Amygdala ">Node labels (optional)</label>
     <script src="extern/cola.v3.min.js"></script>
     <!--<script src="extern/cola.v3.js"></script>-->
     <!--<script src="extern/d3adaptor.js"></script>-->
-    <script src="extern/cytoscape.min.js"></script>    
+    <script src="extern/cytoscape.min.js"></script>
     <script src="extern/cytoscape-cola.js"></script>
     <script src="extern/cytoscape-cose-bilkent.js"></script>
 

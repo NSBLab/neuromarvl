@@ -68,10 +68,13 @@ namespace brain_app_server.brain_app
                 //        ",\"appDataFileContents\":" + appDataFileContents +
                 //        ",\"uploadedModelFileContents\":" + uploadedModelFileContents + "}";
                 //}
-                if (filename.StartsWith("index_"))
+                if (filename.StartsWith("delete_"))
                 {
-                    string indexString = readFile(savePath + "\\" + filename);
-                    string indexFile = savePath + "\\" + filename.Substring(8);
+                    string deleteString = readFile(savePath + "\\" + filename);
+                    
+                    string indexFile = savePath + "\\index_" + deleteString + ".txt";
+                    string indexString = readFile(indexFile);
+                    System.Diagnostics.Debug.WriteLine(indexString);
                     string[] subs = indexString.Split(':');
                     string saveFilePath = subs[0];
                     string appDataFilePath = subs[1];

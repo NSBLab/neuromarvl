@@ -2930,8 +2930,14 @@ class NeuroMarvl {
         }
 
         $('#button-export-submit').button().click(this.exportCallbackFunction);
-
         $('#button-save-app').button().click(() => {
+            $('#button-generate-link').removeClass('disabled');
+            $('#button-generate-link').removeProp('disabled');
+            $('#button-generate-link').removeAttr('disabled');
+            $('#projectModalText').html("");
+            $('#saveModal').modal('show');
+        });
+        $('#button-generate-link').button().click(() => {
             //Save all the applicationsInstances
 
             var appDataArray = Array();
@@ -2960,7 +2966,6 @@ class NeuroMarvl {
                     
                 }
             }
-            console.log(appDataArray);
 
             var uploadedModels = {};
             // save the surface models if uploaded
@@ -3012,15 +3017,19 @@ class NeuroMarvl {
                         var deleteurlarray = document.URL.split('/');
                         deleteurlarray[deleteurlarray.length - 1] = 'delete.html';
                         var deleteurl = deleteurlarray.join('/');
-                        $('#saveModal').modal('show');
+
+                        var guids = data.split(' ');
+
                         $('#projectModalText').html(
                             "Use the following URL to restore the visualisation:<BR>" + 
-                            "<CENTER><B>" + url + "?save=index_" + data + "</CENTER></B>" +
+                            "<CENTER><B>" + url + "?save=index_" + guids[0] + "</CENTER></B>" +
                             "<BR><BR>Use the following URL to delete the data (permanent):<BR>" +
-                            "<CENTER><B>" + deleteurl + "?save=index_" + data + "</CENTER></B>" +
+                            "<CENTER><B>" + deleteurl + "?save=delete_" + guids[1] + "</CENTER></B>" +
                             "<BR><BR><CENTER>Keep these saved</CENTER>"
                         );
                         //#alert(url + "?save=index_" + data + "\n" + url + "?save=delete_" + data + "\n");
+                        console.log('disabling button');
+                        $('#button-generate-link').addClass('disabled');
                     }
                     else {
                         alert("save: " + status);

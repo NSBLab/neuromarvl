@@ -66,8 +66,18 @@ namespace brain_app_server.brain_app
             catch
             {
             }
+            string deleteguid = Guid.NewGuid().ToString();
+            string deletePath = Server.MapPath("save") + "\\delete_" + deleteguid + ".txt";
 
-            Response.Write(indexguid);
+            try
+            {
+                System.IO.File.WriteAllText(deletePath, indexguid);
+            }
+            catch
+            {
+            }
+
+            Response.Write(indexguid + " " + deleteguid);
         }
     }
 }

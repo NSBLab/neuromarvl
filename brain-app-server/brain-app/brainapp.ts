@@ -1,6 +1,7 @@
 /// <reference path="../extern/three.d.ts"/>
 /// <reference path="../extern/jquery.d.ts"/>
 /// <reference path="../extern/jqueryui.d.ts"/>
+
 /**
     This file contains all the control logic for brainapp.html (to manage interaction with
     the page, and the execution of applications/visualisations within the four views).
@@ -2931,37 +2932,43 @@ class NeuroMarvl {
 
         $('#button-export-submit').button().click(this.exportCallbackFunction);
         $('#button-save-app').button().click(() => {
-            $('#button-generate-link').removeClass('disabled');
-            $('#button-generate-link').removeProp('disabled');
-            $('#button-generate-link').removeAttr('disabled');
-            $('#projectModalText').html("");
+            $('#button-generate-link-restore').removeClass('disabled');
+            $('#button-generate-link-restore').removeProp('disabled');
+            $('#button-generate-link-restore').removeAttr('disabled');
+
+            $('#button-generate-link-nodelete').removeClass('disabled');
+            $('#button-generate-link-nodelete').removeProp('disabled');
+            $('#button-generate-link-nodelete').removeAttr('disabled');
+
+            $("#generate-link-output-restore").css({ 'display': 'none' });
+            $("#generate-link-output-delete").css({ 'display': 'none' });
             $('#saveModal').modal('show');
         });
-        $('#button-generate-link').button().click(() => {
-            //Save all the applicationsInstances
 
+        function generateLinkButtonClick(buttonId) {
+            console.log(_self);
+            //Save all the applicationsInstances
             var appDataArray = Array();
 
             for (var i = 0; i < 4; i++) {
-                var app = this.saveFileObj.saveApps[i];
+                var app = _self.saveFileObj.saveApps[i];
 
                 //added to fix surfaceModel not saving issue
                 if (app && app.surfaceModel) app.surfaceModel = $('#select-brain3d-model').val();
 
-                if (this.applicationsInstances[i]) this.applicationsInstances[i].save(app);
+                if (_self.applicationsInstances[i]) _self.applicationsInstances[i].save(app);
 
-                if (!this.applicationsInstances[i]) {
+                if (!_self.applicationsInstances[i]) {
                     appDataArray.push([]);
                 } else {
                     var curArray = {};
 
                     let fields = ["info", "simMatrix", "attributes", "brainCoords", "brainLabels"];
-                    console.log(this.applicationsInstances[0]);
                     fields.forEach(function (curField) {
-                        if (this.applicationsInstances[i].dataSet[curField]) {
-                            curArray[curField] = this.applicationsInstances[i].dataSet[curField];
+                        if (_self.applicationsInstances[i].dataSet[curField]) {
+                            curArray[curField] = _self.applicationsInstances[i].dataSet[curField];
                         }
-                    }, this);
+                    }, _self);
                     appDataArray.push(curArray);
                     
                 }
@@ -2969,17 +2976,17 @@ class NeuroMarvl {
 
             var uploadedModels = {};
             // save the surface models if uploaded
-            if (this.saveFileObj.uploadedModelBilateralValid &&
-                this.brainModelLeftHemi &&
-                this.brainModelRightHemi) {
+            if (_self.saveFileObj.uploadedModelBilateralValid &&
+                _self.brainModelLeftHemi &&
+                _self.brainModelRightHemi) {
                 
-                this.brainModelLeftHemi.traverse(function (child) {
+                _self.brainModelLeftHemi.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
                         let attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position");
                         uploadedModels["leftHemi"] = Array.prototype.slice.call(attribute.array);
                     }
                 });
-                this.brainModelRightHemi.traverse(function (child) {
+                _self.brainModelRightHemi.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
                         let attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position");
                         uploadedModels["rightHemi"] = Array.prototype.slice.call(attribute.array);
@@ -2988,8 +2995,8 @@ class NeuroMarvl {
             }
             var uploadedUnilateralModel;
 
-            if (this.brainModelUnilateral) {
-                this.brainModelUnilateral.traverse(function (child) {
+            if (_self.brainModelUnilateral) {
+                _self.brainModelUnilateral.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
                         let attribute = <THREE.BufferAttribute>(<THREE.BufferGeometry>child.geometry).getAttribute("position");
                         uploadedModels["unilateral"] = Array.prototype.slice.call(attribute.array);
@@ -2998,45 +3005,68 @@ class NeuroMarvl {
             }
 
             //reload display settings
-            this.reloadDisplay();
+            _self.reloadDisplay();
 
-            var saveJson = JSON.stringify(this.saveFileObj);
-
-            // make a 
+            var saveJson = JSON.stringify(_self.saveFileObj);
+            var canDelete = (buttonId == "button-generate-link-restore");
+            
             $.post("brain-app/saveappdatacopy.aspx",
                 {
                     save: saveJson,
                     appDataArray: JSON.stringify(appDataArray),
-                    uploadedModels: JSON.stringify(uploadedModels)
-
+                    uploadedModels: JSON.stringify(uploadedModels),
+                    canDelete: canDelete
                 },
                 (data, status) => {
                     if (status.toLowerCase() == "success") {
                         var url = document.URL.split('?')[0];
                         //#prompt("The project is saved. Use the following URL to restore the project:", url + "?save=index_" + data);
-                        var deleteurlarray = document.URL.split('/');
-                        deleteurlarray[deleteurlarray.length - 1] = 'delete.html';
-                        var deleteurl = deleteurlarray.join('/');
+                        if (canDelete) {
+                            var deleteurlarray = document.URL.split('/');
+                            deleteurlarray[deleteurlarray.length - 1] = 'delete.html';
+                            var deleteurl = deleteurlarray.join('/');
+                        }
 
                         var guids = data.split(' ');
+                        
+                        $("#generate-link-output-restore").css({ 'display': 'block' });
+                        if (canDelete) {
+                            $("#generate-link-output-delete").css({ 'display': 'block' });
+                        }
 
-                        $('#projectModalText').html(
-                            "Use the following URL to restore the visualisation:<BR>" + 
-                            "<CENTER><B>" + url + "?save=index_" + guids[0] + "</CENTER></B>" +
-                            "<BR><BR>Use the following URL to delete the data (permanent):<BR>" +
-                            "<CENTER><B>" + deleteurl + "?save=delete_" + guids[1] + "</CENTER></B>" +
-                            "<BR><BR><CENTER>Keep these saved</CENTER>"
-                        );
+                        $("#index-url-copy-input").val(url + "?save=index_" + guids[0]);
+                        if (canDelete) {
+                            $("#delete-url-copy-input").val(deleteurl + "?save=delete_" + guids[1]);
+                        }
+                        
+
+                        $('#index-url-copy-button').tooltip();
+                        if (canDelete) {
+                            $('#delete-url-copy-button').tooltip();
+                        }
+                        $('#index-url-copy-button').bind('click', function () {
+                            copyToClipboard('index');
+                        });
+                        $('#delete-url-copy-button').bind('click', function () {
+                            copyToClipboard('delete');
+                        });
+
                         //#alert(url + "?save=index_" + data + "\n" + url + "?save=delete_" + data + "\n");
-                        console.log('disabling button');
-                        $('#button-generate-link').addClass('disabled');
+                        $('#button-generate-link-nodelete').addClass('disabled');
+                        $('#button-generate-link-restore').addClass('disabled');
                     }
                     else {
                         alert("save: " + status);
                     }
                 });
-        });
+        }
 
+        $('#button-generate-link-restore').on("click", function () {
+            generateLinkButtonClick(this.id);
+        });
+        $('#button-generate-link-nodelete').on("click", function () {
+            generateLinkButtonClick(this.id);
+        });
         $('[data-toggle="btns"] .btn').on('click', function () {
             var $this = $(this);
             $this.parent().find('.active').removeClass('active');
@@ -3388,8 +3418,53 @@ class NeuroMarvl {
 
 }
 
+//const copyToClipboard = async (id: string): Promise<T> => {
+//    //var input = document.querySelector('#index-url-copy-button');
+//    try {
+//        await navigator.clipboard.writeText($('#' + id + "-url-copy-input").val());
+//        $("#" + id + "index-url-copy-button").html("Copied!");
+//        // Optional: Provide feedback or perform additional actions upon successful copy
+//    } catch (error) {
+//        console.error("Failed to copy to clipboard:", error);
+//        $("#" + id + "index-url-copy-button").val("Error, use Ctrl+C");
+//        // Optional: Handle and display the error to the user
+//    }
+//    return $('#' + id + "-url-copy-input").val();
+//};
+//function copyToClipboard(id) {
+//    return id;
+//}
 
 
+const copyToClipboard = (id: string) => {
+    //var input = document.querySelector('#index-url-copy-button');
+    console.log('copying ' + $('#' + id + "-url-copy-input").val());
+    navigator.clipboard.writeText($('#' + id + "-url-copy-input").val())
+        .then(() => {
+            console.log('then');
+            $("#" + id + "index-url-copy-button").html("Copied!");
+            return "success"
+        })
+        .catch(error => console.log("Failed to copy to clipboard:", error));
+        $("#" + id + "index-url-copy-button").val("Error, use Ctrl+C");
+        // Optional: Handle and display the error to the user
+    return $('#' + id + "-url-copy-input").val();
+};
+
+//async function copyToClipboard(id: string): Promise<void> {
+
+//    //var input = document.querySelector('#index-url-copy-button');
+//    // this is buggy on chrome, the message doesnt appear
+//    try {
+//        await navigator.clipboard.writeText($('#' + id + "-url-copy-input").val());
+//        $("#" + id + "index-url-copy-button").html("Copied!");
+//    }
+//    catch (error) {
+//        console.log("Failed to copy to clipboard:", error);
+//    }
+//};
+
+// Usage
 //////////////////////////////////////////////////////////////////
 ///                  On Default                                 //
 //////////////////////////////////////////////////////////////////

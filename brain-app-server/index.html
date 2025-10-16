@@ -28,15 +28,49 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Visualisation saved</h4>
+                    <h4 class="modal-title">Generate Link dialog box</h4>
                 </div>
                 <div class="modal-body">
-                    <p id="projectModalText"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div><!-- /.modal-content -->
+                    <p>By clicking the "Generate Link" button below the following steps will be executed:</p>
+                    <ul>
+                        <li>Node coordinates, node labels, similarity matrix, attributes, visualisation settings, and uploaded surface models will be saved on the server with randomly generated names. These files are inaccessible via direct download from a browser and cannot be retrieved.</li>
+                        <li>
+                            An index file will be generated and two links will be generated as follows:
+                            <ol>
+                                <li>A link to the current visualisation that can be shared with other users. This link will load the saved files from the server and restore the visualisation as it is currently displayed. A user is unable to download data using this link.</li>
+                                <!--<li>A link to download a zip file containing all the saved files. This file can be used to reload the visualisation in a future session or on another computer.</li>-->
+                                <li>A link to delete the index file and all associated files. When the user navigates to this link in the browser all files associated with the visualisation on the server will be deleted. A message will be printed in the browser to indicate that the files have been deleted. This is irreversible.</li>
+                            </ol>
+                        </li>
+                    </ul>
+                    <br />
+                    <center><button type="button" id="button-generate-link-restore" class="btn btn-default">Generate Link</button> <button type="button" id="button-generate-link-nodelete" class="btn btn-default">Generate Link for publication figure (cannot delete)</button></center>
+                    <div id="generate-link-output-restore">
+                        Use the following URL to restore the visualisation:<BR>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="index-url-copy-input" />
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="index-url-copy-button" data-toggle="tooltip" data-placement="button" title="Copy to Clipboard">Copy</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div id="generate-link-output-delete">
+                        <BR><BR>Use the following URL to delete the data (permanent):<BR>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="delete-url-copy-input" />
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="delete-url-copy-button" data-toggle="tooltip" data-placement="button" title="Copy to Clipboard">Copy</button>
+                            </span>
+                        </div>
+                    </div>
+
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+
+                </div> <!-- /.modal-body -->
+            </div> <!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
     <div id="splashPage" class="overlay overlay-scale">

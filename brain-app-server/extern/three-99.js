@@ -29,7 +29,7 @@
 	//
 
 	if (Math.sign === undefined) {
-
+		
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign
 
 		Math.sign = function (x) {
@@ -3473,7 +3473,7 @@
 				t13 = n23 * n12 - n22 * n13,
 
 				det = n11 * t11 + n21 * t12 + n31 * t13;
-
+			//console.log(me);
 			if (det === 0) {
 
 				var msg = "THREE.Matrix3: .getInverse() can't invert matrix, determinant is 0";
@@ -3483,7 +3483,7 @@
 					throw new Error(msg);
 
 				} else {
-
+					//console.trace();
 					console.warn(msg);
 
 				}
@@ -19971,11 +19971,12 @@
 
 			if (image instanceof HTMLImageElement || image instanceof HTMLCanvasElement || image instanceof ImageBitmap) {
 
+				console.log(_canvas);
 				if (_canvas === undefined) _canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
 
 				_canvas.width = _Math.floorPowerOfTwo(image.width);
 				_canvas.height = _Math.floorPowerOfTwo(image.height);
-
+				console.log(_canvas);
 				var context = _canvas.getContext('2d');
 				context.drawImage(image, 0, 0, _canvas.width, _canvas.height);
 
@@ -23422,7 +23423,7 @@
 
 			object.onBeforeRender(_this, scene, camera, geometry, material, group);
 			currentRenderState = renderStates.get(scene, _currentArrayCamera || camera);
-
+			//console.log(object);
 			object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld);
 			object.normalMatrix.getNormalMatrix(object.modelViewMatrix);
 

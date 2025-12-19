@@ -1960,7 +1960,7 @@ class NeuroMarvl {
                 makeBrain();
                 CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Empty dataset is loaded.");
             }
-            else if (this.saveFileObj.useExampleData) {
+            else if (this.saveFileObj.useExampleData()) {
                 this.loadExampleData(() => {
                     makeBrain();
                     CommonUtilities.launchAlertMessage(CommonUtilities.alertType.SUCCESS, "Default example dataset is loaded.");

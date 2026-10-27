@@ -200,7 +200,7 @@ class NeuroMarvl {
         $('#select-coords').on('change', () => {
             // Change the button name according to the file name
             var file = (<any>$('#select-coords').get(0)).files[0];
-            document.getElementById("button-select-coords-filename").innerHTML = file.name;
+            document.getElementById("button-select-coords-filename").textContent = file.name;
 
             this.changeFileStatus("coords-status", "changed");
 
@@ -213,7 +213,7 @@ class NeuroMarvl {
         });
         $("#select-matrices-batching").on('change', () => {
             var numFiles = (<any>$('#select-matrices-batching').get(0)).files.length;
-            document.getElementById("button-select-matrices-batching").innerHTML = numFiles + " files loaded";
+            document.getElementById("button-select-matrices-batching").textContent = numFiles + " files loaded";
             
             this.changeFileStatus("matrices-batching-status", "uploaded");
         });
@@ -222,7 +222,7 @@ class NeuroMarvl {
         });
         $("#select-attrs-batching").on('change', () => {
             var numFiles = (<any>$('#select-attrs-batching').get(0)).files.length;
-            document.getElementById("button-select-attrs-batching").innerHTML = numFiles + " files loaded";
+            document.getElementById("button-select-attrs-batching").textContent = numFiles + " files loaded";
 
             this.changeFileStatus("attrs-batching-status", "uploaded");
         });
@@ -239,8 +239,8 @@ class NeuroMarvl {
                 });
 
                 // Reset modal content
-                document.getElementById("alertModalTitle").innerHTML = "Batching in progress";
-                document.getElementById("alertModalMessage").innerHTML = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
+                document.getElementById("alertModalTitle").textContent = "Batching in progress";
+                document.getElementById("alertModalMessage").textContent = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
 
                 // Start batching
                 var status = 0.0;
@@ -532,7 +532,7 @@ class NeuroMarvl {
 
     
     batchProcess = (i, numberOfFiles, attributes, matrices, filename = null, filetype = "svg", resolution = { x: 1920, y: 1080 }) => {
-        document.getElementById("alertModalMessage").innerHTML = "Started load of " + numberOfFiles + " file pairs...";
+        document.getElementById("alertModalMessage").textContent = "Started load of " + numberOfFiles + " file pairs...";
 
         let gotAttributes = false;
         let gotMatrix = false;
@@ -553,7 +553,7 @@ class NeuroMarvl {
                     $("#progressBar").css({
                         "width": percentage + "%"
                     });
-                    document.getElementById("alertModalMessage").innerHTML = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
+                    document.getElementById("alertModalMessage").textContent = "Processing " + (i + 1) + " in " + numberOfFiles + " pairs.";
 
                     if (i < numberOfFiles) {
                         setTimeout(() => {
@@ -750,7 +750,7 @@ class NeuroMarvl {
                 .css({ color: 'green' });
             status.coordLoaded = true;
             // change status
-            document.getElementById("button-select-coords-filename").innerHTML = "coords.txt";
+            document.getElementById("button-select-coords-filename").textContent = "coords.txt";
             this.changeFileStatus("coords-status", "uploaded");
 
             callback();
@@ -764,7 +764,7 @@ class NeuroMarvl {
             status.matrixLoaded = true;
 
             // change status
-            document.getElementById("button-select-matrix-filename").innerHTML = "mat1.txt";
+            document.getElementById("button-select-matrix-filename").textContent = "mat1.txt";
             this.changeFileStatus("matrix-status", "uploaded");
 
             callback();
@@ -779,7 +779,7 @@ class NeuroMarvl {
             this.setupAttributeTab();
             status.attrLoaded = true;
             // change status
-            document.getElementById("button-select-attrs-filename").innerHTML = "attributes1.txt";
+            document.getElementById("button-select-attrs-filename").textContent = "attributes1.txt";
             this.changeFileStatus("attrs-status", "uploaded");
 
             callback();
@@ -793,7 +793,7 @@ class NeuroMarvl {
             status.labelLoaded = true;
 
             // change status
-            document.getElementById("button-select-labels-filename").innerHTML = "labels.txt";
+            document.getElementById("button-select-labels-filename").textContent = "labels.txt";
             this.changeFileStatus("labels-status", "uploaded");
 
             callback();
@@ -854,7 +854,7 @@ class NeuroMarvl {
                         .css({ color: 'green' });
                     status.coordLoaded = true;
                     // change status
-                    document.getElementById("button-select-coords-filename").innerHTML = saveObj.serverFileNameCoord;
+                    document.getElementById("button-select-coords-filename").textContent = saveObj.serverFileNameCoord;
                     this.changeFileStatus("coords-status", "uploaded");
 
                     callback();
@@ -882,7 +882,7 @@ class NeuroMarvl {
                     status.matrixLoaded = true;
 
                     // change status
-                    document.getElementById("button-select-matrix-filename").innerHTML = saveObj.serverFileNameMatrix;
+                    document.getElementById("button-select-matrix-filename").textContent = saveObj.serverFileNameMatrix;
                     this.changeFileStatus("matrix-status", "uploaded");
 
                     callback();
@@ -911,7 +911,7 @@ class NeuroMarvl {
                     this.setupAttributeTab();
                     status.attrLoaded = true;
                     // change status
-                    document.getElementById("button-select-attrs-filename").innerHTML = saveObj.serverFileNameAttr;
+                    document.getElementById("button-select-attrs-filename").textContent = saveObj.serverFileNameAttr;
                     this.changeFileStatus("attrs-status", "uploaded");
 
                     callback()
@@ -942,7 +942,7 @@ class NeuroMarvl {
                         status.labelLoaded = true;
 
                         // change status
-                        document.getElementById("button-select-labels-filename").innerHTML = saveObj.serverFileNameLabel;
+                        document.getElementById("button-select-labels-filename").textContent = saveObj.serverFileNameLabel;
                         this.changeFileStatus("labels-status", "uploaded");
 
                         callback();
@@ -965,7 +965,7 @@ class NeuroMarvl {
         //        .css({ color: 'green' });
         //    status.coordLoaded = true;
         //    // change status
-        //    document.getElementById("button-select-coords-filename").innerHTML = saveObj.serverFileNameCoord;
+        //    document.getElementById("button-select-coords-filename").textContent = saveObj.serverFileNameCoord;
         //    this.changeFileStatus("coords-status", "uploaded");
 
         //    callback();
@@ -978,7 +978,7 @@ class NeuroMarvl {
         //    status.matrixLoaded = true;
 
         //    // change status
-        //    document.getElementById("button-select-matrix-filename").innerHTML = saveObj.serverFileNameMatrix;
+        //    document.getElementById("button-select-matrix-filename").textContent = saveObj.serverFileNameMatrix;
         //    this.changeFileStatus("matrix-status", "uploaded");
 
         //    callback();
@@ -992,7 +992,7 @@ class NeuroMarvl {
         //    this.setupAttributeTab();
         //    status.attrLoaded = true;
         //    // change status
-        //    document.getElementById("button-select-attrs-filename").innerHTML = saveObj.serverFileNameAttr;
+        //    document.getElementById("button-select-attrs-filename").textContent = saveObj.serverFileNameAttr;
         //    this.changeFileStatus("attrs-status", "uploaded");
 
         //    callback()
@@ -1009,7 +1009,7 @@ class NeuroMarvl {
         //        status.labelLoaded = true;
 
         //        // change status
-        //        document.getElementById("button-select-labels-filename").innerHTML = saveObj.serverFileNameLabel;
+        //        document.getElementById("button-select-labels-filename").textContent = saveObj.serverFileNameLabel;
         //        this.changeFileStatus("labels-status", "uploaded");
 
         //        callback();
@@ -2401,7 +2401,7 @@ class NeuroMarvl {
         this.divLoadingNotification.style.backgroundColor = '#feeebd'; // the color of the control panel
 
         var text = document.createElement('div');
-        text.innerHTML = "Loading...";
+        text.textContent = "Loading...";
         this.divLoadingNotification.appendChild(text);
     }
 
@@ -2818,8 +2818,8 @@ class NeuroMarvl {
         $('#select-matrix').on('change', () => {
             // Change the button name according to the file name
             let file = (<any>$('#select-matrix').get(0)).files[0];
-            //document.getElementById("button-select-matrix").innerHTML = file.name;
-            document.getElementById("button-select-matrix-filename").innerHTML = file.name;
+            //document.getElementById("button-select-matrix").textContent = file.name;
+            document.getElementById("button-select-matrix-filename").textContent = file.name;
 
             // update file status to changed
             this.changeFileStatus("matrix-status", "changed");
@@ -2834,8 +2834,8 @@ class NeuroMarvl {
         $('#select-attrs').on('change', () => {
             // Change the button name according to the file name
             var file = (<any>$('#select-attrs').get(0)).files[0];
-            //document.getElementById("button-select-attrs").innerHTML = file.name;
-            document.getElementById("button-select-attrs-filename").innerHTML = file.name;
+            //document.getElementById("button-select-attrs").textContent = file.name;
+            document.getElementById("button-select-attrs-filename").textContent = file.name;
             // update file status to changed
             this.changeFileStatus("attrs-status", "changed");
 
@@ -2848,8 +2848,8 @@ class NeuroMarvl {
         $('#select-labels').on('change', () => {
             // Change the button name according to the file name
             var file = (<any>$('#select-labels').get(0)).files[0];
-            //document.getElementById("button-select-labels").innerHTML = file.name;
-            document.getElementById("button-select-labels-filename").innerHTML = file.name;
+            //document.getElementById("button-select-labels").textContent = file.name;
+            document.getElementById("button-select-labels-filename").textContent = file.name;
 
             // update file status to changed
             this.changeFileStatus("labels-status", "changed");

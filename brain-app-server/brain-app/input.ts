@@ -309,7 +309,7 @@ class InputTargetManager {
                 for (var attr in record) {
                     if (record.hasOwnProperty(attr)) {
                         var text = document.createElement('div');
-                        text.innerHTML = attr + ": " + record[attr];
+                        text.textContent = attr + ": " + record[attr];
                         text.style.marginBottom = '5px';
                         attributes.appendChild(text);
                     }
